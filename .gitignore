@@ -1,0 +1,4 @@
+__pycache__/
+samples/amen_174.wav
+samples/_amen_*.wav
+.DS_Store
