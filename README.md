@@ -27,6 +27,7 @@ All finished audio lives in `renders/`. Full-length (~3 min):
 | `amen_jester_174.wav` | Drill'n'bass mischief: a music box vs. a possessed Amen, generative chops |
 | `amen_soundsystem_174.wav` | Ragga jungle: dub sirens, DJ rewinds, one-drop breaks, two-note riddim |
 | `amen_noir_174.wav` | Jazz club at 3 a.m.: harmon-muted trumpet with fall-offs, rootless rhodes comps, brushed Amen |
+| `amen_finale_174.wav` | The farewell: every track returns once to say goodbye, and the last word, in morse code, is AMEN |
 
 Short studies (~30 s): `amen_dnb_174.wav`, `amen_jungle_174.wav`,
 `amen_darkside_174.wav`, `amen_liquid_174.wav`, `amen_jumpup_174.wav`,
@@ -66,7 +67,7 @@ source mp3 automatically if it is missing.
   (The Winstons, 1969) — the most sampled recording in history. This project
   is one more thank-you note to it.
 - Music & code: Claude, 2026. Session produced by a human who kept saying
-  "давай ещё" — which is the only reason there are seventeen tracks.
+  "давай ещё" — which is the only reason there are eighteen tracks.
 
 ## License
 
