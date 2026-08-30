@@ -507,6 +507,40 @@ def rewind(seg, accel=3.0):
     out = np.stack([np.interp(idx, np.arange(n), r[:, c]) for c in range(2)], axis=1)
     return fade_edges(out.astype(np.float32))
 
+def upright(freq, dur_steps, gain=1.0):
+    """double bass pluck: warm decaying body, finger thump, slight scoop into pitch"""
+    n = int(dur_steps * STEP)
+    t = np.arange(n) / SR
+    scoop = freq * (1 - 0.03 * np.exp(-t / 0.015))
+    ph = 2 * np.pi * np.cumsum(scoop) / SR
+    x = (np.sin(ph) + 0.6 * np.sin(2 * ph) * np.exp(-t / 0.35)
+         + 0.3 * np.sin(3 * ph) * np.exp(-t / 0.2)
+         + 0.12 * np.sin(4 * ph) * np.exp(-t / 0.1))     # upper partials carry the pitch
+    x += lp(stereo(np.random.randn(n)), 300)[:, 0] * np.exp(-t / 0.015) * 0.4
+    x = np.tanh(1.4 * x)
+    out = stereo(x)
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0007))
+    return out * (np.exp(-t / 0.55) * adsr(n, a=0.004, r=0.04))[:, None] * gain
+
+def horn(freq, dur_steps, gain=1.0, fall=0.0):
+    """harmon-muted trumpet: reedy tone through a tight bandpass, breath,
+    delayed vibrato; fall = semitones to drop at the phrase end (noir fall-off)"""
+    n = int(dur_steps * STEP)
+    t = np.arange(n) / SR
+    vib = 1 + 0.012 * np.sin(2 * np.pi * 4.7 * t) * np.minimum(t / 0.4, 1)
+    fenv = np.ones(n)
+    if fall > 0:
+        k = int(n * 0.75)
+        fenv[k:] = 2 ** (-fall / 12 * np.linspace(0, 1, n - k))
+    f = freq * vib * fenv
+    ph = np.cumsum(f) / SR
+    x = 0.6 * (2 * (ph % 1.0) - 1) + 0.4 * np.sign(np.sin(2 * np.pi * ph))
+    st = stereo(np.tanh(1.3 * x))
+    out = bandpass(st, 700, 2600) * 1.8
+    out += hp(stereo(np.random.randn(n) * 0.05), 3000) * np.minimum(t / 0.1, 1)[:, None]
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0010))
+    return out * adsr(n, a=0.04, r=0.09)[:, None] * gain
+
 def pad(notes, dur_steps, cutoff=1800, gain=1.0):
     """soft detuned-saw chord, slow attack (notes = list of freqs)"""
     n = int(dur_steps * STEP)
