@@ -315,6 +315,7 @@ Everything below is loaded into every session by the harness.
 @theory/20-genres/02-techno.md
 @theory/20-genres/03-trance.md
 @theory/20-genres/04-drum-and-bass.md
+@theory/20-genres/04a-neurofunk.md
 @theory/20-genres/05-jungle-and-breakbeat.md
 @theory/20-genres/06-dubstep-and-bass-music.md
 @theory/20-genres/07-uk-garage-and-grime.md
@@ -361,9 +362,11 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/a-chord-must-not-arrive-as-one-event.md
 @theory/90-memories/an-open-hat-must-end-before-the-next-one.md
 @theory/90-memories/bar-rendered-parts-must-overhang.md
+@theory/90-memories/bass-must-keep-its-own-fundamental.md
 @theory/90-memories/bells-are-not-a-default-top-layer.md
 @theory/90-memories/dnb-bass-is-gestures-not-notes.md
 @theory/90-memories/fm-index-turns-a-rhodes-into-a-bell.md
+@theory/90-memories/industrial-techno-measures-too-dark.md
 @theory/90-memories/loud-masters-need-a-true-peak-limiter.md
 @theory/90-memories/minimal-means-fewer-voices.md
 @theory/90-memories/neurofunk-bass-is-a-dark-reese.md
@@ -372,6 +375,4 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/smoothers-return-tiny-negatives.md
 @theory/90-memories/struck-metal-needs-modes-not-squares.md
 @theory/90-memories/the-felt-pulse-is-in-the-low-band.md
-@theory/90-memories/industrial-techno-measures-too-dark.md
-@theory/90-memories/bass-must-keep-its-own-fundamental.md
 @theory/90-memories/top-end-from-transients-not-wash.md
