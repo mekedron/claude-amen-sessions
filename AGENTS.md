@@ -45,7 +45,50 @@ Before writing music:
 4. Check the hazards list at the end of the relevant genre and foundation files
    before calling anything finished.
 
-## Rule 3 — house style
+## Rule 3 — build the sound the track needs; never settle for one that exists
+
+**Synthesising a new sound is the default, not the last resort.** The engine's
+existing synths were each written to satisfy one particular track's
+requirements. A function whose name matches what you need is not evidence that
+its sound fits — `pad`, `bell` or `bass` was tuned for a piece with a different
+tempo, key, register, density and genre.
+
+Reaching for an existing sound because it is there produces tracks that all
+sound the same. Adding new synths, new variants and new parameters to the engine
+is expected work, not scope creep.
+
+### Before using any existing sound, audit it against this track
+
+State the answers to yourself; do not reuse on autopilot.
+
+1. **Role** — what job does this sound do in *this* arrangement, and does the
+   existing one actually do that job, or merely a similar-sounding one?
+2. **Register** — does it sit where this arrangement has room, or does it
+   collide with the bass, the lead or the vocal?
+3. **Envelope** — do its attack and decay fit this tempo? A 400 ms decay that
+   worked at 90 BPM smears at 174.
+4. **Timbre and genre** — does its harmonic content match what the genre file
+   calls for, or is it borrowed from a different style?
+5. **Density** — how many elements already occupy its band?
+
+If any answer is "no" or "not quite": **write a new synth, or add parameters to
+the existing one so both callers get what they need.** Never bend the
+arrangement to fit a sound that is merely available.
+
+### When you do reuse
+
+Reuse deliberately and say so — name which existing sounds you kept and why
+they fit this track's requirements. Silent reuse is the failure mode this rule
+exists to prevent.
+
+### Where to start a new sound
+
+`theory/10-instruments/` gives the signal path and rebuild recipe for the
+machines that defined each genre, and `theory/30-patterns/08-sound-design-recipes.md`
+gives the generic constructions. Build from those rather than from whatever the
+last track happened to leave behind.
+
+## Rule 4 — house style
 
 - Conventions used throughout the library: MIDI note numbers for pitch,
   semitone offsets for scales and chords, a 16-step bar for rhythm,
