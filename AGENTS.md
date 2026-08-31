@@ -79,9 +79,13 @@ Before writing music:
 
 1. Name the genre and open its file in `theory/20-genres/`.
 2. Take tempo, key, grid and arrangement shape from it.
-3. Draw the arrangement matrix before writing a note
+3. Read its **Signature techniques** section, and
+   `theory/30-patterns/11-signature-techniques.md`. A genre is defined by how
+   its sounds *move*, not only by which notes and instruments it uses — a
+   gesture written as a note pattern is the most common way to miss a style.
+4. Draw the arrangement matrix before writing a note
    (`theory/30-patterns/10-arrangement-templates.md`).
-4. Check the hazards list at the end of the relevant genre and foundation files
+5. Check the hazards list at the end of the relevant genre and foundation files
    before calling anything finished.
 
 ## Rule 3 — know what exists, then think critically about the gap
@@ -347,17 +351,24 @@ Everything below is loaded into every session by the harness.
 @theory/30-patterns/08-sound-design-recipes.md
 @theory/30-patterns/09-humanization-and-groove.md
 @theory/30-patterns/10-arrangement-templates.md
+@theory/30-patterns/11-signature-techniques.md
 @theory/40-reference/01-note-frequency-midi-table.md
 @theory/40-reference/02-scale-and-chord-formulas.md
 @theory/40-reference/03-bpm-and-timing-tables.md
 @theory/40-reference/04-glossary.md
 @theory/40-reference/05-quick-decision-tables.md
 @theory/90-memories/README.md
-@theory/90-memories/bells-are-not-a-default-top-layer.md
-@theory/90-memories/struck-metal-needs-modes-not-squares.md
-@theory/90-memories/section-contrast-belongs-in-level.md
+@theory/90-memories/a-chord-must-not-arrive-as-one-event.md
+@theory/90-memories/an-open-hat-must-end-before-the-next-one.md
 @theory/90-memories/bar-rendered-parts-must-overhang.md
-@theory/90-memories/smoothers-return-tiny-negatives.md
+@theory/90-memories/bells-are-not-a-default-top-layer.md
+@theory/90-memories/dnb-bass-is-gestures-not-notes.md
+@theory/90-memories/fm-index-turns-a-rhodes-into-a-bell.md
+@theory/90-memories/loud-masters-need-a-true-peak-limiter.md
+@theory/90-memories/minimal-means-fewer-voices.md
 @theory/90-memories/neurofunk-bass-is-a-dark-reese.md
 @theory/90-memories/pitched-metal-reads-as-cheerful.md
-@theory/90-memories/loud-masters-need-a-true-peak-limiter.md
+@theory/90-memories/section-contrast-belongs-in-level.md
+@theory/90-memories/smoothers-return-tiny-negatives.md
+@theory/90-memories/struck-metal-needs-modes-not-squares.md
+@theory/90-memories/the-felt-pulse-is-in-the-low-band.md

@@ -119,6 +119,21 @@ Four-on-the-floor with the offbeat open hat — the direct ancestor of house.
 - Neo-soul and modern R&B mix sparse and dark: fewer elements, more space, more
   low-mid weight.
 
+## Signature techniques
+
+- **Parts interlock, they do not stack.** Every instrument occupies a different
+  set of 16ths; if two share a rhythm, one is unnecessary.
+- **Ghost notes are the groove.** 20–35% velocity hits between the main strokes
+  separate funk from rock.
+- **The one.** Everything orients toward beat 1; the rest of the bar negotiates.
+- **The 16th-note guitar chank** is percussion with pitches — muted, short, on a
+  9th chord.
+- **Anticipation**: chords and bass notes arrive one 16th early.
+- **Lay back or push deliberately** — neo-soul sits 15–30 ms behind the beat.
+- **Vamp, do not modulate.** One or two chords for a whole section; movement
+  comes from rhythm.
+- **Horn stabs are a percussion section with pitch** — short, tight, offbeat.
+
 ## Hazards
 
 - Quantising the groove to a rigid grid.

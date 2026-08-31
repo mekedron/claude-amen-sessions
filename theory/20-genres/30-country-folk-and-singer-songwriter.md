@@ -126,6 +126,22 @@ The lyric is the primary content, more than in any other genre covered here.
 - Reverb: a plate or small hall, moderate. Not a modern dry pop sound.
 - Dynamic range preserved: master to −12 to −10 LUFS.
 
+## Signature techniques
+
+- **The lyric leads.** Arrangement, production and performance exist to deliver
+  it; anything competing with the words comes out.
+- **Alternating bass (boom-chick)** — root on 1 and 3, chord on 2 and 4.
+- **Travis picking**: the thumb keeps an independent bass pattern while the
+  fingers carry the melody.
+- **Pedal steel swells between chords**, arriving after the chord change rather
+  than with it.
+- **Harmony in thirds above**, or sixths below; high harmony above that for
+  bluegrass.
+- **The Nashville number system** — write charts by scale degree so the key can
+  move to fit a singer.
+- **Space over layers.** Four to seven elements is a full arrangement.
+- **Leave the strum's timing alone**; its unevenness is the groove.
+
 ## Hazards
 
 - Overproduction: adding layers because the arrangement feels empty, when the

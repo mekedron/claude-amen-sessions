@@ -123,6 +123,25 @@ before the drop; the reverse cymbal; the female vocal about flying/dreaming/
 tonight; the piano version of the lead in the breakdown; the key change for the
 final climax.
 
+## Signature techniques
+
+- **The rolling offbeat bass is three 16ths after each kick**, short and
+  plucky — a rhythmic engine, not a melodic part.
+- **Stack every dimension in the build.** Snare roll accelerating 1/8 → 1/16 →
+  1/32, riser, high-pass rising, reverb increasing, all at once; then a bar of
+  near-silence.
+- **The breakdown is longer than any other genre's** — 32 to 64 bars. Introduce
+  the lead quietly there, then unleash it at the drop.
+- **Layer the lead in three registers**: supersaw, a pluck or square an octave
+  up, a sine an octave down, all playing identical notes and sharing one reverb.
+- **Long notes, not runs.** The lead melody is singable and slow; the arpeggio
+  underneath supplies the motion.
+- **Sidechain everything to the kick**, including pads and reverb returns.
+- **Harmony stays deliberately plain** — triads and add9s. Complexity kills
+  euphoria.
+- **The gate**: a sustained pad chopped by a 16th-note rhythmic gate reads as a
+  rhythm part without adding a new sound.
+
 ## Hazards
 
 - Complex harmony. Trance chords should be simple; complexity kills euphoria.

@@ -143,6 +143,25 @@ hat:    x - x - | x - x - | x - x - | x - x -
 - Horn sections: record or program in tight 3- or 4-part harmony, with unison
   passages for punch.
 
+## Signature techniques
+
+- **Everything aligns to the clave.** A figure that contradicts it is *cruzado*
+  and sounds wrong to anyone from the tradition.
+- **The bass anticipates.** In son-based music it plays the "and" of 2 and beat
+  4, leaving beat 1 empty. This is the most important single rule here.
+- **The montuno is an engine**, not a chord part — a fixed arpeggiated 2-bar
+  figure locked to the clave, repeated for a whole section.
+- **Percussion layers subdivide differently** — congas, bongó, timbale shell and
+  shaker each play a different set of 16ths and together produce a continuous
+  texture no single part contains.
+- **Four articulations minimum per hand drum** — open, slap, muff, heel/toe.
+  A one-sample conga is instantly fake.
+- **Bells are struck in two places** — mouth and neck — which changes *which
+  modes* are excited, not just the level.
+- **Bossa understates.** The guitar pattern anticipates the beat; everything is
+  played quietly.
+- **Horn moñas** are riffs, not pads — short, tight, offbeat.
+
 ## Hazards
 
 - Ignoring the clave, or switching between 2-3 and 3-2 mid-section by accident.

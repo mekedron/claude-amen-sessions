@@ -123,6 +123,21 @@ counter-melody, drop the kick for 4 bars, filter the whole thing.
 The anime/film dialogue sample at the intro; the vinyl crackle; the rain sound;
 the "study girl" visual; the rhodes maj7 loop; the muted trumpet.
 
+## Signature techniques
+
+- **Swing 55–65% and push the snare 10–25 ms late.** The looseness is the point.
+- **Nothing at full velocity.** The kick is felt more than heard.
+- **Low-pass the entire mix** at 6–12 kHz, and high-pass at 60–100 Hz — this is
+  not a bass genre.
+- **Detune and drift.** ±5–15 cents on keys and pads, plus tape wow at
+  0.3–1 Hz; perfect tuning breaks the aesthetic.
+- **Jazz voicings played simply**: maj7, m9, 6/9, m11 — never bare triads.
+- **Evolve the loop by subtraction** — drop the drums for 4 bars, change one
+  chord voicing, add a counter-melody — rather than by adding layers.
+- **Leave the mistakes.** Slightly late, slightly out of tune beats a perfect
+  take here.
+- **Master quietly** (−14 to −11 LUFS); the dynamic range is part of the genre.
+
 ## Hazards
 
 - Harmony too simple — a triad loop will not carry the genre.

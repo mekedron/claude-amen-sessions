@@ -106,6 +106,25 @@ The 32-bar filter opening; the reverse-cymbal into the breakdown; the single
 spoken-word sample; the acid line entering at bar 96; the "no kick for 16 bars"
 breakdown; the rumble kick (kick + heavily reverbed kick).
 
+## Signature techniques
+
+- **Filter automation replaces arrangement.** A 32-bar cutoff sweep is a
+  section. The notes do not change; the brightness does.
+- **Change at 16 and 32 bars, not at 8.** Patience is the aesthetic; a variation
+  every 8 bars reads as house.
+- **Mute-based arrangement.** Layers enter and leave; there are no fills in the
+  pop sense.
+- **Resonance as melody.** A high-resonance filter swept across noise or a loop
+  produces pitch; that is often the only "melodic" content.
+- **Distortion is a mix stage**, applied to the kick, the bus and often the
+  master — not an effect on one sound.
+- **The rumble kick**: a kick sent to a short dark reverb, ducked by itself, so
+  the tail fills the gap between beats and the track reads as one machine.
+- **Hypnosis through near-repetition.** One element gets a cycle length coprime
+  with 16 (a 7- or 5-step percussion loop) so the combination never quite
+  repeats.
+- **One idea per track.** Four to six elements is a full arrangement.
+
 ## Hazards
 
 - Making it *interesting* — techno fails when it tries to be a song. Trust

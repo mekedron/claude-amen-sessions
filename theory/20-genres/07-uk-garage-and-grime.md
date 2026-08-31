@@ -119,6 +119,23 @@ performance convention.
 The pitched-up "ooh" vocal; the organ bass; the reverse cymbal; the MC saying
 "reload"; the 2-step drop after a 4x4 intro; the sped-up R&B sample.
 
+## Signature techniques
+
+- **The missing kick on beat 3** is the genre. Kick on 1 and on the "and" of 3.
+- **Swing the hats and percussion to 56–62%**, and nudge the snare 5–10 ms late,
+  while the kick stays near the grid.
+- **Chop vocals into syllables**, pitch them up 2–5 semitones and re-sequence
+  them rhythmically; time-stretch artefacts are part of the sound.
+- **The bass interlocks with the kick**, never landing on it — it fills the
+  2-step gaps.
+- **Organ bass**: a filtered square played as short syncopated stabs, not
+  sustained.
+- **Short reverbs and slapback only.** Long tails kill the bounce.
+- **Grime is a platform for a voice**: 8- or 16-bar loops, minimal variation,
+  frequent drops to drums alone, and the riff repeated relentlessly.
+- **Reloads** — restarting a track from a phrase boundary — are a performance
+  convention, not a mistake.
+
 ## Hazards
 
 - No swing → it is just slow house.

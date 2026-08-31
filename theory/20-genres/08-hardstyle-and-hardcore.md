@@ -105,6 +105,24 @@ The emotional female-vocal breakdown before the hardest drop; the "are you
 ready" MC sample; the euphoric supersaw melody over a brutal kick; the
 gradually-pitching-up kick in the build; the reverse bass bounce.
 
+## Signature techniques
+
+- **The kick is designed, not chosen.** Three layers — a distorted transient,
+  a punch band, and a pitch-swept tail tuned to the track's root — each
+  distorted and EQ'd separately, then glued.
+- **The tail is the bassline.** Nothing else occupies 40–300 Hz; there is no
+  separate bass part under the kick.
+- **Reverse bass**: an offbeat note with a reversed envelope swelling into the
+  gap the kick leaves. The bounce comes from the interlock, not from a pattern.
+- **Distortion chains, not single stages** — soft clip → EQ → hard clip → EQ →
+  fold. Every stage after an EQ generates new harmonics; that is where the
+  scream comes from.
+- **Screech design by resampling**: detuned saws → distortion → resonant
+  band-pass → bounce → re-pitch → repeat.
+- **Emotional contrast is structural.** The melodic, often vocal breakdown is
+  what makes the drop land; without it the drop is just loud.
+- **Pitch the kick across a phrase** for the last bars of a build.
+
 ## Hazards
 
 - A kick that is loud but not *tuned* — the track will feel harmonically wrong.

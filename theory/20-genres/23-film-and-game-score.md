@@ -130,6 +130,22 @@ channel doubling as bass and melody, noise channel as the entire drum kit.
   runtime).
 - Leave the 300 Hz–4 kHz band open when there is dialogue.
 
+## Signature techniques
+
+- **Score the subtext, not the picture.** If the scene is already tense, the
+  music can be calm.
+- **Hollow the middle.** Under dialogue, live below 300 Hz and above 4 kHz.
+- **Ostinato plus expanding orchestration** is the standard 90-second build:
+  the figure never changes, the number of players doubles.
+- **Chromatic mediants for wonder** — one common tone, no functional logic.
+- **Thematic transformation.** The same theme in major/minor, fast/slow, solo/
+  tutti carries meaning across a whole film.
+- **Hit points**: align accents to the cuts, changing tempo if necessary.
+- **Silence as a cue.** Stopping is the strongest gesture available.
+- **For games, write for recombination** — every layer in the same key and tempo
+  so any stem can play against any other, with transitions entering only on a
+  musical boundary.
+
 ## Hazards
 
 - Music that competes with dialogue.

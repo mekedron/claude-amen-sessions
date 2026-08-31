@@ -91,6 +91,21 @@ identity.
   subversion.
 - Short attention spans are designed for: change something every 4 bars.
 
+## Signature techniques
+
+- **Break rules deliberately.** Clipping, mono-incompatible width and harsh
+  frequencies are legitimate here only when chosen.
+- **Hard autotune at zero retune speed** — the stepped glide between notes is the
+  instrument.
+- **Vocal stacks in several octaves**, formant-shifted apart.
+- **Abrupt structure.** Cut between sections with no transition; switch genre
+  mid-track; reverse a bar; pitch the whole mix.
+- **Maximalism needs a minimal neighbour** — it only reads as maximal by
+  contrast.
+- **A real pop hook underneath.** The best of this music is a strong topline with
+  the surface destroyed.
+- **Keep it short**: 1:30–2:30, with something changing every 4 bars.
+
 ## Hazards
 
 - Chaos without a hook. The best hyperpop has a genuinely strong pop melody

@@ -121,6 +121,23 @@ Much of jungle's history is uncleared; that is a historical fact, not a legal
 strategy. For released work, use royalty-free breaks, re-play the pattern with
 your own drums, or clear the sample.
 
+## Signature techniques
+
+- **Chop the ghosts, keep the skeleton.** Re-order the quiet hits between the
+  kicks and snares; leave the kick/snare positions recognisable most of the time.
+- **Varispeed, not time-stretch.** Speeding a break raises its pitch, and that
+  bright thinness is the genre.
+- **Layer two or three breaks** so their ghost notes interleave; more than three
+  smears the transients.
+- **Reverse individual slices** for fills instead of writing a new part.
+- **Filter whole bars** as arrangement — a low-passed break in the intro, full
+  break at the drop.
+- **The sub plays around the beat**, sparse and long, reggae-style, not locked
+  to the kick.
+- **The rewind** — spinning back and restarting from a phrase boundary — is a
+  performance convention.
+- **Timestretch artefacts are a texture**, deliberately used, not a defect.
+
 ## Hazards
 
 - Chopping so hard that the groove disappears — keep the kick/snare skeleton

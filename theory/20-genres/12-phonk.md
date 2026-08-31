@@ -97,6 +97,19 @@ The "chopped and screwed" pitched-down vocal; the cowbell riff that everyone
 knows; the car engine sample; the anime/movie quote intro; the tape stop at the
 end of a section.
 
+## Signature techniques
+
+- **The cowbell is a melodic instrument.** Tune it to the key and write a riff;
+  it is the lead, not percussion.
+- **Distortion at every stage** — the aesthetic is deliberate overload. Soft-clip
+  the cowbell, saturate the 808, clip the master.
+- **Chopped and screwed**: pitch and tempo lowered 10–25% on the sampled
+  material.
+- **Lo-fi the whole bus**: bit reduction, tape emulation, high-pass to imitate a
+  cassette, hiss, wow and flutter.
+- **Keep it short and narrow.** 1:30–2:30, mono-heavy, deliberately unpolished.
+- **Tape stop** at the end of a section is idiomatic.
+
 ## Hazards
 
 - A clean, well-mixed phonk track sounds wrong. Some grit is required.

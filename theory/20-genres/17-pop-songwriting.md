@@ -139,6 +139,24 @@ The "oh-oh-oh" post-chorus; the last-chorus key change; the stripped-down
 bridge; the pre-chorus that stops dead before the chorus; the four-chord loop;
 the whispered ad-lib; the vocal chop drop; the "one more time" false ending.
 
+## Signature techniques
+
+- **Register lift into the chorus.** The chorus melody sits a third to a fifth
+  above the verse; this single move creates most of pop's payoff.
+- **Fewer words, longer notes in the chorus**; busier and more conversational in
+  the verse.
+- **The pre-chorus is harmonically unresolved** — end it on V or IV so the
+  chorus is inevitable.
+- **Speak the lyric in rhythm first.** Stressed syllables must land on strong
+  beats.
+- **Start phrases off the downbeat** with a pickup.
+- **Never repeat a section identically** — add a layer, a harmony, an octave, or
+  strip a bar before the last chorus.
+- **The chorus adds at least three elements the verse lacks**; the bridge removes
+  at least three.
+- **Ear candy every few bars** — a reverse hit, a vocal chop, a riser — to reward
+  repeat listening.
+
 ## Hazards
 
 - The chorus melody sitting in the same register as the verse — no lift.

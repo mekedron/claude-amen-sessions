@@ -116,6 +116,21 @@ The filtered disco loop; the "yeah" vocal sample; the offbeat organ stab; the
 16-bar filter sweep; the piano riff in the breakdown; the "Can you feel it"
 spoken word; the diva vocal about house music itself.
 
+## Signature techniques
+
+- **Additive arrangement, no drop.** Layers accumulate over 32–64 bars and
+  subtract at the end; there is no build-and-drop structure.
+- **The offbeat open hat** on every "and" is the genre marker.
+- **Swing the hats, not the kick** — 52–56%, applied to offbeat 16ths only.
+- **Chord stabs land on offbeats** and are cut short, with the reverb tail
+  gated so the groove stays open.
+- **Rootless voicings in MIDI 55–75** keep the low end free for the bass.
+- **Filter the loop, do not rewrite it.** A 16-bar cutoff sweep is the standard
+  section-level move (and the whole of French house).
+- **One new percussion layer every 16 bars** is how a static loop evolves.
+- **Sample and filter rather than compose**: loop 1–2 bars of a disco or soul
+  record, low-pass it, and let the drums carry the top.
+
 ## Hazards
 
 - Too much going on. House is a subtraction genre.

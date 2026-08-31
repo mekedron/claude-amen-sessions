@@ -165,6 +165,26 @@ gong structure.
 6. **Name what you did honestly.** "Inspired by maqam Hijaz" is accurate;
    "a Hijaz piece" implies rules you did not follow.
 
+## Signature techniques
+
+- **Use the rhythm, not only the scale.** A Phrygian dominant scale over a 4/4
+  club beat is a flavour, not a tradition.
+- **Use a drone** wherever the tradition does — it changes how every note is
+  heard, and it is why raga and maqam phrases mean what they mean.
+- **Ornament.** These musics live between the notes: meend and gamaka in Indian
+  music, the krechts in klezmer, the bend in flamenco. A bare note list captures
+  almost nothing.
+- **Ascent and descent differ.** Many ragas use different notes going up and
+  coming down; a symmetric scale is already wrong.
+- **Aksak meters are felt as unequal groups** — 7/8 as 2+2+3, not as seven equal
+  beats.
+- **Gamelan is stratified**: low instruments play the melody slowly, high ones
+  play it at 2×, 4×, 8× the density, and gongs mark nested cycles.
+- **Interlocking (kotekan)**: two parts alternate notes to produce a line neither
+  plays alone.
+- **Tune honestly.** If you cannot do quarter tones or non-equal scales, say the
+  result is an approximation.
+
 ## Related
 
 - Scale tables: `../00-foundations/04-scales-and-modes.md`

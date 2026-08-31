@@ -121,6 +121,21 @@ generative system has (1) a constrained pitch set, (2) a rhythmic grid or
 strong metrical bias, (3) repetition somewhere, and (4) a human curating the
 seeds and keeping only the good outputs.
 
+## Signature techniques
+
+- **Write a straight beat, then damage it.** Shift hits off-grid, silence some,
+  stutter one, pitch another down two octaves. The skeleton keeps it coherent.
+- **Ratchets**: one hit stamped n times across a span with the gap accelerating,
+  the pitch sweeping through the burst, and the bit depth collapsing as it goes.
+- **Beat repeat that reads the bus** — stamp back audio that already played, so
+  the loop eats itself.
+- **Polymeter by default**: layers on 5-, 7- or 9-step cycles over a 16-step bar.
+- **Constrain the randomness.** A scale, a rhythmic grid, repetition somewhere,
+  and a human keeping only the good seeds.
+- **Beautiful melody against violent rhythm** is the classic contrast.
+- **Resampling chains** of five or more passes.
+- **Automate every parameter constantly**; nothing stays still.
+
 ## Hazards
 
 - Complexity without a centre — the listener needs one stable thing to hold on to.

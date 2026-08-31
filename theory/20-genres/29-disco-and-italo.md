@@ -122,6 +122,20 @@ The string glissando into the chorus; the octave bassline; the handclaps on 2
 and 4; the "get up" vocal; the filter sweep; the breakdown to bass and drums;
 the key change for the final chorus; the cowbell.
 
+## Signature techniques
+
+- **Octave 8ths in the bass** — root, octave, root, octave — is the definitive
+  gesture.
+- **String lines rise into sections** and glissando across transitions.
+- **The break**: strip to bass and drums for 8–16 bars. This is the passage that
+  hip-hop and house were built on.
+- **16th-note guitar chank** interlocking with a second guitar.
+- **Play it, do not program it** — slides, ghost notes and dynamics in the bass
+  are the difference between disco and generic four-to-the-floor.
+- **Horn and string stabs on offbeats**, arranged in real 3- and 4-part harmony.
+- **Key change for the final section.**
+- **Do not master it loud.** The genre needs dynamic range.
+
 ## Hazards
 
 - Programming the bassline with no dynamics or slides.

@@ -118,6 +118,17 @@ ride:   x - x | x - x | x - x | x - x
 - The bent, non-tempered pitch → all expressive vocal performance in popular
   music.
 
+## Signature techniques
+
+- **Bend into the blue notes.** The third, fifth and seventh are bent 20–50
+  cents; quantised 12-TET pitches lose the genre entirely.
+- **Call and response every 4 bars** — the 12-bar form is three of them.
+- **AAB lyric form**: line one, line one again, then the punchline.
+- **Dominant 7ths on every degree**, including the tonic.
+- **Repetition with variation** — the same lick answered slightly differently.
+- **Space.** The gaps between phrases are where the form breathes.
+- **The turnaround** in bar 12 sends the form round again.
+
 ## Hazards
 
 - Playing it perfectly in tune and perfectly on the grid.

@@ -119,6 +119,20 @@ The gated snare; the tom fill into the chorus; the neon/car/sunset framing; the
 saxophone solo; the spoken-word movie sample; the key change for the last
 chorus; the arpeggio that never stops.
 
+## Signature techniques
+
+- **Gated reverb on the snare** — a big bright reverb hard-gated at 200–400 ms.
+- **The arp never stops.** A 16th-note pluck through a dotted-8th delay is the
+  motion of the whole track.
+- **Chorus on everything.** It is period-correct and it is the sound.
+- **Octave-jumping bass** in driving 8ths or 16ths, with a short filter envelope
+  per note.
+- **Tom fills descending** into every chorus.
+- **Vibrato applied late** in a held note, never from the start.
+- **Do not over-master.** The era did not sound loud; leave dynamic range and
+  roll off above 15 kHz.
+- **Simple minor loops** — sophistication undercuts the nostalgia.
+
 ## Hazards
 
 - Modern, clean production — it undercuts the aesthetic.

@@ -107,6 +107,23 @@ The pizzicato string melody; the 808 slide down at the end of every 4 bars; the
 dark bell loop; the "beat switch" halfway; the sample of a well-known melody
 re-harmonised in minor.
 
+## Signature techniques
+
+- **The 808 is the composition.** Write the sliding bass line first, then build
+  the kick pattern to mark its attacks.
+- **Every note glides.** Continuous portamento between 808 notes is the genre;
+  an 808 that does not slide is trap.
+- **The kick pattern is deliberately irregular** — it follows the 808, not a
+  fixed grid.
+- **Sparse melodic loops.** One 2-bar phrase, played with long gaps, drenched in
+  dark reverb.
+- **Cold mixing**: roll off warmth at 200–400 Hz, keep the top glassy rather than
+  bright, no reverb on the drums.
+- **Scales with a b2 or an augmented second** supply the menace — Phrygian,
+  harmonic minor, Hungarian minor.
+- **Silence carries the vocal.** The beat is arranged around what the voice
+  needs, not the other way round.
+
 ## Hazards
 
 - An 808 that does not slide — it becomes trap.

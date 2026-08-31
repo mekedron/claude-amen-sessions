@@ -120,6 +120,23 @@ the song.
 - Modern metal is grid-tight; classic rock breathes. Choose deliberately.
 - Vocals: rock vocals sit *in* the band, not floating above it like pop.
 
+## Signature techniques
+
+- **Double-track the rhythm guitars** — two separate performances panned hard
+  left and right. This is the single biggest factor in a "big" guitar sound.
+- **Power chords survive distortion** because they contain no third;
+  intermodulation would turn thirds to mud.
+- **Palm muting as an articulation grid** — the chug pattern is the riff's
+  rhythm.
+- **The riff is the song.** Sections are different riffs, not the same groove
+  with different chords.
+- **Dynamics create heaviness.** A quiet verse is what makes a chorus heavy;
+  constant intensity reads as flat.
+- **Crash on the downbeat of each new section** is the primary transition marker.
+- **Modal cadences**: bVII → I instead of V → I.
+- **The breakdown** — halftime, syncopated, lowest-tuned — is a physical device,
+  placed once.
+
 ## Hazards
 
 - Guitars panned centre — thin and cluttered.

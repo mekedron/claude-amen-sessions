@@ -146,6 +146,23 @@ hat:    x - x x | - x - x | x - x x | - x - x
 - Analogue imperfection: tape saturation, spring reverb, slightly unstable
   delay times.
 
+## Signature techniques
+
+- **Leave beat 1 empty.** The one drop puts kick and rim together on beat 3;
+  the bass arrives late and plays around the beat.
+- **The skank is short and dry** — no sustain, no reverb, high-passed, almost
+  inaudible soloed and essential in context.
+- **The bass is the loudest melodic element** and is deliberately dark — rolled
+  off above 800 Hz, no definition boost.
+- **Dub arranging is performance**: mute and unmute parts live; drums and bass
+  are the constant and everything else appears and vanishes.
+- **Effect throws.** Send one snare hit or one word to a long echo, then close
+  the send.
+- **Push the delay feedback into self-oscillation**, then pull it back.
+- **Sweep a high-pass across the whole mix** as a transition.
+- **Riddim thinking**: the instrumental is the composition, and many vocals may
+  ride it.
+
 ## Hazards
 
 - Playing on beat 1 in a one-drop.

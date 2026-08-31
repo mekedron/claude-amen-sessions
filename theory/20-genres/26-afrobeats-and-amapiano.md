@@ -129,6 +129,24 @@ the downbeat — this ambiguity is the point, not a problem to be resolved.
   weight genres — except for the amapiano log drum, which is the exception.
 - Keep the mix warm and slightly soft; harshness at 3–5 kHz is out of place.
 
+## Signature techniques
+
+- **Many quiet layers, not few loud ones.** Ten to twenty percussion elements at
+  −18 to −25 dB, each on a different subdivision.
+- **Swing unevenly.** These grooves sit between straight and triplet, around
+  56–60%, and not applied uniformly to every part.
+- **The kick is soft.** It anchors without dominating; the percussion carries the
+  energy.
+- **Polyrhythm as structure**: layers on 3-, 4- and 6-step cycles over a 12-step
+  bar, so the same music can be heard "in 3" or "in 4".
+- **The log drum is bass, percussion and hook at once** — a pitched sine with a
+  fast downward pitch envelope, playing a syncopated melodic riff.
+- **Amapiano is patient.** 5–8 minutes, slow accumulation, closer to deep house
+  than to pop.
+- **Guitar plays a highlife arpeggio figure**, clean and bright, rather than
+  chords.
+- **Group vocal responses** answer every lead phrase.
+
 ## Hazards
 
 - Treating polyrhythm as decoration rather than structure.

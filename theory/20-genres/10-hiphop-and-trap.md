@@ -130,6 +130,22 @@ The hi-hat triplet roll before the hook; the "beat drops out for the last line";
 the pitched-up vocal ad-lib; the 808 slide down at the end of a phrase; the
 dark bell melody; the producer tag at bar 1.
 
+## Signature techniques
+
+- **Leave 300 Hz–3 kHz empty** for the voice. Melodic parts sit above it or are
+  filtered out of it.
+- **Hat rolls are the melody of the drums**: change the subdivision every bar or
+  half-bar, and vary pitch, pan and decay per hit.
+- **808 glides**, 40–150 ms, are how the bass phrases — the slide between notes
+  carries more identity than the notes.
+- **Chop, do not loop.** Slice a sample by transient and re-sequence it; keep
+  the kick and snare slices in place and scramble the ghost slices.
+- **Filter the whole sample** rather than EQ'ing its parts — a low-passed loop
+  under clean drums is the boom-bap method.
+- **Beat switch**: change the entire instrumental halfway through.
+- **Space over layers.** A trap beat with five elements is a full production.
+- **Swing and lay back**: 54–62% swing, snare 10–20 ms late, in boom bap.
+
 ## Hazards
 
 - A busy melody competing with the vocal.

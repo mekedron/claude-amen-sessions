@@ -147,6 +147,7 @@ everything at once is not experimental, it is noise.
 - [`08-sound-design-recipes.md`](30-patterns/08-sound-design-recipes.md) — Sound Design Recipes
 - [`09-humanization-and-groove.md`](30-patterns/09-humanization-and-groove.md) — Humanisation and Groove
 - [`10-arrangement-templates.md`](30-patterns/10-arrangement-templates.md) — Arrangement Templates
+- [`11-signature-techniques.md`](30-patterns/11-signature-techniques.md) — Signature Techniques — Gesture, Not Just Notes
 
 ### `40-reference/` — Reference — the numbers
 
@@ -159,5 +160,19 @@ everything at once is not experimental, it is noise.
 ### `90-memories/` — Memories — what has been learned about this project
 
 - [`README.md`](90-memories/README.md) — Memories
+- [`a-chord-must-not-arrive-as-one-event.md`](90-memories/a-chord-must-not-arrive-as-one-event.md) — a-chord-must-not-arrive-as-one-event.md
+- [`an-open-hat-must-end-before-the-next-one.md`](90-memories/an-open-hat-must-end-before-the-next-one.md) — an-open-hat-must-end-before-the-next-one.md
+- [`bar-rendered-parts-must-overhang.md`](90-memories/bar-rendered-parts-must-overhang.md) — bar-rendered-parts-must-overhang.md
+- [`bells-are-not-a-default-top-layer.md`](90-memories/bells-are-not-a-default-top-layer.md) — bells-are-not-a-default-top-layer.md
+- [`dnb-bass-is-gestures-not-notes.md`](90-memories/dnb-bass-is-gestures-not-notes.md) — dnb-bass-is-gestures-not-notes.md
+- [`fm-index-turns-a-rhodes-into-a-bell.md`](90-memories/fm-index-turns-a-rhodes-into-a-bell.md) — fm-index-turns-a-rhodes-into-a-bell.md
+- [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
+- [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md
+- [`neurofunk-bass-is-a-dark-reese.md`](90-memories/neurofunk-bass-is-a-dark-reese.md) — neurofunk-bass-is-a-dark-reese.md
+- [`pitched-metal-reads-as-cheerful.md`](90-memories/pitched-metal-reads-as-cheerful.md) — pitched-metal-reads-as-cheerful.md
+- [`section-contrast-belongs-in-level.md`](90-memories/section-contrast-belongs-in-level.md) — section-contrast-belongs-in-level.md
+- [`smoothers-return-tiny-negatives.md`](90-memories/smoothers-return-tiny-negatives.md) — smoothers-return-tiny-negatives.md
+- [`struck-metal-needs-modes-not-squares.md`](90-memories/struck-metal-needs-modes-not-squares.md) — struck-metal-needs-modes-not-squares.md
+- [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
 
-**80 files.** Everything is plain Markdown with no external dependencies.
+**95 files.** Everything is plain Markdown with no external dependencies.

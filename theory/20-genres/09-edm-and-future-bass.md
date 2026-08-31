@@ -129,6 +129,25 @@ The one-bar silence; the "drop" that is emptier than the build; the vocal chop
 hook; the supersaw pitch bend; the countdown sample; the reverse crash;
 the "final chorus a semitone up".
 
+## Signature techniques
+
+- **The drop is often sparser than the build.** Contrast, not density, creates
+  the impact.
+- **Pitch-modulate the whole chord.** A tempo-synced LFO or envelope bending a
+  supersaw chord ±10–50 cents is the future-bass signature.
+- **Multiband upward compression** (OTT-style) at 30–60% is what makes the
+  chords sound dense and "finished".
+- **Vocal chops as an instrument**: map syllables across a keyboard and play the
+  progression with them, formant-shifted.
+- **Sidechain is the sound, not a fix.** The breathing pump is a musical
+  element.
+- **Build by stacking dimensions** — roll, riser, high-pass, reverb, crowd — then
+  cut everything for the last beat.
+- **The second drop adds one element**, or transposes up, or widens; it is never
+  merely louder.
+- **Layer the lead by frequency band**: sub layer, body layer, air layer, all
+  playing the same notes.
+
 ## Hazards
 
 - A build with no release, or a drop with no build.

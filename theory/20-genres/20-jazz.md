@@ -142,6 +142,19 @@ chromatic approach — not from running scales.
   Vary velocities enormously, place the bass slightly ahead, the drums slightly
   behind, and never repeat a comping rhythm exactly.
 
+## Signature techniques
+
+- **Comp irregularly.** Do not play on every beat; anticipate the "and" of 4 and
+  the "and" of 2, and leave space when the soloist plays.
+- **Guide tones over chord-scales.** Follow the 3rds and 7ths through the
+  changes; they resolve by half-step and they make the harmony legible.
+- **Enclosure**: approach a target note from above and below before landing.
+- **Chromatic approach into every new root** in the walking bass, on beat 4.
+- **Rootless voicings** so the bass owns the root.
+- **Swing flattens as tempo rises** — near-triplet at 120, nearly even at 300.
+- **Bass ahead, drums behind.** That tension is the swing.
+- **Motivic development beats scale-running** — state, sequence, invert, fragment.
+
 ## Hazards
 
 - Perfectly quantised swing — the feel comes from the deviation.

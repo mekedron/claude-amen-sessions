@@ -133,6 +133,22 @@ The species discipline, compressed:
    between, with attention to doubling and weight.
 8. Vary dynamics constantly — a flat dynamic is the giveaway of machine writing.
 
+## Signature techniques
+
+- **Voice-lead by minimal motion**, with contrary motion between the outer parts.
+- **Suspensions and passing tones** generate the line's tension, not the chords
+  themselves.
+- **Phrase in periods and sentences** — question and answer, or statement,
+  restatement, development, cadence.
+- **Cadences punctuate.** Half cadence ends an antecedent; authentic cadence
+  closes a sentence; deceptive cadence extends one.
+- **Orchestrate by weight, not by instrument count** — brass outweighs woodwind
+  outweighs strings at equal dynamics.
+- **Doubling at the octave strengthens; unison doubling changes timbre.**
+- **Tutti is only powerful if rare.**
+- **Dynamics and articulation vary constantly** — a flat dynamic is the giveaway
+  of machine writing.
+
 ## Hazards
 
 - Parallel fifths and octaves in a texture that is trying to sound contrapuntal.

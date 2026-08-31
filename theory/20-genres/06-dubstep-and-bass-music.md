@@ -120,6 +120,26 @@ The one-bar silence; the sub-drop; the "riddim triplet" pattern; the pitched
 vocal sample saying something ominous; the build with a rising siren; the second
 drop being a different bass patch; the "growl that says a word".
 
+## Signature techniques
+
+- **The LFO rate is the composition.** One held note; change the wobble rate
+  every 1 or 2 bars (1/4 → 1/8 → 1/8T → 1/16 → 1/32). The arrangement of a drop
+  *is* the sequence of rates.
+- **Call and response inside the drop.** Two bars of a gesture, two bars of its
+  variation, repeated with escalation. A drop that plays one 2-bar loop sixteen
+  times has no internal structure.
+- **Formant sweeps make it "talk".** Two band-pass filters moved between vowel
+  pairs across a bar — "ee"→"ah"→"oh" — over a growl source.
+- **Rhythmic gating.** A sustained bass chopped by a 16th-note gate with shaped
+  attack/release per slice, rather than re-triggered notes.
+- **Space is a parameter.** The drums are sparse *on purpose*; the silence
+  between kick and snare is where the bass lives.
+- **Half-time reading.** Everything is written at 140 and felt at 70; the bass
+  phrases in 2-bar units against that slow pulse.
+- **Multiband everything.** Split at ~100 Hz: clean mono sub below, all
+  modulation and distortion above.
+- **The one-beat silence before the drop** is structural, not decorative.
+
 ## Hazards
 
 - A busy drum pattern — dubstep drums are minimal by design.

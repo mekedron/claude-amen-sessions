@@ -113,6 +113,21 @@ generative patches.
 - **Silence is allowed.** Real silence, several seconds long.
 - Avoid obvious loop points — vary tails and use long crossfades.
 
+## Signature techniques
+
+- **Layer cycles of coprime length** (17 s, 23 s, 31 s) so the combination never
+  repeats.
+- **Fades are the primary tool.** A 60-second fade-in is normal; nothing arrives
+  suddenly unless the suddenness is the event.
+- **Modulate at 0.01–0.1 Hz.** Everything moves, imperceptibly.
+- **Reverb as the instrument**, not as a coating — 10–60 s decays, shimmer with
+  pitch-shifted feedback, convolution with non-room impulses.
+- **Extreme time-stretch** turns any 3-second source into a 5-minute bed.
+- **Just-intoned drift.** Sustained tones a few cents apart beat slowly; this is
+  the one genre where microtonal detuning is fully available.
+- **One chord for minutes.** Add and remove notes from it rather than changing it.
+- **Preserve dynamics** — do not compress toward a modern loudness target.
+
 ## Hazards
 
 - Static in the wrong way: no change over 10 minutes is boredom, not ambience.
