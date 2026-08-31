@@ -45,48 +45,63 @@ Before writing music:
 4. Check the hazards list at the end of the relevant genre and foundation files
    before calling anything finished.
 
-## Rule 3 — build the sound the track needs; never settle for one that exists
+## Rule 3 — know what exists, then think critically about the gap
 
-**Synthesising a new sound is the default, not the last resort.** The engine's
-existing synths were each written to satisfy one particular track's
-requirements. A function whose name matches what you need is not evidence that
-its sound fits — `pad`, `bell` or `bass` was tuned for a piece with a different
-tempo, key, register, density and genre.
+Always start by reading the engine's existing sounds. Knowing the palette is the
+first step, not something to skip — you cannot judge what a track needs without
+knowing what is already there, and half the time an existing sound genuinely is
+the right answer.
 
-Reaching for an existing sound because it is there produces tracks that all
-sound the same. Adding new synths, new variants and new parameters to the engine
-is expected work, not scope creep.
+**What must not happen is unreflective reuse.** Each synth in the engine was
+written to satisfy one particular track's requirements. A function whose name
+matches what you need is not evidence that its sound fits: `pad`, `bell` or
+`bass` was tuned for a piece at a different tempo, in a different register, at a
+different density, in a different genre. Picking it because the name matches, or
+because it is there, is how every track ends up sounding the same.
 
-### Before using any existing sound, audit it against this track
+So the sequence is: **survey → compare → name the gap → decide.**
 
-State the answers to yourself; do not reuse on autopilot.
+### Survey
 
-1. **Role** — what job does this sound do in *this* arrangement, and does the
-   existing one actually do that job, or merely a similar-sounding one?
-2. **Register** — does it sit where this arrangement has room, or does it
-   collide with the bass, the lead or the vocal?
-3. **Envelope** — do its attack and decay fit this tempo? A 400 ms decay that
-   worked at 90 BPM smears at 174.
-4. **Timbre and genre** — does its harmonic content match what the genre file
-   calls for, or is it borrowed from a different style?
-5. **Density** — how many elements already occupy its band?
+Look at what the engine already has for this role. Read what it actually does —
+its oscillators, envelope, filter, register — not just its name.
 
-If any answer is "no" or "not quite": **write a new synth, or add parameters to
-the existing one so both callers get what they need.** Never bend the
-arrangement to fit a sound that is merely available.
+### Compare, and say what is different
 
-### When you do reuse
+For the closest candidates, articulate the **delta** between what they do and
+what this track needs. Be specific; "close enough" is not an analysis.
 
-Reuse deliberately and say so — name which existing sounds you kept and why
-they fit this track's requirements. Silent reuse is the failure mode this rule
-exists to prevent.
+| Dimension | The question |
+|---|---|
+| **Role** | Does it do *this* job in *this* arrangement, or a similar-sounding one? |
+| **Register** | Does it sit where this arrangement has room, or collide with the bass, lead or vocal? |
+| **Envelope** | Do its attack and decay fit this tempo? A 400 ms decay that worked at 90 BPM smears at 174 |
+| **Timbre and genre** | Does its harmonic content match what the genre file calls for, or is it borrowed from another style? |
+| **Density** | How many elements already occupy its band? |
+
+State the conclusion in words: *"`rhodes` is close, but its decay is too long for
+174 and it has no top end above 4 kHz, which this arrangement needs."* That
+sentence is the point of the rule.
+
+### Decide, and justify either way
+
+| Verdict | Action |
+|---|---|
+| It genuinely fits | **Use it.** Say which sound and why it fits this track |
+| It is close, and the gap is a parameter | **Add the parameter**, so both the old and the new caller get what they need |
+| It is close, but the gap is structural | **Write a variant** next to it |
+| Nothing fits | **Build a new synth.** This is expected work, not scope creep |
+
+Never bend the arrangement to fit a sound that happens to be available. If the
+track wants something the engine cannot do, the engine grows.
 
 ### Where to start a new sound
 
 `theory/10-instruments/` gives the signal path and rebuild recipe for the
-machines that defined each genre, and `theory/30-patterns/08-sound-design-recipes.md`
-gives the generic constructions. Build from those rather than from whatever the
-last track happened to leave behind.
+machines that defined each genre, and
+`theory/30-patterns/08-sound-design-recipes.md` gives the generic constructions.
+Build from those rather than from whatever the last track happened to leave
+behind.
 
 ## Rule 4 — house style
 
