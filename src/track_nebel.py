@@ -39,12 +39,18 @@ s = Session(208, tail=6.0)
 
 def chord_of(b): return CHORDS[(b // 2) % len(CHORDS)]
 
-def floor(b, gain=1.0, steps_=(0, 4, 8, 12), lpf=None, rum=0.55, drive=4.5,
-          decay=0.22, grit=0.12):
+def floor(b, gain=1.0, steps_=(0, 4, 8, 12), lpf=None, rum=0.55, drive=2.2,
+          decay=0.26, grit=0.0):
+    """A dub techno kick is soft. At drive 4.5 on a 58 Hz note the tanh turns
+    the sine into something close to a square wave, and its harmonics sit
+    close enough together to read as a buzz rather than as a kick - which is
+    what the listener heard as crackle. 2.2 into a 2.2 kHz lowpass keeps the
+    weight and loses the edge; this record has no use for a click."""
     for st in steps_:
         t = s.pos(b, st)
         s.hit(t)
-        k = techkick(dur_steps=2.6, tune=ROOT, drive=drive, decay=decay, grit=grit)
+        k = techkick(dur_steps=2.6, tune=ROOT, drive=drive, decay=decay, grit=grit,
+                     tone=2200, mid=0.7, click=0.5)
         if lpf:
             k = lp(k, lpf)
         s.place(t, k, gain, 'drums')
@@ -94,7 +100,7 @@ for b in range(2, 32, 4):
 for b in range(16, 32):
     u = (b - 16) / 15
     floor(b, gain=0.35 + 0.45 * u, lpf=200 + 300 * (b - 16) if b < 26 else None,
-          rum=0.3 + 0.3 * u, grit=0.02)
+          rum=0.3 + 0.3 * u)
     if b >= 22:
         tops(b, gain=0.4 + 0.4 * u, closed=b >= 26, opens=(6, 14))
 s.place(s.pos(24), steam(8, gain=0.35), 1.0, 'fx')
@@ -146,7 +152,7 @@ s.place(s.pos(116), riser(48, gain=0.7, f0=140, f1=1400), 1.0, 'fx')
 # ================= STROM: 120-159 =================
 for b in range(120, 160):
     ph = b - 120
-    floor(b, gain=1.0, rum=0.9, drive=5.0, grit=0.18)
+    floor(b, gain=1.0, rum=0.9, drive=2.6)
     tops(b, gain=1.0, claps=(4, 12))
     chords(b, gain=1.05, steps_=(2, 6, 10, 14), cutoff=1900, echo=3.0, times=8, fb=0.62)
     if ph == 31:                                        # the one fill
@@ -168,7 +174,7 @@ for b in (128, 144):
 for b in range(160, 184):
     ph = b - 160
     u = ph / 23
-    floor(b, gain=1.0 - 0.25 * u, rum=0.9 - 0.2 * u, drive=4.8)
+    floor(b, gain=1.0 - 0.25 * u, rum=0.9 - 0.2 * u, drive=2.5)
     tops(b, gain=0.9 - 0.4 * u, claps=(4, 12) if ph < 12 else (12,),
          closed=ph < 16, opens=(6, 14))
     chords(b, gain=1.0, steps_=(2, 6, 10, 14) if ph < 12 else (2, 10),
@@ -187,7 +193,7 @@ for b in range(184, 208):
     u = ph / 23
     if ph < 14:
         floor(b, gain=0.75 - 0.6 * u, steps_=(0, 4, 8, 12) if ph < 8 else (0, 8),
-              lpf=3000 - 180 * ph, rum=0.7 - 0.5 * u, grit=0.0)
+              lpf=3000 - 180 * ph, rum=0.7 - 0.5 * u)
     if ph < 10:
         tops(b, gain=0.5 - 0.4 * u, closed=ph < 5, opens=(6, 14) if ph < 8 else ())
 for b in range(184, 206, 4):
@@ -212,8 +218,8 @@ for b in ('drums', 'air', 'fx'):
 for b in s.bus:
     s.bus[b] = mono_below(s.bus[b], 150)
 
-GAINS = {'drums': 0.98, 'rumble': 0.54, 'acid': 0.72, 'chord': 1.15,
-         'music': 0.50, 'air': 0.60, 'fx': 0.50}
+GAINS = {'drums': 0.86, 'rumble': 0.70, 'acid': 0.78, 'chord': 1.22,
+         'music': 0.52, 'air': 0.62, 'fx': 0.52}
 s.report(GAINS)
 s.render('acid_nebel_130.wav', drive=1.0, duck=0.20, clip=1.10, limit=0.94,
          peak=0.95, fade=4.0, gains=GAINS)

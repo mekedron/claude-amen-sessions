@@ -107,7 +107,15 @@ def rumble(dur_steps=8, tune=43.65, decay=1.1, tone=210, drive=2.6, tilt=48,
     n, _ = steps(dur_steps)
     r = r[:n] if len(r) >= n else np.pad(r, ((0, n - len(r)), (0, 0)))
     r = bandpass(r, tilt, tone * 2.0)
-    r = np.tanh(drive * r * 3.2) / np.tanh(drive)
+    # Normalise BEFORE the drive. The convolution leaves peaks around 6.0, so
+    # a bare tanh() here is not saturation - it is hard-clipping a reverb
+    # tail, and a reverb tail is noise. Clipped noise crackles like a fire,
+    # which is exactly what it sounded like.
+    r = r / max(float(np.abs(r).max()), 1e-9) * 0.85
+    r = np.tanh(drive * r) / np.tanh(drive)
+    # And a rumble is a rumble: whatever the drive put up top is not part of
+    # it. Everything above the growl goes.
+    r = lp(r, tone * 1.5, order=4)
     t = np.arange(n) / SR
     return (r * np.exp(-t / (decay * 0.85))[:, None] * adsr(n, a=0.004, r=0.05)[:, None]
             * gain * 0.55).astype(np.float32)
