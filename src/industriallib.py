@@ -308,12 +308,21 @@ def _line_envelopes(pattern, n, decay, cut_decay, acc_amt):
 
 def acidline(pattern, dur_bars=1, f_lo=170, f_hi=3800, res=3.2, decay=0.18,
              cut_decay=0.11, drive=3.4, gain=1.0, wave='saw', acc_amt=0.55,
-             bands=9, sub=0.0, base=0.06, low=170):
+             bands=9, sub=0.0, base=0.06, low=170, knob=None):
     """A whole bar of 303 as one continuous monophonic voice. The oscillator
     never restarts, so a slide really slides; accents open the filter further
     and hit harder; the bar goes through one moving resonant lowpass.
 
     pattern: list of (step, note, dur_steps, accent, slide)
+    knob:    the cutoff control, swept across the whole call. Any number of
+             points, interpolated - (0.3, 1.0) opens, (0.3, 1.0, 0.4) opens
+             and closes again. This is the knob a player has their hand on.
+
+    Render a PHRASE per call, not a bar. The oscillator phase is continuous
+    inside one call and restarts between calls, so a line cut into bars and
+    re-rendered every 16 steps has a waveform discontinuity on every bar line
+    - a click, sitting at the top of the spectrum where it is most audible.
+    Eight or sixteen bars at a time, with `knob` doing the movement.
     """
     n = int(round(dur_bars * BAR))
     fs, amp, cut = _line_envelopes(pattern, n, decay, cut_decay, acc_amt)
@@ -323,6 +332,12 @@ def acidline(pattern, dur_bars=1, f_lo=170, f_hi=3800, res=3.2, decay=0.18,
         (2 / np.pi) * sum(np.sin(k * ph) / k for k in range(1, 40, 2)) * 2
     if sub:
         x = x + sub * np.sin(0.5 * ph)
+    if knob is not None:
+        k = np.atleast_1d(np.asarray(knob, dtype=np.float64))
+        if len(k) == 1:
+            cut = cut * k[0]
+        else:
+            cut = cut * np.interp(np.linspace(0, 1, n), np.linspace(0, 1, len(k)), k)
     st = stereo(x * amp)
     out = morph_lp(st, f_lo, f_hi, base + (1 - base) * cut, bands=bands, res=res)
     out = np.tanh(drive * out / (1 + res * 0.45))
