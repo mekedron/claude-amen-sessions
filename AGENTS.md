@@ -372,3 +372,6 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/smoothers-return-tiny-negatives.md
 @theory/90-memories/struck-metal-needs-modes-not-squares.md
 @theory/90-memories/the-felt-pulse-is-in-the-low-band.md
+@theory/90-memories/industrial-techno-measures-too-dark.md
+@theory/90-memories/bass-must-keep-its-own-fundamental.md
+@theory/90-memories/top-end-from-transients-not-wash.md

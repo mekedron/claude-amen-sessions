@@ -174,5 +174,6 @@ everything at once is not experimental, it is noise.
 - [`smoothers-return-tiny-negatives.md`](90-memories/smoothers-return-tiny-negatives.md) — smoothers-return-tiny-negatives.md
 - [`struck-metal-needs-modes-not-squares.md`](90-memories/struck-metal-needs-modes-not-squares.md) — struck-metal-needs-modes-not-squares.md
 - [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
+- [`industrial-techno-measures-too-dark.md`](90-memories/industrial-techno-measures-too-dark.md) — Industrial techno comes out dark, sub-light and wide in the sub
 
 **95 files.** Everything is plain Markdown with no external dependencies.

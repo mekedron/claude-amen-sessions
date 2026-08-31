@@ -874,3 +874,120 @@ def dubdelay(seg, steps_=3.0, times=7, fb=0.62, damp=900, sat=1.4, spread=0.8):
         a = i * d
         out[a:a + len(e)] += e
     return out
+
+
+# ---- the wall ----
+@cached
+def glare(notes, dur_steps=38, gain=1.0, voices=3, detune=17.0, walk=8.0,
+          roll=0.042, f_lo=300.0, f_hi=7200.0, open0=0.06, open1=0.9,
+          curve=1.5, attack=0.32, release=0.30, drive=2.6, bite=0.8,
+          fold_amt=0.22, res=0.30, air=0.5, hpf=250.0, width=1.5, seed=0):
+    """The thing that arrives over the machine and does not stop it.
+
+    An industrial record made entirely of menace has nowhere to go at six in
+    the morning. What lifts a room then is not a breakdown - it is something
+    enormous and consonant landing ON TOP of the kick while the kick keeps
+    going. This is that voice, and it is built from two halves of the engine
+    that already existed separately and never met.
+
+    From `ens()`: the behaviour of a section rather than a chord. The notes
+    enter in pitch order 30-70 ms apart, each voice wanders on its own slow
+    random walk of a few cents and never comes home, and the top of the chord
+    is quieter and sheds first. A block chord - every note on one sample,
+    one envelope, one fixed spectrum - reads as a preset pasted in no matter
+    how good the oscillator is.
+
+    From `acid_hard()`: the material. drive -> EQ -> drive -> fold, so the
+    wall is made of the same distortion as everything else on the record. A
+    clean supersaw over a driven kick does not sound euphoric, it sounds like
+    two records playing at once.
+
+    And the filter opens across the whole call rather than per note, so the
+    spectrum is still moving after four bars. `open0`/`open1` are where in
+    the bank it starts and ends; ramp them from section to section and the
+    wall grows over thirty bars instead of pulsing every two.
+
+    Render it LONGER than the chord and place it on the chord change: the
+    tails overlap, so the change is voice-led instead of switched. `notes`
+    is a tuple of frequencies - the segment is cached.
+    """
+    n, t = steps(dur_steps, floor=int(0.25 * SR))
+    rs = np.random.RandomState(seed + 977)
+    out = np.zeros((n, 2), dtype=np.float64)
+    order = sorted(range(len(notes)), key=lambda i: notes[i])
+    for k, idx in enumerate(order):
+        f = float(notes[idx])
+        lag = int((roll * k + rs.uniform(0.004, 0.016)) * SR)   # low note first
+        m = n - lag
+        if m < 128:
+            continue
+        w = uniform_filter1d(rs.randn(m), max(int(0.45 * SR), 3))
+        w = w * (walk / max(float(np.abs(w).max()), 1e-9))      # cents, wandering
+        ratio = 2.0 ** ((rs.uniform(-4, 4) + w) / 1200.0)
+        ph = 2 * np.pi * np.cumsum(f * ratio) / SR + rs.rand() * 6.28
+        y = sawstack(ph, f * 1.04, voices=voices, detune=detune,
+                     seed=seed + k * 7, kmax=110)
+        pan = ((k / max(len(order) - 1, 1)) - 0.5) * 1.7 * width
+        ang = (np.clip(pan, -1, 1) + 1) * np.pi / 4
+        lvl = 1.0 / (1 + 0.32 * k)                              # the top is quieter
+        out[lag:, 0] += y * np.cos(ang) * lvl
+        out[lag:, 1] += y * np.sin(ang) * lvl
+    out = (out / max(len(notes), 1) ** 0.7).astype(np.float32)
+
+    env = open0 + (open1 - open0) * (np.linspace(0, 1, n) ** curve)
+    out = morph_lp(out, f_lo, f_hi, env, bands=9, res=res)
+
+    out = np.tanh(drive * out)                                  # drive
+    out = out + bite * bandpass(out, 400, 2600)                 # EQ
+    out = np.tanh(1.6 * out / (1 + bite * 0.5))                 # drive again
+    if fold_amt:
+        out = (1 - fold_amt) * out + fold_amt * fold(out, 1.05 + fold_amt * 0.7)
+    if air:
+        # Mechanism: the amplifier leaning back. It swells with the filter
+        # rather than sitting under it, so something is making the sound.
+        nz = bandpass(np.stack([rs.randn(n), rs.randn(n)], 1).astype(np.float32),
+                      2600, 11000, 2)
+        out = out + nz * (air * 0.055 * env).astype(np.float32)[:, None]
+
+    out = hp(out, hpf, order=2)                                 # off the rumble
+    a = min(int(attack * SR), n // 2)
+    r = min(int(release * SR), n // 2)
+    amp = np.ones(n, dtype=np.float32)
+    amp[:a] = np.linspace(0, 1, a) ** 1.7
+    amp[-r:] *= np.linspace(1, 0, r) ** 1.2
+    return (out * amp[:, None]).astype(np.float32) * gain * 0.5
+
+
+@cached
+def sheet(dur_steps=32, gain=1.0, bands=7, lo=2600.0, hi=12000.0, rate=0.11,
+          drive=1.7, seed=0):
+    """A steel sheet under a slow scrape: the top of the room.
+
+    Every industrial record this project has measured came out with under 2%
+    of its energy above 3 kHz, which on a big rig is a blanket thrown over
+    the whole thing. An air shelf does not fix it - a shelf lifts whatever is
+    already there, and in a genre whose brightest instrument is a closed hat
+    there is nothing there to lift. This puts something there.
+
+    Same construction as `grind()` two octaves up, with one deliberate
+    difference: `grind` tunes its bands to the root and is therefore pitched,
+    and a bright ringing pitched thing above 3 kHz reads as a glockenspiel
+    and makes a dark record sound cheerful. These bands are tuned to nothing.
+    An untuned bright object is a room; a tuned one is a toy.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 733)
+    nz = np.stack([rs.randn(n), rs.randn(n)], 1).astype(np.float32)
+    out = np.zeros((n, 2), dtype=np.float32)
+    for i, f in enumerate(np.geomspace(lo, hi, bands)):
+        b = bandpass(nz, f * 0.84, f * 1.19, order=2)
+        breath = 0.22 + 0.78 * (0.5 - 0.5 * np.cos(
+            2 * np.pi * rate * (0.5 + 0.42 * i) * t + rs.rand() * 6))
+        out += b * (breath / (1 + i * 0.28)).astype(np.float32)[:, None]
+    out = np.tanh(drive * out * 2.4) / np.tanh(drive)
+    out = hp(out, lo * 0.8, order=2)
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0017))
+    env = np.ones(n, dtype=np.float32)
+    a = min(int(0.25 * SR), n // 2); r = min(int(0.35 * SR), n // 2)
+    env[:a] = np.linspace(0, 1, a); env[-r:] *= np.linspace(1, 0, r)
+    return out * env[:, None] * gain * 0.22
