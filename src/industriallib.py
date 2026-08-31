@@ -33,6 +33,18 @@ from scipy.signal import fftconvolve
 BAR, STEP = core.set_grid(bpm=152)
 BPM = core.BPM
 
+def set_tempo(bpm, beats=4):
+    """Re-grid the module. 152 is this genre's tempo and the import sets it,
+    but the palette is not tied to it - a slower, heavier piece wants the same
+    machine shop. A bare core.set_grid() is not enough: this module keeps its
+    own BAR/STEP, and every cached segment was rendered against the old grid,
+    so both have to move together."""
+    global BAR, STEP, BPM
+    BAR, STEP = core.set_grid(bpm=bpm, beats=beats)
+    BPM = core.BPM
+    core._SEG_CACHE.clear()
+    return BAR, STEP
+
 # The rumble is a bass instrument: it has to move out of the way of the hit
 # that made it, or the two sum into one long smear.
 Session.DUCKED = {'bass': 1.0, 'rumble': 0.9, 'acid': 0.35, 'music': 0.55,
@@ -446,3 +458,153 @@ def stutter(seg, slice_steps=1.0, repeats=4, decay=1.0, accel=1.0):
         piece = head[:step_k] if step_k <= len(head) else np.pad(head, ((0, step_k - len(head)), (0, 0)))
         out.append(piece * (decay ** i))
     return np.concatenate(out).astype(np.float32)
+
+
+# ---- the voices in the shaft ----
+@cached
+def labourchoir(notes, dur_steps=16, gain=1.0, vowel='oh', size=1.25, voices=4,
+                spread=20.0, rasp=0.16, sag=35.0, breath=0.14, attack=0.5, seed=0):
+    """A choir of men nine hours into a shift.
+
+    `size` divides the formants. A vocal tract scaled up does not read as a
+    lower voice, it reads as a BIGGER one - same pitch, larger body - which is
+    how a handful of saw stacks becomes something that belongs in a room the
+    size of a shaft. That single number is most of the grotesque.
+
+    `spread` is how far apart the voices are tuned, in cents, because a crowd
+    does not agree; `sag` is how many cents the whole choir drifts flat across
+    the phrase, because nobody is holding it up any more; `rasp` is the edge on
+    a voice that has spent the day shouting over machinery."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 301)
+    u = t / max(t[-1], 1e-9)
+    drift = 2 ** (-(sag / 1200) * u ** 1.4)                  # the shift wearing them down
+    # Width comes from spreading the singers across the field, never from a
+    # Haas delay: this choir lives at 200-800 Hz and a 1.6 ms delay puts its
+    # first comb notch at 312 Hz, straight through the middle of it. Detuned
+    # voices at different pan positions are wide and survive a mono sum.
+    l = np.zeros(n); r = np.zeros(n)
+    total = max(voices * len(notes), 1)
+    idx = 0
+    for f in notes:
+        for v in range(voices):
+            cents = spread * (v - (voices - 1) / 2) / max((voices - 1) / 2, 1)
+            cents += rs.uniform(-spread * 0.35, spread * 0.35)
+            vib = 1 + rs.uniform(0.004, 0.011) * np.sin(
+                2 * np.pi * rs.uniform(4.1, 5.9) * t + rs.rand() * 6) * np.minimum(t / 0.6, 1)
+            ph = 2 * np.pi * np.cumsum(f * 2 ** (cents / 1200) * drift * vib) / SR
+            sig = saw_ph(ph, f * 1.6, kmax=30)
+            ang = ((idx / max(total - 1, 1)) * 1.7 - 0.85 + 1) * np.pi / 4
+            l += sig * np.cos(ang); r += sig * np.sin(ang)
+            idx += 1
+    st = (np.stack([l, r], 1) / total).astype(np.float32)
+    out = sum(bandpass(st, fc / size * 0.68, fc / size * 1.42) * g
+              for fc, g in zip(FORMANTS[vowel], (1.0, 0.75, 0.4)))
+    if breath:
+        out = out + breath * bandpass(stereo(rs.randn(n)), 600, 4200) * \
+            (0.35 + 0.65 * (0.5 - 0.5 * np.cos(2 * np.pi * 0.35 * t)))[:, None] * 0.35
+    if rasp:
+        out = (1 - rasp) * out + rasp * np.tanh(3.5 * out)
+    a = min(int(attack * SR), n // 2); r = min(int(0.6 * SR), n // 2)
+    env = np.ones(n); env[:a] = np.linspace(0, 1, a) ** 1.6; env[-r:] *= np.linspace(1, 0, r) ** 0.8
+    return out * env[:, None] * gain * 1.5
+
+@cached
+def groan(note=48, dur_steps=12, gain=1.0, fall=2.5, vowel='uh', size=1.35,
+          rasp=0.28, seed=0):
+    """One voice giving up. The pitch sags a couple of semitones across the
+    note and the vibrato widens as it goes - a groan IS a falling intonation,
+    and that is the whole difference between a groan and a held note."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 331)
+    u = t / max(t[-1], 1e-9)
+    f = midi(note) * 2 ** (-fall / 12 * u ** 2.2)
+    vib = 1 + (0.004 + 0.016 * u) * np.sin(2 * np.pi * (4.4 + 1.2 * u) * t)
+    ph = 2 * np.pi * np.cumsum(f * vib) / SR
+    x = saw_ph(ph, midi(note) * 1.8, kmax=26) + rs.randn(n) * 0.10
+    st = stereo(x)
+    out = sum(bandpass(st, fc / size * 0.66, fc / size * 1.45) * g
+              for fc, g in zip(FORMANTS[vowel], (1.0, 0.8, 0.45)))
+    out = (1 - rasp) * out + rasp * np.tanh(3.0 * out)
+    env = adsr(n, a=0.12, r=0.45) * (0.55 + 0.45 * np.exp(-u * 1.6))
+    return norm(out * env[:, None], 0.9) * gain * 1.4      # centred: see labourchoir
+
+@cached
+def chant(note=55, dur_steps=2, gain=1.0, vowel='ah', size=1.2, rasp=0.26,
+          voices=3, drop=1.2, seed=0):
+    """One shouted syllable. A work song exists to put a crowd's effort on the
+    same beat as the machine; this is the syllable, and the arrangement decides
+    where it lands."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 353)
+    u = t / max(t[-1], 1e-9)
+    f0 = midi(note)
+    l = np.zeros(n); r = np.zeros(n)
+    for v in range(voices):
+        det = 2 ** (rs.uniform(-22, 22) / 1200)
+        f = f0 * det * (1 + 0.05 * np.exp(-t / 0.03)) * 2 ** (-drop / 12 * u ** 3)
+        sig = saw_ph(2 * np.pi * np.cumsum(f) / SR, f0 * 1.7, kmax=24)
+        ang = ((v / max(voices - 1, 1)) * 1.5 - 0.75 + 1) * np.pi / 4
+        l += sig * np.cos(ang); r += sig * np.sin(ang)
+    noise = rs.randn(n) * 0.11
+    st = (np.stack([l + noise, r + noise], 1) / voices).astype(np.float32)
+    out = sum(bandpass(st, fc / size * 0.7, fc / size * 1.4) * g
+              for fc, g in zip(FORMANTS[vowel], (1.0, 0.85, 0.5)))
+    out = np.tanh((1 + rasp * 2.2) * out)   # enough edge to sound shouted, not clipped
+    env = np.exp(-t / (0.09 * max(dur_steps / 2, 1))) * adsr(n, a=0.006, r=0.05)
+    return out * env[:, None] * gain * 0.9                 # centred: see labourchoir
+
+# ---- the megastructure ----
+@cached
+def press(dur_steps=16, tune=32.7, gain=1.0, metal=1.0, room=1.0, seed=0):
+    """The big press. An octave under the forge hammer, with the structure
+    ringing for a second and a half afterwards - the sound is not the impact,
+    it is the building answering it."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 401)
+    f = tune * (1 + 6.5 * np.exp(-t / 0.02))
+    thud = np.tanh(3.5 * np.sin(2 * np.pi * np.cumsum(f) / SR)) * np.exp(-t / 0.45)
+    out = stereo(thud)
+    if metal:
+        k = int(0.018 * SR)
+        m = np.zeros(n)
+        for p, a, d in ((1.0, 1.0, 1.5), (2.31, 0.62, 1.0), (3.77, 0.42, 0.7),
+                        (5.19, 0.28, 0.45), (8.44, 0.16, 0.3)):
+            m[k:] += a * np.sin(2 * np.pi * 97 * p * t[:n - k]) * np.exp(-t[:n - k] / d)
+        out += metal * bandpass(stereo(np.tanh(1.3 * m)), 150, 7000) * 0.45
+    if room:
+        out += room * 0.5 * reverb(lp(out, 2200), decay=2.2, wet=0.9, tone=1500)[:n]
+    return norm(widen(out * adsr(n, a=0.0005, r=0.1)[:, None], 0.9), 0.95) * gain * 0.6
+
+@cached
+def chains(dur_steps=4, gain=1.0, density=26, seed=0):
+    """Chain dragged over steel: a scatter of short inharmonic clinks, never
+    on the grid."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 431)
+    x = np.zeros(n)
+    for _ in range(density):
+        k = int(rs.uniform(0, n * 0.92))
+        m = min(int(rs.uniform(0.004, 0.016) * SR), n - k)
+        if m < 8:
+            continue
+        tt = np.arange(m) / SR
+        f = rs.uniform(900, 4200)
+        x[k:k + m] += (np.sin(2 * np.pi * f * tt) + 0.6 * np.sin(2 * np.pi * f * 1.71 * tt)
+                       + rs.randn(m) * 0.5) * np.exp(-tt / 0.004) * rs.uniform(0.3, 1.0)
+    out = bandpass(stereo(np.tanh(1.8 * x)), 1200, 12000)
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0013))
+    return out * adsr(n, a=0.002, r=0.03)[:, None] * gain * 0.45
+
+@cached
+def bellow(dur_steps=32, gain=1.0, rate=0.55, seed=0):
+    """Ventilation: the lungs of the building. A huge slow breath of filtered
+    noise, so the room is never actually silent."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 457)
+    breath = 0.5 - 0.5 * np.cos(2 * np.pi * rate * t / max(t[-1], 1e-9) * 4)
+    nz = stereo(rs.randn(n))
+    x = morph_lp(nz, 90, 1400, breath * 0.8 + 0.1, bands=6)
+    x = x + lp(nz, 120) * 0.5
+    out = widen(x, 2.2) * (0.3 + 0.7 * breath)[:, None]
+    return out * adsr(n, a=0.5, r=0.8)[:, None] * gain * 0.5
