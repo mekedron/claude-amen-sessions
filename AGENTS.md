@@ -172,9 +172,9 @@ This covers the whole engine, not only synths:
 1. **Existing tracks must still render.** Add parameters with defaults rather
    than changing the meaning of existing ones; keep public signatures working.
    If a change is genuinely breaking, update every caller in the same commit.
-2. **Put it in the right layer.** Anything tempo-agnostic and generally useful
-   goes in `core.py`; a sample's handling goes in `sampler.py`; anything that
-   belongs to one style goes in that genre module.
+2. **Put it in the right layer** — see Rule 5. Abstract machinery goes in
+   `core.py`, sample handling in `sampler.py`, and **sounds never go in the
+   core**; they belong to a genre module or a sound layer.
 3. **Match the surrounding idiom** — the same naming, argument order, gain
    conventions and comment density as the code next to it.
 4. **Document it where the module documents itself** — the module docstring and
@@ -189,7 +189,51 @@ This covers the whole engine, not only synths:
 Report engine changes alongside the musical result: what you added, why the
 track needed it, and what now exists for future pieces to use.
 
-## Rule 5 — memory lives in this repository, never in global memory
+## Rule 5 — the core is machinery; sounds live outside it
+
+**`core.py` holds abstract, reusable apparatus. It does not hold instruments.**
+
+The distinction is between a *tool* and a *taste decision*:
+
+| Belongs in the core | Does not belong in the core |
+|---|---|
+| Oscillator primitives — band-limited saw, square, sine, noise | A named voice: `bell`, `pad`, `rhodes`, `piano`, `diva`, `hoover`, `acid` |
+| Filters, envelopes, waveshapers, resamplers | A particular kick, snare, cowbell or 808 |
+| Effects: reverb, delay, chorus, distortion, transient shaping | A patch that is "the lead for that one track" |
+| The sequencer, buses, the mix-down and limiter | Anything whose parameters were chosen by ear for one piece |
+| Sample loading, slicing, retiming, onset detection | Anything genre-specific |
+| Analysis and verification helpers | |
+
+**The test:** *would this be useful in a track of any genre, or is it a specific
+timbre somebody chose?* Machinery is the first; a sound is the second. A sound
+is a **combination of core primitives with tuned constants** — that combination
+belongs in a sound layer, not in the engine.
+
+### Why this matters, concretely
+
+A voice that sits in `core.py` is imported by every module and is therefore
+reached for by default, whether or not the track asked for it. That is how
+`bell()` ended up sprinkled across many tracks
+([[bells-are-not-a-default-top-layer]]). Keeping sounds out of the core is what
+makes Rule 3's question — *does this track actually want this?* — a real
+decision instead of a reflex.
+
+### Where sounds go
+
+- A sound used by one style goes in that style's module.
+- A sound genuinely shared across styles goes in a dedicated sound layer beside
+  the genre modules — not in `core.py`.
+- A sound built for one piece can live in that piece's script until a second
+  piece needs it.
+
+### The current state
+
+`core.py` still contains named voices. That is known debt, scheduled for a
+refactor that will move them out. **Do not add to it.** New sounds go in a genre
+module or a sound layer from the start, even while the old ones are still in
+place, so the refactor only has to move what is already there.
+
+## Rule 6 — memory lives in this repository, never in global memory
 
 **Do not write to the harness's global or per-project memory directory.** Notes
 kept outside the repository are invisible to the user, absent from git, lost to
@@ -214,7 +258,7 @@ them.
 A new memory file needs its `@` import added to the list at the bottom of this
 file in the same commit (Rule 1), or the next session will not load it.
 
-## Rule 6 — house style
+## Rule 7 — house style
 
 - Conventions used throughout the library: MIDI note numbers for pitch,
   semitone offsets for scales and chords, a 16-step bar for rhythm,
