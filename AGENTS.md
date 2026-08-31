@@ -296,6 +296,7 @@ Everything below is loaded into every session by the harness.
 @theory/00-foundations/17-mastering.md
 @theory/00-foundations/18-psychoacoustics-and-tension.md
 @theory/00-foundations/19-vocals-and-lyrics.md
+@theory/00-foundations/20-spectral-arrangement.md
 @theory/10-instruments/01-overview.md
 @theory/10-instruments/02-analog-monosynths.md
 @theory/10-instruments/03-analog-polysynths.md
@@ -375,6 +376,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/pitched-metal-reads-as-cheerful.md
 @theory/90-memories/section-contrast-belongs-in-level.md
 @theory/90-memories/smoothers-return-tiny-negatives.md
+@theory/90-memories/spectrum-should-not-be-full-all-the-time.md
 @theory/90-memories/struck-metal-needs-modes-not-squares.md
 @theory/90-memories/the-felt-pulse-is-in-the-low-band.md
 @theory/90-memories/top-end-from-transients-not-wash.md

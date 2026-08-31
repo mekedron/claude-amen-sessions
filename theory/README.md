@@ -83,6 +83,7 @@ everything at once is not experimental, it is noise.
 - [`17-mastering.md`](00-foundations/17-mastering.md) — Mastering
 - [`18-psychoacoustics-and-tension.md`](00-foundations/18-psychoacoustics-and-tension.md) — Psychoacoustics, Expectation and Tension
 - [`19-vocals-and-lyrics.md`](00-foundations/19-vocals-and-lyrics.md) — Vocals, Topline and Lyrics
+- [`20-spectral-arrangement.md`](00-foundations/20-spectral-arrangement.md) — Spectral Arrangement — Which Bands Are Occupied, and When
 
 ### `10-instruments/` — Instruments — the machines that made the sounds
 
@@ -171,14 +172,15 @@ everything at once is not experimental, it is noise.
 - [`fm-index-turns-a-rhodes-into-a-bell.md`](90-memories/fm-index-turns-a-rhodes-into-a-bell.md) — fm-index-turns-a-rhodes-into-a-bell.md
 - [`industrial-techno-measures-too-dark.md`](90-memories/industrial-techno-measures-too-dark.md) — industrial-techno-measures-too-dark.md
 - [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
-- [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal is holes, and holes are a time-domain measurement
+- [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal-is-holes-not-a-full-spectrum.md
 - [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md
 - [`neurofunk-bass-is-a-dark-reese.md`](90-memories/neurofunk-bass-is-a-dark-reese.md) — neurofunk-bass-is-a-dark-reese.md
 - [`pitched-metal-reads-as-cheerful.md`](90-memories/pitched-metal-reads-as-cheerful.md) — pitched-metal-reads-as-cheerful.md
 - [`section-contrast-belongs-in-level.md`](90-memories/section-contrast-belongs-in-level.md) — section-contrast-belongs-in-level.md
 - [`smoothers-return-tiny-negatives.md`](90-memories/smoothers-return-tiny-negatives.md) — smoothers-return-tiny-negatives.md
+- [`spectrum-should-not-be-full-all-the-time.md`](90-memories/spectrum-should-not-be-full-all-the-time.md) — spectrum-should-not-be-full-all-the-time.md
 - [`struck-metal-needs-modes-not-squares.md`](90-memories/struck-metal-needs-modes-not-squares.md) — struck-metal-needs-modes-not-squares.md
 - [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
 - [`top-end-from-transients-not-wash.md`](90-memories/top-end-from-transients-not-wash.md) — top-end-from-transients-not-wash.md
 
-**100 files.** Everything is plain Markdown with no external dependencies.
+**103 files.** Everything is plain Markdown with no external dependencies.

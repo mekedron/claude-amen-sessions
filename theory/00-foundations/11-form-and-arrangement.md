@@ -13,6 +13,10 @@ technique reduces to managing contrast in four dimensions:
 |---|---|---|
 | **Density** | few elements, few notes | many elements, busy |
 | **Register** | narrow band, no highs or lows | full spectrum |
+
+Register is the most under-used of the four. Which *frequency bands* are
+occupied should differ between sections — see `20-spectral-arrangement.md`.
+
 | **Loudness** | quiet, headroom | loud, compressed |
 | **Rhythmic energy** | long notes, sparse | fast subdivisions, syncopation |
 

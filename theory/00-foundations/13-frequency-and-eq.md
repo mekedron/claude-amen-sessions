@@ -242,6 +242,11 @@ Common offenders worth knowing:
 
 ## Reference spectra
 
+**This is a tendency of finished full-range masters, not a target to hit at
+every moment.** Which bands are occupied should change between sections, and a
+great many genres are deliberately band-limited — see `20-spectral-arrangement.md`
+before using any of the numbers below as a goal.
+
 A finished, full-range modern mix roughly follows a **pink-noise-like slope**:
 about **−3 to −4.5 dB per octave** above 1 kHz, with a low end that is flat or
 slightly raised from 40–120 Hz. Genre variations:
@@ -277,6 +282,9 @@ slightly raised from 40–120 Hz. Genre variations:
   mix plays.
 - **Matching a "reference EQ curve" blindly** — the curve is a consequence of
   good arrangement, not a cause.
+- **Filling every band all the time.** Masking is zero-sum, contrast is the
+  mechanism of arrangement, and much of what identifies a genre is what it
+  leaves out. See `20-spectral-arrangement.md`.
 - **Too many EQ bands** — if an element needs 8 bands of correction, the source
   is wrong. Re-record or re-synthesise it.
 - **Forgetting that filters have gain** — resonant filters and shelves change
@@ -289,3 +297,4 @@ slightly raised from 40–120 Hz. Genre variations:
 - Level control: `14-dynamics-and-compression.md`
 - The full mixing process: `16-mixing-process.md`
 - Mastering EQ specifically: `17-mastering.md`
+- Budgeting bands across instruments and sections: `20-spectral-arrangement.md`
