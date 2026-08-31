@@ -48,9 +48,15 @@ def bass(b, busy=False):
         s.place(s.pos(b, 14.5), sub(r * 2, 1), 0.16)
 
 def arp(b):
+    """Five notes over eight 8th-note slots, so the figure starts somewhere
+    new every bar and only comes home on bar 5. Same pluck, same chord tones -
+    a four-note cycle just divided the bar exactly and landed identically
+    every time."""
     notes = ARPN[chord_at(b)]
-    for i, st in enumerate([0, 2, 4, 6, 8, 10, 12, 14]):
-        s.place(s.pos(b, st), pluck(midi(notes[i % 4] + (12 if i in (5, 7) else 0)), 1.5), 0.10)
+    for st, note, dur, vel in arp_seq(notes, bars=1, shape='updown', rate=2.0,
+                                      cycle=5, octaves=(0, 1), gate=(1, 1, 1, 0, 1),
+                                      accents=(0,), tail=0.8, rotate=b * 8, seed=b):
+        s.place(s.pos(b, st), pluck(midi(note), max(dur, 1.2)), 0.13 * vel)
 
 def drums(b, kind='roll'):
     if kind == 'roll':

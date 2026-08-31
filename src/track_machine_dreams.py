@@ -64,11 +64,18 @@ def melody_line(b0, octave=0, gain=0.17, bells_too=False):
             s.place(s.pos(b0 + off, st), bell(midi(note + octave + 12), 3), gain * 0.4)
 
 def datastream(b, gain=0.07):
-    """fast 16th arp ticking by like packets, drifting across the stereo field"""
+    """fast 16th arp ticking by like packets, drifting across the stereo field.
+
+    Seven notes over sixteen steps, with two of them dropped: packets arrive
+    at an interval that does not divide the bar, which is what packets do. A
+    four-note cycle here repeated four times per bar, forever."""
     ns = ARPS[chord_at(b)]
-    for i in range(16):
-        note = ns[i % 4] + (12 if i % 8 >= 4 else 0)
-        s.place(s.pos(b, i), panned(pluck(midi(note), 0.9), np.sin(i * 0.9) * 0.7), gain)
+    for st, note, dur, vel in arp_seq(ns, bars=1, shape='converge', rate=1.0,
+                                      cycle=7, octaves=(0, 1), gate=(1, 1, 1, 0, 1, 1, 0),
+                                      ratchets=(4,), accents=(0,), tail=0.85,
+                                      rotate=b * 16, seed=b):
+        s.place(s.pos(b, st), panned(pluck(midi(note), max(dur, 0.8)),
+                                     np.sin(st * 0.9) * 0.7), gain * vel * 1.5)
 
 def bass(b, busy=False):
     r = midi(ROOT[chord_at(b)] - 12)

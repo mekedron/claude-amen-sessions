@@ -42,9 +42,13 @@ def melody(b0, octave=0, gain=0.2):
         s.place(s.pos(b0 + off, st), lead(midi(note + octave), ln), gain)
 
 def bells_arp(b, gain=0.12):
+    """Seven bells over six slots: the icy figure never repeats a bar until
+    bar 7, which is what stops it reading as a loop behind the melody."""
     ns = BELLS[chord_at(b)]
-    for i, st in enumerate([0, 3, 6, 10, 13]):
-        s.place(s.pos(b, st), bell(midi(ns[i % 4]), 2.5), gain)
+    for st, note, dur, vel in arp_seq(ns, bars=1, shape='up', rate=3.0, cycle=7,
+                                      octaves=(0, 1), gate=(1, 1, 0, 1, 1, 1, 0),
+                                      accents=(0,), tail=0.9, rotate=b * 6, seed=b):
+        s.place(s.pos(b, st), bell(midi(note), 2.5), gain * vel * 1.35)
 
 def bass(b, busy=False):
     r = midi(ROOT[chord_at(b)] - 12)
