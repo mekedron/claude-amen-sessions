@@ -1,20 +1,63 @@
-# Amen Sessions
+# Claude Music
 
-Drum & bass composed and coded by **Claude** in a single terminal session —
-every drum hit in every track comes from **one 6.9-second Amen break sample**,
-sliced, resequenced and mangled in Python.
-Everything else (basses, pianos, choirs, bells, reverb) is synthesized from
-scratch with numpy/scipy. No DAW, no samples beyond the break, no audio
-libraries — just math writing WAV files.
+Music composed and coded by **Claude** in a single terminal session — no DAW,
+no plugins, no audio libraries. Just numpy and scipy writing WAV files.
+
+Two families so far:
+
+- **Amen Sessions** — 18 drum & bass pieces in which every drum hit comes from
+  one 6.9-second Amen break, sliced and resequenced.
+- **Machine Rave** — pieces with no sample at all: every kick, cowbell, 808,
+  screech and tyre squeal is synthesized from scratch.
 
 A human ran the session, picked the directions, listened, and gave feedback
-("the stars need more depth", "one of those chords is slightly off");
-Claude wrote all the code and made all the musical decisions. Claude cannot
-hear the renders — arrangements were verified by spectrogram.
+("the stars need more depth", "that roll takes my ears off"); Claude wrote all
+the code and made all the musical decisions. Claude cannot hear the renders —
+they were verified by spectrogram and by measuring band balance, stereo width,
+sidechain depth and transient punch against the tracks that already worked.
+
+## The engine
+
+    src/core.py       the shared engine: oscillators, 74 synths and effects,
+                      the mix bus and the sequencer. Tempo-agnostic.
+    src/sampler.py    the sample layer: load any audio file, lock it to a bar
+                      grid, slice it, retime it - several at once, at
+                      different tempos.
+    src/amenlib.py    the Amen module: one Sample, prepared and named
+    src/phonklib.py   the phonk module: the cowbell and the car, 160 BPM
+    src/hardlib.py    the hardstyle module: the kick, 170 BPM
+
+A genre module sets the grid, adds its own kit and re-exports core, so
+`from amenlib import *`, `from phonklib import *` and `from hardlib import *`
+are the same API with a different palette. One small script per piece,
+arrangement only.
+
+The sample layer finds hits by itself: pointed at the Amen break, `Sample.kit()`
+recovers the map the break is documented by — kicks on 0, 2, 10, 11, snares on
+4 and 12 — so an unfamiliar break can be loaded and played the same way, or
+layered over a synthesized track:
+
+```python
+from phonklib import *
+from sampler import Sample
+
+brk = Sample('samples/some_break.wav', bars=4).fit()   # snapped to 160 BPM
+s.place(s.pos(4), brk.bar(0))
+s.place(s.pos(5), rev(brk.get(1, 8, 4)), 0.6)
+```
 
 ## The tracks
 
-All finished audio lives in `renders/`. Full-length (~3 min):
+All finished audio lives in `renders/`.
+
+**Machine Rave** (nothing sampled, ~2:30 each):
+
+| File | What it is |
+|---|---|
+| `phonk_drift_160.wav` | Drift phonk in F# minor: the 808 cowbell driven until it clangs, a sliding 808, memphis vocal chops, tyres and an engine. Three drops, a tape-stopped breakdown, pitched echoes thrown ear to ear |
+| `hard_ascension_170.wav` | Industrial hardstyle in A minor: a kick put through drive, EQ, drive and a wavefolder, reverse bass swelling into every gap it leaves, and a euphoric breakdown that has to earn the drop it walks into |
+
+**Amen Sessions** (full-length, ~3 min):
 
 | File | What it is |
 |---|---|
@@ -33,31 +76,20 @@ Short studies (~30 s): `amen_dnb_174.wav`, `amen_jungle_174.wav`,
 `amen_darkside_174.wav`, `amen_liquid_174.wav`, `amen_jumpup_174.wav`,
 `amen_neuro_174.wav`, `amen_rave_174.wav`, `amen_funk_174.wav`.
 
-## How it works
-
-- `src/amenlib.py` — the whole engine: break preparation (trim, speed-up
-  140→174 BPM the old jungle way, pitch and all), a slice library mapped by
-  spectral analysis (which 16th holds a kick, which holds the crash), a
-  `Session` sequencer, and ~30 synths/effects: `sub`, `wobble`, `reese`,
-  `sawbass`, `growl`, `hoover`, `funkbass`, `clav`, `rhodes`, `piano`,
-  `diva`, `vox`, `strings`, `bell`, `lead`, `pluck`, `orchhit`, `acid`,
-  `zap`, `drone`, `impact`, `riser`, `subdrop`, `pad`, `wind`, `crackle`,
-  `hat`, plus `reverb` (IR convolution), `wah`, `bitcrush`, `panned`,
-  dub-delay echoes, `dubsiren`, DJ `rewind`, `upright` bass, muted `horn`.
-- `src/beat_*.py` / `src/track_*.py` — one small script per piece,
-  arrangement only.
-- `samples/` — the one source mp3 (and the prepared break, rebuilt on demand).
-
 ## Render it yourself
 
-Needs `python3` with `numpy` + `scipy`, plus `ffmpeg` and `sox` on PATH.
+Needs `python3` with `numpy` + `scipy`. The Amen module also needs `ffmpeg` and
+`sox` on PATH to prepare the break; the synthesized tracks need neither.
 
 ```sh
-python3 src/track_alive.py    # writes renders/amen_alive_174.wav
+python3 src/track_drift.py       # writes renders/phonk_drift_160.wav
+python3 src/track_hardstyle.py   # writes renders/hard_ascension_170.wav
+python3 src/track_alive.py       # writes renders/amen_alive_174.wav
 ```
 
-The scripts rebuild the prepared break (`samples/amen_174.wav`) from the
-source mp3 automatically if it is missing.
+Every track script prints a mix report before it renders — per bus level, peak,
+crest factor, stereo width and where its energy sits — which is how a deaf
+composer checks its work.
 
 ## Credits
 
@@ -67,7 +99,7 @@ source mp3 automatically if it is missing.
   (The Winstons, 1969) — the most sampled recording in history. This project
   is one more thank-you note to it.
 - Music & code: Claude, 2026. Session produced by a human who kept saying
-  "давай ещё" — which is the only reason there are eighteen tracks.
+  "давай ещё" — which is the only reason there are twenty tracks.
 
 ## License
 
