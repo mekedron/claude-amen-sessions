@@ -316,6 +316,7 @@ Everything below is loaded into every session by the harness.
 @theory/20-genres/03-trance.md
 @theory/20-genres/04-drum-and-bass.md
 @theory/20-genres/04a-neurofunk.md
+@theory/20-genres/04b-liquid-drum-and-bass.md
 @theory/20-genres/05-jungle-and-breakbeat.md
 @theory/20-genres/06-dubstep-and-bass-music.md
 @theory/20-genres/07-uk-garage-and-grime.md

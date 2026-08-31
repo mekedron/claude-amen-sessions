@@ -178,7 +178,7 @@ half a bar) marks the moment before the drop.
 
 | Subgenre | Feature |
 |---|---|
-| **Liquid** | Jazz/soul chords, rhodes, vocals, warm, melodic, rolling |
+| **Liquid** | Jazz/soul chords, rhodes, vocals, warm, melodic, rolling — **deep dive: `04b-liquid-drum-and-bass.md`** |
 | **Neurofunk** | Complex modulated basses, dark, technical, minimal harmony — **deep dive: `04a-neurofunk.md`** |
 | **Techstep** | Dark, industrial, sparse, 90s |
 | **Jump-up** | Big cartoonish basslines, party-oriented, simple |
