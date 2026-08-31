@@ -332,6 +332,12 @@ def acidline(pattern, dur_bars=1, f_lo=170, f_hi=3800, res=3.2, decay=0.18,
         (2 / np.pi) * sum(np.sin(k * ph) / k for k in range(1, 40, 2)) * 2
     if sub:
         x = x + sub * np.sin(0.5 * ph)
+    # Smooth the cutoff envelope before it drives the filter bank. morph_lp
+    # crossfades static filters by this value, so a step in it swaps the
+    # filter mid-waveform - a discontinuity, and at the top of the spectrum
+    # where it is most audible. 4 ms is far shorter than any 303 envelope and
+    # removes the artefact completely.
+    cut = uniform_filter1d(cut, max(int(0.004 * SR), 3))
     if knob is not None:
         k = np.atleast_1d(np.asarray(knob, dtype=np.float64))
         if len(k) == 1:
@@ -704,3 +710,109 @@ def autopan(seg, cycle_bars=8.0, depth=0.6, phase=0.0):
     out[:, 0] *= np.cos(a) * 1.41
     out[:, 1] *= np.sin(a) * 1.41
     return out
+
+
+# ---- hard acid ----
+@cached
+def hat909(dur_steps=0.6, open_=False, gain=1.0, tone=1.0, seed=0):
+    """A 909-ish hat: noise band-limited, not merely highpassed.
+
+    core's hat() keeps only what is above 8 kHz. One of those is a tick; a
+    line of them on sixteenths is a continuous crackle at the top of the
+    spectrum, because there is no body underneath for the ear to hear as an
+    instrument. 3.8-12 kHz makes it a hi-hat again."""
+    n, t = steps(dur_steps if not open_ else max(dur_steps, 2.6))
+    rs = np.random.RandomState(seed + 77)
+    x = bandpass(stereo(rs.randn(n)), 3800 * tone, 12000 * tone)
+    dec = 0.20 if open_ else 0.028
+    return x * (np.exp(-t / dec) * adsr(n, a=0.0006, r=0.008))[:, None] * gain * 0.55
+
+def acid_hard(pattern, dur_bars=1, fold_amt=0.45, stage2=2.4, bite=0.8,
+              gain=1.0, **kw):
+    """The 303 put through a real distortion chain instead of one tanh.
+
+    drive -> EQ -> drive -> fold. Every stage after an EQ makes harmonics the
+    stage before it could not, which is why a chain screams and a single
+    waveshaper only clips. `bite` is the band that gets re-driven - the
+    200-2000 Hz an ear reads as force - and `fold_amt` is how far into the
+    wavefolder it goes, which is where it stops sounding like a filter and
+    starts sounding like something tearing."""
+    seg = acidline(pattern, dur_bars, gain=1.0, **kw)
+    seg = seg + bite * bandpass(seg, 200, 2000)                # EQ
+    seg = np.tanh(stage2 * seg / (1 + bite * 0.5))             # drive it again
+    if fold_amt:
+        seg = (1 - fold_amt) * seg + fold_amt * fold(seg, 1.1 + fold_amt * 0.6)
+    return hp(seg, 60, order=2).astype(np.float32) * gain * 0.62
+
+def subacid(pattern, dur_bars=1, gain=1.0, sat=2.6, top=170, low=26, **kw):
+    """The same line an octave down, saturated but never folded.
+
+    A sub has room for exactly one clean thing. Saturation here is only to
+    make the fundamental audible on small speakers - the 2nd and 3rd harmonics
+    it generates sit at 80-250 Hz, which is what a phone reproduces and what
+    the ear reconstructs the missing fundamental from."""
+    pat = [(st, n - 12, d, a, sl) for st, n, d, a, sl in pattern]
+    seg = acidline(pat, dur_bars, f_lo=60, f_hi=max(top * 1.6, 200), res=0.6,
+                   drive=1.8, low=low, gain=1.0, **kw)
+    seg = np.tanh(sat * seg) / np.tanh(sat)
+    return lp(seg, top).astype(np.float32) * gain * 0.7
+
+@cached
+def resoscream(note=64, dur_steps=4, gain=1.0, res=7.0, decay=0.18, drift=0.35,
+               seed=0):
+    """A filter pushed until it sings on its own: a resonant band with almost
+    no signal in it, swept. Not a note anybody played - the circuit's own
+    pitch, which is the sound acid was named for."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 211)
+    f0 = midi(note)
+    f = f0 * (1 + drift * np.exp(-t / (decay * 1.6)))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = np.sin(ph) + 0.3 * np.sin(2 * ph)
+    nz = rs.randn(n) * 0.12
+    x = stereo(tone * 0.9 + nz)
+    out = res * bandpass(x, f0 * 0.7, f0 * 1.5) + 0.2 * x
+    out = np.tanh(1.6 * out / (1 + res * 0.3))
+    return out * (np.exp(-t / decay) * adsr(n, a=0.002, r=0.03))[:, None] * gain * 0.4
+
+
+@cached
+def industrialkick(dur_steps=2.0, tune=41.2, drive=13.0, decay=0.13, hiss=0.75,
+                   ceil=0.62, air=0.55, body=1.4, gain=1.0, seed=0):
+    """A kick that has been through a wall.
+
+    Hard-clipped rather than saturated: a clipper flattens the top of the wave
+    and leaves odd harmonics buzzing all the way up, where tanh rounds them
+    off and stays polite. Behind the transient sits a filtered noise exhale -
+    that is the 'pff', and a real industrial kick is half air. Short decay on
+    purpose, because these are meant to be fired in rows."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 503)
+    f = tune * (1 + 3.4 * np.exp(-t / 0.017))
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR)
+    x = np.clip(x * drive, -ceil, ceil) / ceil                   # hard clip, not tanh
+    st = lp(stereo(x), 8000)
+    st = st + body * bandpass(st, tune * 0.8, tune * 2.6)
+    st = np.clip(st * 1.8, -1.0, 1.0)                            # and again
+    st = norm(hp(st * np.exp(-t / decay)[:, None], 34), 0.88)
+    if hiss:
+        # the exhale gets its own envelope. Folded into the body's, the low
+        # end wins the normalisation and the 'pff' disappears - which is what
+        # happens to most attempts at this kick.
+        nz = rs.randn(n)
+        exhale = bandpass(stereo(nz), 800, 5600) * np.exp(-t / 0.070)[:, None]
+        exhale += hp(stereo(nz), 5200) * np.exp(-t / 0.026)[:, None] * air
+        exhale *= np.minimum(t / 0.0025, 1.0)[:, None]          # no click on its front
+        st = st + hiss * exhale * 0.85
+    return norm(st * adsr(n, a=0.0004, r=0.012)[:, None], 0.97) * gain
+
+def kickbarrage(s, b, steps_, bus='drums', gain=1.0, tune=41.2, climb=0.0,
+                duck=True, **kw):
+    """A row of industrial kicks. Register every one: the pump is what makes a
+    barrage read as rhythm instead of noise."""
+    for i, st in enumerate(steps_):
+        u = i / max(len(steps_) - 1, 1)
+        t = s.pos(b, st)
+        if duck:
+            s.hit(t)
+        s.place(t, industrialkick(tune=tune * (1 + climb * u), **kw), gain, bus)

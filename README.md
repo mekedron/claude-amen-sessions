@@ -66,6 +66,7 @@ All finished audio lives in `renders/`.
 | `phonk_drift_160.wav` | Drift phonk in F# minor: the 808 cowbell driven until it clangs, a sliding 808, memphis vocal chops, tyres and an engine. Three drops, a tape-stopped breakdown, pitched echoes thrown ear to ear |
 | `hard_ascension_170.wav` | Industrial hardstyle in A minor: a kick put through drive, EQ, drive and a wavefolder, reverse bass swelling into every gap it leaves, and a euphoric breakdown that has to earn the drop it walks into |
 | `neuro_bezdna_174.wav` | Dark neurofunk in F minor (4:28): programmed drums instead of a break, and a bass built in three layers that never share a frequency - a clean mono sine under 110 Hz, a reese moving under a swept comb above it, and a hard-synced screech on top. Three drops, one chord progression in the whole track, and the Phrygian b2 as the only note from outside |
+| `acid_saeure_146.wav` | Hard acid in E minor, 6:38: the kick tuned to E1 (41.2 Hz) and a 303 that spends the record descending. The line starts at E3, drops an octave halfway, and by the last forty bars is running in three octaves at once - a saturated sub, a clean bassline and a folded scream on top. Sixteen bars of nothing but hard-clipped industrial kicks before the finale, half of each one made of air |
 | `acid_spirale_140.wav` | Acid techno in A minor, 7:22: the 303 is the whole record. Two acid lines, one on a sixteen-step bar and one on a fifteen-step cycle, so they drift a step apart every bar and meet again fifteen bars later - always almost repeating, never quite. No rumble: acid techno is a 909 and a 303 and the space between them, and the low end belongs to the bassline. Everything that happens is a filter moving |
 | `industrial_untertage_136.wav` | Industrial techno in G minor, 5:43: a shift underground. The choir is the instrument - `labourchoir` divides the formants, and a vocal tract scaled up reads as a bigger body at the same pitch, so four saw stacks become something the size of the room. They sag flat across every phrase, answer the press rather than the beat, and keep walking into the augmented second a harmonic-minor V puts under them |
 | `punk_griptape_186.wav` | Skate punk in E major, 2:58, no vocals: a Karplus-Strong string through a three-stage valve amp and a 4x12, double tracked and hard panned, over an acoustic kit. The tune a singer would have had is played by a lead guitar. Two verses, a bridge with the distortion off, a harmonised twin lead, and gang shouts on the last chorus |
@@ -103,6 +104,7 @@ python3 src/track_industrial.py  # writes renders/industrial_morgengrauen_152.wa
 python3 src/track_punk.py        # writes renders/punk_griptape_186.wav
 python3 src/track_untertage.py   # writes renders/industrial_untertage_136.wav
 python3 src/track_spirale.py     # writes renders/acid_spirale_140.wav
+python3 src/track_saeure.py      # writes renders/acid_saeure_146.wav
 python3 src/track_hardstyle.py   # writes renders/hard_ascension_170.wav
 python3 src/track_alive.py       # writes renders/amen_alive_174.wav
 python3 src/track_zub4atka.py    # writes renders/amen_zub4atka_174.wav
