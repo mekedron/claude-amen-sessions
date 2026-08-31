@@ -171,6 +171,7 @@ everything at once is not experimental, it is noise.
 - [`fm-index-turns-a-rhodes-into-a-bell.md`](90-memories/fm-index-turns-a-rhodes-into-a-bell.md) — fm-index-turns-a-rhodes-into-a-bell.md
 - [`industrial-techno-measures-too-dark.md`](90-memories/industrial-techno-measures-too-dark.md) — industrial-techno-measures-too-dark.md
 - [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
+- [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal is holes, and holes are a time-domain measurement
 - [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md
 - [`neurofunk-bass-is-a-dark-reese.md`](90-memories/neurofunk-bass-is-a-dark-reese.md) — neurofunk-bass-is-a-dark-reese.md
 - [`pitched-metal-reads-as-cheerful.md`](90-memories/pitched-metal-reads-as-cheerful.md) — pitched-metal-reads-as-cheerful.md

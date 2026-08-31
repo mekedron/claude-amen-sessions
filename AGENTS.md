@@ -369,6 +369,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/fm-index-turns-a-rhodes-into-a-bell.md
 @theory/90-memories/industrial-techno-measures-too-dark.md
 @theory/90-memories/loud-masters-need-a-true-peak-limiter.md
+@theory/90-memories/minimal-is-holes-not-a-full-spectrum.md
 @theory/90-memories/minimal-means-fewer-voices.md
 @theory/90-memories/neurofunk-bass-is-a-dark-reese.md
 @theory/90-memories/pitched-metal-reads-as-cheerful.md
