@@ -16,6 +16,7 @@ Four kinds of file, answering four different questions.
 | Folder | Question it answers |
 |---|---|
 | `00-foundations/` | **Why** does this work? Pitch, rhythm, scales, chords, harmony, voice leading, melody, form, timbre, mixing, perception. |
+| `10-instruments/` | **Which machine made that sound?** The landmark synths, drum machines, samplers, effects and plugins — how they worked and how to rebuild their sounds. |
 | `20-genres/` | **What** does this style actually do? One file per genre: tempo, grid, harmony habits, sound palette, arrangement map, clichés to use and clichés to avoid. |
 | `30-patterns/` | **Give me one now.** Cookbooks: progressions, drum grids, basslines, drops, transitions, sound-design recipes. |
 | `40-reference/` | **What is the number?** Lookup tables: MIDI/frequency, scale and chord formulas, delay times per BPM, glossary. |
@@ -82,6 +83,24 @@ everything at once is not experimental, it is noise.
 - [`18-psychoacoustics-and-tension.md`](00-foundations/18-psychoacoustics-and-tension.md) — Psychoacoustics, Expectation and Tension
 - [`19-vocals-and-lyrics.md`](00-foundations/19-vocals-and-lyrics.md) — Vocals, Topline and Lyrics
 
+### `10-instruments/` — Instruments — the machines that made the sounds
+
+- [`01-overview.md`](10-instruments/01-overview.md) — Landmark Instruments — Overview
+- [`02-analog-monosynths.md`](10-instruments/02-analog-monosynths.md) — Analog Monosynths
+- [`03-analog-polysynths.md`](10-instruments/03-analog-polysynths.md) — Analog Polysynths
+- [`04-electromechanical-keyboards.md`](10-instruments/04-electromechanical-keyboards.md) — Electromechanical Keyboards
+- [`05-fm-and-phase-distortion.md`](10-instruments/05-fm-and-phase-distortion.md) — FM and Phase Distortion
+- [`06-wavetable-vector-and-la.md`](10-instruments/06-wavetable-vector-and-la.md) — Wavetable, Vector and LA Synthesis
+- [`07-samplers-and-workstations.md`](10-instruments/07-samplers-and-workstations.md) — Samplers and Workstations
+- [`08-drum-machines.md`](10-instruments/08-drum-machines.md) — Drum Machines
+- [`09-virtual-analog-and-90s.md`](10-instruments/09-virtual-analog-and-90s.md) — Virtual Analog and the 1990s
+- [`10-modular-and-west-coast.md`](10-instruments/10-modular-and-west-coast.md) — Modular and West Coast Synthesis
+- [`11-chips-trackers-and-voices.md`](10-instruments/11-chips-trackers-and-voices.md) — Sound Chips, Trackers and Voice Machines
+- [`12-software-instruments.md`](10-instruments/12-software-instruments.md) — Software Instruments
+- [`13-effects-and-processors.md`](10-instruments/13-effects-and-processors.md) — Effects and Processors
+- [`14-iconic-patch-recipes.md`](10-instruments/14-iconic-patch-recipes.md) — Iconic Patch Recipes
+- [`15-why-old-gear-sounds-like-that.md`](10-instruments/15-why-old-gear-sounds-like-that.md) — Why Old Gear Sounds Like That
+
 ### `20-genres/` — Genres — the what
 
 - [`01-house.md`](20-genres/01-house.md) — House
@@ -136,4 +155,4 @@ everything at once is not experimental, it is noise.
 - [`04-glossary.md`](40-reference/04-glossary.md) — Glossary
 - [`05-quick-decision-tables.md`](40-reference/05-quick-decision-tables.md) — Quick Decision Tables
 
-**64 files.** Everything is plain Markdown with no external dependencies.
+**79 files.** Everything is plain Markdown with no external dependencies.

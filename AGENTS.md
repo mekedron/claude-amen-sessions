@@ -25,6 +25,7 @@ bottom of this file in the same commit**, and add a line for it to the index in
 | Folder | Use it for |
 |---|---|
 | `theory/00-foundations/` | Why something works: pitch, rhythm, scales, chords, harmony, voice leading, melody, form, synthesis, EQ, compression, space, mixing, mastering, psychoacoustics, vocals |
+| `theory/10-instruments/` | Which machine made a sound, how it worked, and how to rebuild it: synths, drum machines, samplers, effects, plugins, iconic patches |
 | `theory/20-genres/` | What a style actually does: tempo, grid, harmony habits, palette, arrangement map, clichés, hazards |
 | `theory/30-patterns/` | Ready-made material: progressions, drops, basslines, drum grids, hooks, transitions, sampling, sound design, humanisation, arrangement templates |
 | `theory/40-reference/` | Lookup: MIDI/frequency table, scale and chord formulas, BPM and delay times, glossary, quick decision tables |
@@ -78,6 +79,21 @@ Everything below is loaded into every session by the harness.
 @theory/00-foundations/17-mastering.md
 @theory/00-foundations/18-psychoacoustics-and-tension.md
 @theory/00-foundations/19-vocals-and-lyrics.md
+@theory/10-instruments/01-overview.md
+@theory/10-instruments/02-analog-monosynths.md
+@theory/10-instruments/03-analog-polysynths.md
+@theory/10-instruments/04-electromechanical-keyboards.md
+@theory/10-instruments/05-fm-and-phase-distortion.md
+@theory/10-instruments/06-wavetable-vector-and-la.md
+@theory/10-instruments/07-samplers-and-workstations.md
+@theory/10-instruments/08-drum-machines.md
+@theory/10-instruments/09-virtual-analog-and-90s.md
+@theory/10-instruments/10-modular-and-west-coast.md
+@theory/10-instruments/11-chips-trackers-and-voices.md
+@theory/10-instruments/12-software-instruments.md
+@theory/10-instruments/13-effects-and-processors.md
+@theory/10-instruments/14-iconic-patch-recipes.md
+@theory/10-instruments/15-why-old-gear-sounds-like-that.md
 @theory/20-genres/01-house.md
 @theory/20-genres/02-techno.md
 @theory/20-genres/03-trance.md
