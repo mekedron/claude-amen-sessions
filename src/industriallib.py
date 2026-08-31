@@ -608,3 +608,84 @@ def bellow(dur_steps=32, gain=1.0, rate=0.55, seed=0):
     x = x + lp(nz, 120) * 0.5
     out = widen(x, 2.2) * (0.3 + 0.7 * breath)[:, None]
     return out * adsr(n, a=0.5, r=0.8)[:, None] * gain * 0.5
+
+
+# ---- acid: the 303 as the whole instrument ----
+def poly_pattern(pat, cycle_steps, bars):
+    """Repeat a pattern whose length is NOT 16 across `bars` bars.
+
+    A 15-step line against a 16-step bar starts one step earlier every bar and
+    only comes home after 15 of them. Nothing about the notes changes - the
+    listener hears the same figure drifting against the drums and back, which
+    is the cheapest way to make a loop feel like it is moving without moving.
+    Give it a length coprime with 16: 15, 13, 9, 7."""
+    out = []
+    total = 16 * bars
+    off = 0
+    while off < total:
+        for (st, n, d, a, sl) in pat:
+            if off + st < total:
+                out.append((off + st, n, d, a, sl))
+        off += cycle_steps
+    return out
+
+def swirl(seg, rate=0.12, depth_ms=3.5, base_ms=1.0, mix=0.65, stages=2, seed=0):
+    """Slow flanger: a delayed copy whose delay time sweeps, so the comb
+    notches walk up and down the spectrum. This is what makes a static 303
+    line sound like it is dissolving.
+
+    Both channels share one LFO on purpose - a flanger with a different sweep
+    per side is wider and turns into a comb filter the moment anything sums to
+    mono, and this sits on the hook."""
+    n = len(seg)
+    t = np.arange(n) / SR
+    out = seg.astype(np.float32).copy()
+    ar = np.arange(n)
+    for st in range(stages):
+        lfo = 0.5 - 0.5 * np.cos(2 * np.pi * rate * t + st * 2.1 + seed)
+        d = (base_ms + depth_ms * lfo) / 1000 * SR
+        idx = np.clip(ar - d, 0, n - 1)
+        dly = np.stack([np.interp(idx, ar, out[:, c]) for c in range(2)], 1)
+        out = ((out + mix * dly) / (1 + mix * 0.7)).astype(np.float32)
+    return out
+
+def acid_throw(seg, steps_=3.0, times=5, fb=0.55, damp=600):
+    """A delay throw for the 303: each repeat darker and narrower than the
+    last, alternating sides. The oldest trick in acid and still the one that
+    turns four bars into a room."""
+    d = int(steps_ * STEP)
+    out = np.zeros((len(seg) + d * times + 1, 2), dtype=np.float32)
+    out[:len(seg)] += seg
+    for i in range(1, times + 1):
+        e = lp(seg, max(5200 - damp * i, 500)) * fb ** i
+        e = panned(e, (0.75 if i % 2 else -0.75) * min(i / 2, 1.0))
+        out[i * d:i * d + len(seg)] += e
+    return out
+
+def pitch_warp(seg, semis=(0, -2, -5), steps_=2.0, gain=1.0):
+    """Chop a segment and drop each piece to a different pitch - the floor
+    giving way. Used once or twice, never as a rhythm."""
+    k = max(int(steps_ * STEP), 128)
+    out = []
+    for i, sm in enumerate(semis):
+        piece = seg[i * k:(i + 1) * k]
+        if len(piece) < 64:
+            break
+        out.append(fade_edges(pitched(piece, 2 ** (sm / 12)), 3.0) * gain)
+    return np.concatenate(out).astype(np.float32) if out else seg[:0]
+
+def autopan(seg, cycle_bars=8.0, depth=0.6, phase=0.0):
+    """A slow equal-power sweep across the field.
+
+    Movement that survives a mono sum: panning is a level difference, so
+    summing gives back one signal with a gentle tremolo. Everything else that
+    moves in stereo - Haas, flanging, chorus - is built from a delay, and a
+    delay in mono is a comb filter. On a hook, use this."""
+    n = len(seg)
+    t = np.arange(n) / SR
+    p = depth * np.sin(2 * np.pi * t / max(cycle_bars * BAR / SR, 1e-9) + phase)
+    a = (p + 1) * np.pi / 4
+    out = seg.astype(np.float32).copy()
+    out[:, 0] *= np.cos(a) * 1.41
+    out[:, 1] *= np.sin(a) * 1.41
+    return out
