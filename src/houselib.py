@@ -808,7 +808,7 @@ def combo(x, warm=1.55, tone=4400, tight=95.0, cone=0.85, presence=0.72,
 def gtr(notes, dur_steps=3.0, level=1.0, vel=0.72, decay=0.60, damp=0.042,
         bright=0.90, strum=0.0068, pick=0.21, pickup=0.14, res_hz=2400.0,
         res_q=2.1, warm=1.55, tone=4400, chorus=0.42, hp_hz=150.0,
-        cone=0.85, presence=0.72, tight=95.0, take=0):
+        cone=0.85, presence=0.72, tight=95.0, tilt_base=0.35, take=0):
     """The chord this record is built on: an electric guitar, comped.
 
     A pad states harmony and a guitar PLAYS it, and the difference is
@@ -841,6 +841,13 @@ def gtr(notes, dur_steps=3.0, level=1.0, vel=0.72, decay=0.60, damp=0.042,
     to locate. Picking nearer the bridge moves the nulls up past the band the
     record needs, and the amp's lowpass is where the warmth comes back.
 
+    `tilt_base` is the right hand. A plectrum is a hard edge and bends the
+    string into a sharp corner; a fingertip is soft and rounds it off, so the
+    same note picked with a finger has audibly fewer high modes in it. That is
+    a real difference between two techniques on one instrument, and it is not
+    a tone control - dropping `tilt_base` toward zero for a fingerpicked part
+    is what stops it screaming in 800-3000 Hz where a strummed comp is happy.
+
     `tight` is the amp's input highpass, and on a comp it is a compositional
     control rather than a corrective one. A guitar voiced from A3 up has its
     lowest fundamentals at 220-260 Hz, right where a house record's warmth
@@ -863,7 +870,7 @@ def gtr(notes, dur_steps=3.0, level=1.0, vel=0.72, decay=0.60, damp=0.042,
         s_ = string(f, n - d, decay=decay * (1 - 0.07 * i), damp=damp,
                     pick=pick + 0.06 * rng.random(), pickup=pickup,
                     B=1.3e-4 * (82.0 / f) ** 0.4, bright=bright,
-                    tilt=0.35 - 0.55 * (1.0 - vel), res_hz=res_hz, res_q=res_q,
+                    tilt=tilt_base - 0.55 * (1.0 - vel), res_hz=res_hz, res_q=res_q,
                     top=6200.0,
                     seed=int(7919 * take + 13 * nt))
         x[d:] += s_ * (1.0 - 0.09 * i)
