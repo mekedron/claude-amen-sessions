@@ -868,13 +868,23 @@ def dubsiren(dur_steps, f0=650.0, lfo=3.0, gain=1.0, shape='tri'):
     return out * adsr(n, a=0.01, r=0.12)[:, None] * gain * 0.7
 
 # ---- mix tools ----
-def duck_env(n, hits, depth=0.35, hold=0.012, release=0.19):
-    """sidechain curve: dip to `depth` on every registered kick, then recover"""
+def duck_env(n, hits, depth=0.35, hold=0.012, release=0.19, attack=0.0022):
+    """sidechain curve: dip to `depth` on every registered kick, then recover.
+
+    `attack` is not decoration. Dropping the gain from 1.0 to depth inside a
+    single sample is a step discontinuity in the waveform - a click. Normally
+    the kick that triggered it lands on top and masks it, so nobody hears it;
+    the moment the kick is quiet or absent - an intro where the floor is still
+    fading in, a ghost trigger keeping the pump alive through a breakdown -
+    the click is the only thing left. 2 ms is still far faster than any real
+    compressor and costs the pump nothing."""
     env = np.ones(n, dtype=np.float32)
     if not hits:
         return env
     h, r = int(hold * SR), int(release * SR)
-    curve = np.concatenate([np.full(h, depth),
+    a = max(int(attack * SR), 2)
+    curve = np.concatenate([np.linspace(1.0, depth, a),
+                            np.full(h, depth),
                             depth + (1 - depth) * (1 - np.exp(-np.linspace(0, 4, r)))]).astype(np.float32)
     for t in hits:
         t = int(t); e = min(t + len(curve), n)

@@ -116,7 +116,8 @@ s.place(s.pos(9), reverb(groan(51, 12, fall=2.2, seed=2), decay=5.0, wet=0.75, t
 s.place(s.pos(6), press(16, gain=0.7, seed=1), 1.0, 'fx')
 for b in range(10, 16):                                   # the floor arrives from far off
     u = (b - 10) / 5
-    floor(b, gain=0.0, rum=0.3 + 0.3 * u, lpf=150 + 200 * (b - 10), rdecay=1.6)
+    floor(b, gain=0.10 + 0.22 * u, rum=0.3 + 0.3 * u, lpf=150 + 200 * (b - 10),
+          rdecay=1.6, grit=0.0)
 s.place(s.pos(14), press(16, gain=0.85, seed=2), 1.0, 'fx')
 s.place(s.pos(15), steam(8, gain=0.6), 1.0, 'fx')
 
