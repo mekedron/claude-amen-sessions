@@ -19,6 +19,7 @@ Four kinds of file, answering four different questions.
 | `10-instruments/` | **Which machine made that sound?** The landmark synths, drum machines, samplers, effects and plugins — how they worked and how to rebuild their sounds. |
 | `20-genres/` | **What** does this style actually do? One file per genre: tempo, grid, harmony habits, sound palette, arrangement map, clichés to use and clichés to avoid. |
 | `30-patterns/` | **Give me one now.** Cookbooks: progressions, drum grids, basslines, drops, transitions, sound-design recipes. |
+| `90-memories/` | **What did we learn here?** Decisions, preferences, pitfalls and constraints specific to this project — the one section that is not general theory. |
 | `40-reference/` | **What is the number?** Lookup tables: MIDI/frequency, scale and chord formulas, delay times per BPM, glossary. |
 
 ## The short version
@@ -155,4 +156,8 @@ everything at once is not experimental, it is noise.
 - [`04-glossary.md`](40-reference/04-glossary.md) — Glossary
 - [`05-quick-decision-tables.md`](40-reference/05-quick-decision-tables.md) — Quick Decision Tables
 
-**79 files.** Everything is plain Markdown with no external dependencies.
+### `90-memories/` — Memories — what has been learned about this project
+
+- [`README.md`](90-memories/README.md) — Memories
+
+**80 files.** Everything is plain Markdown with no external dependencies.

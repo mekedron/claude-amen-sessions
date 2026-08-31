@@ -29,10 +29,13 @@ bottom of this file in the same commit**, and add a line for it to the index in
 | `theory/20-genres/` | What a style actually does: tempo, grid, harmony habits, palette, arrangement map, clichés, hazards |
 | `theory/30-patterns/` | Ready-made material: progressions, drops, basslines, drum grids, hooks, transitions, sampling, sound design, humanisation, arrangement templates |
 | `theory/40-reference/` | Lookup: MIDI/frequency table, scale and chord formulas, BPM and delay times, glossary, quick decision tables |
+| `theory/90-memories/` | What has been learned about *this* project — decisions, preferences, pitfalls, constraints (Rule 5) |
 
-The library is deliberately **tool-agnostic** — it assumes no DAW, no library,
-no API. Keep it that way. Anything specific to this repository's own engine
-belongs in separate files, not in `theory/`.
+Sections `00-` to `40-` are deliberately **tool-agnostic** — they assume no DAW,
+no library, no API, and would be true in any project. Keep them that way:
+anything specific to this repository's own engine belongs in the repo's own
+documentation, not in the theory sections. `90-memories/` is the deliberate
+exception — it holds exactly what *is* specific to this project (Rule 5).
 
 ## Rule 2 — use it, do not just carry it
 
@@ -141,15 +144,41 @@ This covers the whole engine, not only synths:
 4. **Document it where the module documents itself** — the module docstring and
    the README's engine section stay accurate.
 5. **Refactor when the structure is in the way**, not for its own sake.
-6. **`theory/` stays tool-agnostic.** Engine capabilities are described in the
-   repo's own documentation, never inside the theory library.
+6. **Theory sections `00-`–`40-` stay tool-agnostic.** Engine capabilities are
+   described in the repo's own documentation and, where a decision is worth
+   remembering, in `theory/90-memories/` — never inside the theory sections.
 
 ### Say what you changed
 
 Report engine changes alongside the musical result: what you added, why the
 track needed it, and what now exists for future pieces to use.
 
-## Rule 5 — house style
+## Rule 5 — memory lives in this repository, never in global memory
+
+**Do not write to the harness's global or per-project memory directory.** Notes
+kept outside the repository are invisible to the user, absent from git, lost to
+other machines, and unavailable to any session that is not this one. This
+project is complete in git, and that includes what has been learned about it.
+
+**Everything worth remembering goes in `theory/90-memories/`**, one fact per
+file, committed like any other work. The format and the rules are in
+`theory/90-memories/README.md`.
+
+| Write it down when | Example |
+|---|---|
+| The user states a preference and the reasoning behind it | Which arrangement habits they reject, and why |
+| A decision is made that a future session might silently reverse | Why a module is split the way it is |
+| Something went wrong and the cause is not obvious from the code | A synthesis approach that produced artefacts |
+| A project constraint exists that the code does not express | What a piece is *for* |
+
+Do **not** record what the repository already states — code structure, commit
+history, or anything already in this file. Record what is not derivable from
+them.
+
+A new memory file needs its `@` import added to the list at the bottom of this
+file in the same commit (Rule 1), or the next session will not load it.
+
+## Rule 6 — house style
 
 - Conventions used throughout the library: MIDI note numbers for pitch,
   semitone offsets for scales and chords, a 16-step bar for rhythm,
@@ -243,3 +272,4 @@ Everything below is loaded into every session by the harness.
 @theory/40-reference/03-bpm-and-timing-tables.md
 @theory/40-reference/04-glossary.md
 @theory/40-reference/05-quick-decision-tables.md
+@theory/90-memories/README.md
