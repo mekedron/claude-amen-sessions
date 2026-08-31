@@ -26,10 +26,12 @@ sidechain depth and transient punch against the tracks that already worked.
     src/amenlib.py    the Amen module: one Sample, prepared and named
     src/phonklib.py   the phonk module: the cowbell and the car, 160 BPM
     src/hardlib.py    the hardstyle module: the kick, 170 BPM
+    src/industriallib.py  the industrial techno module: the rumble, the
+                      machine hall and the acid, 152 BPM
 
 A genre module sets the grid, adds its own kit and re-exports core, so
-`from amenlib import *`, `from phonklib import *` and `from hardlib import *`
-are the same API with a different palette. One small script per piece,
+`from amenlib import *`, `from phonklib import *`, `from hardlib import *` and
+`from industriallib import *` are the same API with a different palette. One small script per piece,
 arrangement only.
 
 The sample layer finds hits by itself: pointed at the Amen break, `Sample.kit()`
@@ -56,6 +58,7 @@ All finished audio lives in `renders/`.
 |---|---|
 | `phonk_drift_160.wav` | Drift phonk in F# minor: the 808 cowbell driven until it clangs, a sliding 808, memphis vocal chops, tyres and an engine. Three drops, a tape-stopped breakdown, pitched echoes thrown ear to ear |
 | `hard_ascension_170.wav` | Industrial hardstyle in A minor: a kick put through drive, EQ, drive and a wavefolder, reverse bass swelling into every gap it leaves, and a euphoric breakdown that has to earn the drop it walks into |
+| `industrial_morgengrauen_152.wav` | Industrial techno in F Phrygian, 6:00: the kick tuned to F1 and the same kick thrown into a dark room as the bass part, a 303 rendered a whole bar at a time so its slides really slide, a machine shop for percussion, and a siren. The name means daybreak, and also "morning horror" |
 
 **Amen Sessions** (full-length, ~3 min):
 
@@ -70,6 +73,7 @@ All finished audio lives in `renders/`.
 | `amen_jester_174.wav` | Drill'n'bass mischief: a music box vs. a possessed Amen, generative chops |
 | `amen_soundsystem_174.wav` | Ragga jungle: dub sirens, DJ rewinds, one-drop breaks, two-note riddim |
 | `amen_noir_174.wav` | Jazz club at 3 a.m.: harmon-muted trumpet with fall-offs, rootless rhodes comps, brushed Amen |
+| `amen_zub4atka_174.wav` | Drill'n'bass, Aphex school (~3:55): a detuned music box plays one tune from the first bar to the last while the break tears itself into ratchets around it. A real 303 with a filter that moves inside every note, arps on cycles coprime with the bar so they never land twice in the same place, and a kill switch punched through the finished mix |
 | `amen_finale_174.wav` | The farewell: every track returns once to say goodbye, and the last word, in morse code, is AMEN |
 
 Short studies (~30 s): `amen_dnb_174.wav`, `amen_jungle_174.wav`,
@@ -83,8 +87,10 @@ Needs `python3` with `numpy` + `scipy`. The Amen module also needs `ffmpeg` and
 
 ```sh
 python3 src/track_drift.py       # writes renders/phonk_drift_160.wav
+python3 src/track_industrial.py  # writes renders/industrial_morgengrauen_152.wav
 python3 src/track_hardstyle.py   # writes renders/hard_ascension_170.wav
 python3 src/track_alive.py       # writes renders/amen_alive_174.wav
+python3 src/track_zub4atka.py    # writes renders/amen_zub4atka_174.wav
 ```
 
 Every track script prints a mix report before it renders — per bus level, peak,

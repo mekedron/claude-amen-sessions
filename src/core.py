@@ -118,6 +118,24 @@ def bitcrush(seg, bits=6, downsample=4):
         x = np.repeat(x[::downsample], downsample, axis=0)[:len(seg)]
     return x.astype(np.float32)
 
+# ---- caching ----
+_SEG_CACHE = {}
+def cached(fn):
+    """A drum machine plays one recording of a kick, not four hundred fresh
+    ones. Wrap a deterministic voice in this and the same arguments give back
+    the same segment, so a six-minute track renders in seconds. Never wrap a
+    voice that relies on fresh randomness per call - `pad`, `strings`, `vox`
+    and `drone` all randomise their phases on purpose."""
+    def wrap(*a, **kw):
+        key = (fn.__name__, a, tuple(sorted(kw.items())))
+        if key not in _SEG_CACHE:
+            _SEG_CACHE[key] = fn(*a, **kw)
+        return _SEG_CACHE[key]
+    wrap.__name__ = fn.__name__
+    wrap.__doc__ = fn.__doc__
+    wrap.uncached = fn
+    return wrap
+
 # ---- oscillators ----
 def square(f, t, nyq=16500.0, kmax=60):
     """band-limited square: odd harmonics only, nothing above nyq"""
@@ -162,6 +180,19 @@ def panned(seg, p):
     out[:, 1] *= np.sin(a) * 1.41
     return out
 
+def mono_below(seg, hz=120, order=4):
+    """Fold everything under `hz` to the centre.
+
+    The ear locates low frequencies by arrival time, not level, so there is
+    no width down there to lose - but a club system that sums the bass, or a
+    single earbud, will cancel whatever was out of phase. Reverb tails and
+    Haas delays leak stereo into the sub without anyone hearing it until the
+    track is on a big rig and the low end is quietly gone."""
+    mid = seg.mean(axis=1)
+    side = (seg[:, 0] - seg[:, 1]) * 0.5
+    side = hp(np.stack([side, side], 1), hz, order)[:, 0]
+    return np.stack([mid + side, mid - side], 1).astype(np.float32)
+
 def widen(seg, ms=0.9):
     """Haas widening: nudge the right channel late"""
     out = seg.copy()
@@ -184,6 +215,29 @@ def sweep_lp(seg, f0, f1, curve=1.0):
     """filter sweep: crossfade a dark and a bright copy over the segment"""
     u = (np.linspace(0, 1, len(seg)) ** curve)[:, None]
     return (lp(seg, f0) * (1 - u) + lp(seg, f1) * u).astype(np.float32)
+
+def morph_lp(seg, f_lo, f_hi, env, bands=9, res=0.0, order=4):
+    """A lowpass whose cutoff MOVES, approximated by crossfading a bank of
+    static filters; `env` is 0..1 per sample and picks where in the bank each
+    sample sits. `res` adds a resonant peak that travels with the cutoff.
+
+    This is the difference between an instrument and a beep. A fixed filter
+    with an envelope on the amplitude only changes how loud a note is; a
+    moving filter changes what it is made of while it sounds, which is what
+    every plucked or struck thing in the physical world does."""
+    n = len(seg)
+    fs = np.geomspace(max(f_lo, 40), min(f_hi, SR * 0.45), bands)
+    u = np.clip(np.asarray(env, dtype=np.float64), 0, 1)[:n] * (bands - 1)
+    out = np.zeros((n, 2), dtype=np.float32)
+    for i, f in enumerate(fs):
+        w = np.clip(1 - np.abs(u - i), 0, 1)
+        if w.max() < 1e-4:
+            continue
+        y = lp(seg, f, order)
+        if res:
+            y = y + res * bandpass(seg, f * 0.82, f * 1.22, order=2)
+        out += (y * w[:, None]).astype(np.float32)
+    return out
 
 def wow(seg, depth_ms=1.8, rate=0.7):
     """cassette wow: slow pitch drift from an uneven tape speed"""
@@ -377,6 +431,110 @@ def pluck(freq, dur_steps, gain=1.0):
     out = stereo(np.tanh(x) * np.exp(-t / 0.22))
     out[:, 1] = np.roll(out[:, 1], int(SR * 0.0012))
     return out * adsr(n, a=0.003, r=0.03)[:, None] * gain
+
+# ---- arpeggios ----
+# The metrical hierarchy of a 4/4 bar, as velocities. Beat 1 is strongest,
+# beat 3 next, then 2 and 4, then the "and"s, then the remaining 16ths. An
+# arpeggio that ignores this is a row of identical events, not a part.
+_STEP_WEIGHT = {0: 1.00, 4: 0.78, 8: 0.88, 12: 0.74,
+                2: 0.60, 6: 0.56, 10: 0.60, 14: 0.56}
+
+def arp_seq(notes, bars=1, shape='up', rate=1.0, cycle=None, octaves=(0,),
+            gate=None, ratchets=(), accents=(), tail=0.95, rotate=0,
+            jitter=0.0, swing=0.0, seed=0):
+    """Turn a chord into a part instead of a loop of itself.
+
+    Returns [(step, midi_note, dur_steps, velocity), ...] across `bars` bars,
+    ready to hand to any voice.
+
+    The one decision that matters is `cycle`. A four-note pattern on a
+    sixteen-step bar divides the bar exactly, so it lands identically every
+    half-bar for the length of the track - that is what "all the arps sound
+    the same" means, and no amount of reverb fixes it. Give the cycle a length
+    coprime with 16 (5, 7, 9, 11) and the pattern walks: it starts on a
+    different note every bar and does not come back around until bar 5, 7, 9
+    or 11. Same notes, same synth, and it stops being wallpaper.
+
+    shape    order the pool is played in
+    cycle    notes before the pattern repeats - use 5/7/9/11, not 4 or 8
+    octaves  octave offsets folded into the pool
+    gate     0/1 mask over the cycle: which steps are silent (holes matter)
+    ratchets indices in the cycle that fire twice at double speed
+    accents  indices in the cycle that hit at full velocity
+    tail     note length as a fraction of the step
+    rotate   start the cycle somewhere other than its first note
+    jitter   timing humanisation in steps (keep under ~0.06)
+    swing    delay of every second note, as a fraction of a step
+    """
+    rs = np.random.RandomState(seed + 1)
+    pool = [n + 12 * o for o in octaves for n in notes]
+    if shape == 'down':
+        pool = pool[::-1]
+    elif shape == 'updown':
+        pool = pool + pool[-2:0:-1]
+    elif shape == 'downup':
+        pool = pool[::-1] + pool[1:-1]
+    elif shape == 'converge':                      # outside in: low, high, low, high
+        lo, hi = pool[:], pool[::-1]
+        pool = [x for pair in zip(lo, hi) for x in pair][:len(pool)]
+    elif shape == 'thumb':                         # Alberti: root between every note
+        root = pool[0]
+        pool = [x for n in pool[1:] for x in (root, n)]
+    elif shape == 'random':
+        pool = list(rs.permutation(pool))
+    cyc = int(cycle or len(pool))
+    seq = [pool[i % len(pool)] for i in range(cyc)]
+
+    out = []
+    total = 16.0 * bars
+    st = 0.0
+    i = 0
+    while st < total - 1e-6:
+        k = (i + rotate) % cyc
+        if gate is None or gate[k % len(gate)]:
+            grid = int(round(st)) % 16
+            v = _STEP_WEIGHT.get(grid, 0.42)
+            if k in accents:
+                v = min(1.0, v + 0.35)
+            v *= 1.0 + 0.06 * rs.randn()
+            pos = st + (swing * rate if int(st / rate) % 2 else 0.0)
+            pos += jitter * rs.randn()
+            if k in ratchets:                      # one step, two hits
+                out.append((pos, seq[k], rate * 0.45 * tail, float(np.clip(v, 0.05, 1.2))))
+                out.append((pos + rate * 0.5, seq[k], rate * 0.45 * tail,
+                            float(np.clip(v * 0.72, 0.05, 1.2))))
+            else:
+                out.append((pos, seq[k], rate * tail, float(np.clip(v, 0.05, 1.2))))
+        st += rate
+        i += 1
+    return out
+
+@cached
+def arpvoice(freq, dur_steps, gain=1.0, wave='saw', detune=0.007, f_lo=300,
+             f_hi=6500, res=1.5, decay=0.11, open_=1.0, floor_=0.05, sub=0.0,
+             drive=1.6, bands=7):
+    """An arp note whose spectrum moves while it sounds: detuned oscillators
+    through a filter that closes as the note decays.
+
+    `pluck` and `bell` hold one timbre for the whole note and only get
+    quieter - fine once, but sixteen of them a bar is the sound people call
+    raw. Here the filter starts at `f_hi` and falls to `f_lo` on every single
+    note, which is what a plucked string does and what a 303 does."""
+    n, t = steps(dur_steps)
+    if wave == 'square':
+        x = square(freq * (1 - detune), t) + square(freq * (1 + detune), t)
+    elif wave == 'tri':
+        x = (2 / np.pi) * np.arcsin(np.sin(2 * np.pi * freq * t)) * 2
+    else:
+        x = saw(freq * (1 - detune), t) + saw(freq * (1 + detune), t)
+    if sub:
+        x = x + sub * np.sin(np.pi * freq * t * 2 * 0.5)
+    cut = floor_ + (open_ - floor_) * np.exp(-t / decay)
+    out = morph_lp(stereo(x / 2), f_lo, f_hi, cut, bands=bands, res=res)
+    out = np.tanh(drive * out / (1 + res * 0.4))
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0009))
+    env = np.exp(-t / max(decay * 1.9, 0.02)) * adsr(n, a=0.0025, r=0.02)
+    return out * env[:, None] * gain * 0.5
 
 def bell(freq, dur_steps, gain=1.0):
     """icy glass bell: sine + inharmonic shimmer partials, long ring"""
@@ -798,7 +956,8 @@ class Session:
             print(f"{name:8s} {r:7.3f} {np.abs(m).max():6.3f} {np.abs(m).max()/r:6.2f} {side:6.0f} |"
                   + "".join(f"{v:7.1f}" for v in sh))
 
-    def mixdown(self, drive=1.2, duck=0.34, limit=0.0, peak=0.94, gains=None):
+    def mixdown(self, drive=1.2, duck=0.34, limit=0.0, peak=0.94, gains=None,
+                clip=0.0):
         env = duck_env(self.total, self.hits, depth=duck)
         mix = np.zeros((self.total, 2), dtype=np.float32)
         for name, buf in self.bus.items():
@@ -807,14 +966,32 @@ class Session:
                 buf = buf * (1 - (1 - env) * self.DUCKED[name])[:, None]
             mix += buf * g
         mix = hp(mix, 25)
-        mix = np.tanh(drive * mix) / np.tanh(drive)
+        if clip:
+            # Shave the sharpest transients before the saturator sees them.
+            # A clipper takes 1-2 dB off the very tip of a kick, where the ear
+            # is masked anyway, and leaves the body alone - which is exactly
+            # what a wide tanh does not do.
+            before = float(np.abs(mix).max())
+            touched = float((np.abs(mix).max(axis=1) > 0.8 * clip).mean()) * 100
+            mix = softclip(mix, clip, knee=0.8)
+            print(f"  clipper: {before:.2f} -> {float(np.abs(mix).max()):.2f} peak, "
+                  f"{touched:.2f}% of samples shaped "
+                  f"({'transients only' if touched < 2 else 'THIS IS EATING THE BODY'})")
+        pk = float(np.abs(mix).max())
+        if drive:
+            mix = np.tanh(drive * mix) / np.tanh(drive)
+            after = float(np.abs(mix).max())
+            print(f"  saturation: bus sum peaks {pk:.2f} -> {after:.2f} "
+                  f"({20*np.log10(max(after,1e-9)/max(pk,1e-9)):+.1f} dB). "
+                  f"More than about -1 dB here and the tanh is distorting every "
+                  f"transient, not gluing the mix.")
         if limit:
             mix = limiter(mix, limit, report=True)
         return mix * (peak / max(np.abs(mix).max(), 1e-9))
 
     def render(self, filename, drive=1.2, duck=0.34, limit=0.0, peak=0.94,
-               fade=1.2, gains=None):
-        m = self.mixdown(drive, duck, limit, peak, gains)
+               fade=1.2, gains=None, clip=0.0):
+        m = self.mixdown(drive, duck, limit, peak, gains, clip)
         fi = int(0.01 * SR); m[:fi] *= np.linspace(0, 1, fi)[:, None]
         fo = int(fade * SR); m[-fo:] *= np.linspace(1, 0, fo)[:, None]
         os.makedirs(RENDERS, exist_ok=True)
