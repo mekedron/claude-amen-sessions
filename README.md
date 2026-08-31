@@ -68,6 +68,7 @@ All finished audio lives in `renders/`.
 | `phonk_drift_160.wav` | Drift phonk in F# minor: the 808 cowbell driven until it clangs, a sliding 808, memphis vocal chops, tyres and an engine. Three drops, a tape-stopped breakdown, pitched echoes thrown ear to ear |
 | `hard_ascension_170.wav` | Industrial hardstyle in A minor: a kick put through drive, EQ, drive and a wavefolder, reverse bass swelling into every gap it leaves, and a euphoric breakdown that has to earn the drop it walks into |
 | `neuro_bezdna_174.wav` | Dark neurofunk in F minor (4:28): programmed drums instead of a break, and a bass built in three layers that never share a frequency - a clean mono sine under 110 Hz, a reese moving under a swept comb above it, and a hard-synced screech on top. Three drops, one chord progression in the whole track, and the Phrygian b2 as the only note from outside |
+| `acid_nebel_130.wav` | Dub techno with acid in it, 6:24: the chord is on the offbeat, filtered dark and thrown into a delay that filters and saturates inside its own feedback path, so the tenth repeat is a different sound from the first. The 303 arrives from behind that. No kick for sixteen bars, and one drum fill in the whole record |
 | `acid_rausch_138.wav` | Acid breakbeat in D minor, 5:37: no kick on every beat. A breakbeat states the pulse by leaving it out, and ghost snares at a fifth of the velocity fill the gaps - inaudible as events, and the entire groove. The 303 shares the bar with hoovers, orchestra hits, a piano playing major triads over a minor key and a diva from another genre |
 | `acid_saeure_146.wav` | Hard acid in E minor, 6:38: the kick tuned to E1 (41.2 Hz) and a 303 that spends the record descending. The line starts at E3, drops an octave halfway, and by the last forty bars is running in three octaves at once - a saturated sub, a clean bassline and a folded scream on top. Sixteen bars of nothing but hard-clipped industrial kicks before the finale, half of each one made of air |
 | `acid_spirale_140.wav` | Acid techno in A minor, 7:22: the 303 is the whole record. Two acid lines, one on a sixteen-step bar and one on a fifteen-step cycle, so they drift a step apart every bar and meet again fifteen bars later - always almost repeating, never quite. No rumble: acid techno is a 909 and a 303 and the space between them, and the low end belongs to the bassline. Everything that happens is a filter moving |
@@ -109,6 +110,7 @@ python3 src/track_untertage.py   # writes renders/industrial_untertage_136.wav
 python3 src/track_spirale.py     # writes renders/acid_spirale_140.wav
 python3 src/track_saeure.py      # writes renders/acid_saeure_146.wav
 python3 src/track_rausch.py      # writes renders/acid_rausch_138.wav
+python3 src/track_nebel.py       # writes renders/acid_nebel_130.wav
 python3 src/track_hardstyle.py   # writes renders/hard_ascension_170.wav
 python3 src/track_alive.py       # writes renders/amen_alive_174.wav
 python3 src/track_zub4atka.py    # writes renders/amen_zub4atka_174.wav

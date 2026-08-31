@@ -57,9 +57,9 @@ def breaksnare(dur_steps=3.0, gain=1.0, tune=196.0, room=0.55, bright=1.0,
     tone = (0.6 * np.sin(2 * np.pi * tune * t) * np.exp(-t / 0.045)
             + 0.3 * np.sin(2 * np.pi * tune * 1.6 * t) * np.exp(-t / 0.03))
     nz = rs.randn(n)
-    crack = bandpass(stereo(nz), 1400 * bright, 7000 * bright) * np.exp(-t / 0.085)[:, None]
-    snap = hp(stereo(nz), 6000) * np.exp(-t / 0.022)[:, None] * 0.5
-    out = stereo(tone) + crack * 1.1 + snap
+    crack = bandpass(stereo(nz), 1200 * bright, 5200 * bright) * np.exp(-t / 0.085)[:, None]
+    snap = bandpass(stereo(nz), 5000, 9000) * np.exp(-t / 0.018)[:, None] * 0.22
+    out = stereo(tone) * 1.25 + crack * 0.85 + snap
     if room:
         out = out + room * reverb(lp(out, 6000), decay=0.42, wet=0.8, tone=4200)[:n]
     out = np.tanh(1.7 * out)
@@ -70,9 +70,9 @@ def breaksnare(dur_steps=3.0, gain=1.0, tune=196.0, room=0.55, bright=1.0,
 def breakhat(dur_steps=0.6, open_=False, gain=1.0, seed=0):
     n, t = steps(dur_steps if not open_ else max(dur_steps, 2.4))
     rs = np.random.RandomState(seed + 661)
-    x = bandpass(stereo(rs.randn(n)), 4200, 13000)
+    x = bandpass(stereo(rs.randn(n)), 4600, 10500)
     dec = 0.17 if open_ else 0.024
-    return x * (np.exp(-t / dec) * adsr(n, a=0.0005, r=0.008))[:, None] * gain * 0.5
+    return x * (np.exp(-t / dec) * adsr(n, a=0.0005, r=0.008))[:, None] * gain * 0.46
 
 # a Funky-Drummer-shaped bar: (step, what, gain). 'g' is a ghost snare.
 BREAK_A = [(0, 'k', 1.0), (3, 'k', 0.8), (4, 's', 1.0), (6, 'g', 1.0), (7, 's', 0.55),

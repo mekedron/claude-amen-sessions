@@ -816,3 +816,53 @@ def kickbarrage(s, b, steps_, bus='drums', gain=1.0, tune=41.2, climb=0.0,
         if duck:
             s.hit(t)
         s.place(t, industrialkick(tune=tune * (1 + climb * u), **kw), gain, bus)
+
+
+# ---- dub techno ----
+@cached
+def dubchord(notes, dur_steps=2.0, gain=1.0, cutoff=1500, drift=7.0, drive=1.6,
+             attack=0.008, seed=0):
+    """The Basic Channel chord: a minor triad on detuned saws, filtered dark,
+    struck short and thrown into a delay.
+
+    Everything about it is slightly wrong on purpose - the voices are seven
+    cents apart and drift against each other, the filter is closed far below
+    where you would put a pad, and the attack is soft enough that it never
+    quite starts. On its own it is a dull stab; the instrument is the chord
+    plus the echo, which is why this is written to be fed to dubdelay()."""
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 811)
+    x = np.zeros(n)
+    for f in notes:
+        for k, d in enumerate((-drift, 0.0, drift)):
+            det = 2 ** (d / 1200) * (1 + 0.0006 * np.sin(2 * np.pi * (0.07 + 0.03 * k) * t))
+            x += saw_ph(2 * np.pi * np.cumsum(f * det) / SR, f * 1.5, kmax=26)
+    x /= 3 * len(notes)
+    out = lp(stereo(np.tanh(drive * x)), cutoff)
+    out = out + 0.3 * bandpass(out, cutoff * 0.7, cutoff * 1.4)
+    a = max(int(attack * SR), 8)
+    env = np.ones(n)
+    env[:a] = np.linspace(0, 1, a) ** 1.4
+    env *= np.exp(-t / (dur_steps * STEP / SR * 0.5))
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0013))
+    return out * env[:, None] * gain * 0.5
+
+def dubdelay(seg, steps_=3.0, times=7, fb=0.62, damp=900, sat=1.4, spread=0.8):
+    """A dub delay: each repeat darker, dirtier and further out than the last.
+
+    A plain delay repeats a sound quieter. This one filters and saturates
+    inside the feedback path, so the tenth repeat is a different sound from
+    the first - a dark smear with no transient left - which is the whole
+    point of the technique and the reason dub records sound like weather."""
+    d = int(steps_ * STEP)
+    out = np.zeros((len(seg) + d * times + 1, 2), dtype=np.float32)
+    out[:len(seg)] += seg
+    tail = seg.copy()
+    for i in range(1, times + 1):
+        tail = lp(tail, max(6000 - damp * i, 380))
+        tail = np.tanh(sat * tail) / np.tanh(sat)
+        e = tail * (fb ** i)
+        e = panned(e, (spread if i % 2 else -spread) * min(i / 3, 1.0))
+        a = i * d
+        out[a:a + len(e)] += e
+    return out

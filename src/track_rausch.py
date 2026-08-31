@@ -242,8 +242,12 @@ s.bus['acid'] = autopan(s.bus['acid'], cycle_bars=11.0, depth=0.26, phase=1.1)
 s.bus['pad'] = hp(s.bus['pad'], 200)
 s.bus['stab'] = hp(s.bus['stab'], 110)
 s.bus['drums'] = softclip(s.bus['drums'], 1.2, knee=0.85)
+# a broad cut through the fatigue zone: this kit is all snare and hat, and
+# 11% of the mix was sitting in 2-4 kHz against 1.7% on the other records
+s.bus['drums'] = peak_eq(s.bus['drums'], 3000, -3.0, width=0.5)
+s.bus['drums'] = peak_eq(s.bus['drums'], 5000, -1.2, width=0.4)
 for b in ('drums', 'music', 'fx', 'pad'):
-    s.bus[b] = shelf(s.bus[b], 9500, -2.0)
+    s.bus[b] = shelf(s.bus[b], 9000, -2.5)
 for b in s.bus:
     s.bus[b] = mono_below(s.bus[b], 140)
 
