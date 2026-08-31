@@ -103,7 +103,53 @@ machines that defined each genre, and
 Build from those rather than from whatever the last track happened to leave
 behind.
 
-## Rule 4 — house style
+## Rule 4 — the engine is yours to extend
+
+You have standing permission to **change, refactor, improve and extend the
+engine** — `core.py`, `sampler.py`, the genre modules, and the tooling around
+them — at your own discretion, without asking first.
+
+**If a capability is missing, add it.** Do not work around a gap with awkward
+code at the call site, and do not treat the current set of functions as the
+limit of what is possible. The engine is a means to whatever the track needs; it
+is not a fixed specification. If a piece calls for a filter type, a modulation
+source, an effect, a sequencing primitive, a mix behaviour or an analysis
+helper that does not exist yet, writing it is the correct response.
+
+This covers the whole engine, not only synths:
+
+| Area | Examples of things worth adding |
+|---|---|
+| **Synthesis** | New oscillators, filter models, envelope shapes, modulation sources |
+| **Effects** | Anything in `theory/10-instruments/13-effects-and-processors.md` that is missing |
+| **Sequencing** | Probability, parameter locks per step, polymeter, swing templates, ratchets |
+| **Sampling** | New slicing, retiming, onset-detection or classification tools |
+| **Mixing** | Buses, sidechain shapes, multiband processing, metering |
+| **Verification** | Analysis that reports what a render actually contains — band balance, stereo width, peak/LUFS, transient punch — since the audio cannot be heard directly |
+| **Structure** | A new genre module when a style needs its own kit and grid |
+
+### The constraints that keep it safe
+
+1. **Existing tracks must still render.** Add parameters with defaults rather
+   than changing the meaning of existing ones; keep public signatures working.
+   If a change is genuinely breaking, update every caller in the same commit.
+2. **Put it in the right layer.** Anything tempo-agnostic and generally useful
+   goes in `core.py`; a sample's handling goes in `sampler.py`; anything that
+   belongs to one style goes in that genre module.
+3. **Match the surrounding idiom** — the same naming, argument order, gain
+   conventions and comment density as the code next to it.
+4. **Document it where the module documents itself** — the module docstring and
+   the README's engine section stay accurate.
+5. **Refactor when the structure is in the way**, not for its own sake.
+6. **`theory/` stays tool-agnostic.** Engine capabilities are described in the
+   repo's own documentation, never inside the theory library.
+
+### Say what you changed
+
+Report engine changes alongside the musical result: what you added, why the
+track needed it, and what now exists for future pieces to use.
+
+## Rule 5 — house style
 
 - Conventions used throughout the library: MIDI note numbers for pitch,
   semitone offsets for scales and chords, a 16-step bar for rhythm,
