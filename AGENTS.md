@@ -309,7 +309,11 @@ Everything below is loaded into every session by the harness.
 @theory/40-reference/04-glossary.md
 @theory/40-reference/05-quick-decision-tables.md
 @theory/90-memories/README.md
+@theory/90-memories/bells-are-not-a-default-top-layer.md
 @theory/90-memories/struck-metal-needs-modes-not-squares.md
 @theory/90-memories/section-contrast-belongs-in-level.md
 @theory/90-memories/bar-rendered-parts-must-overhang.md
 @theory/90-memories/smoothers-return-tiny-negatives.md
+@theory/90-memories/neurofunk-bass-is-a-dark-reese.md
+@theory/90-memories/pitched-metal-reads-as-cheerful.md
+@theory/90-memories/loud-masters-need-a-true-peak-limiter.md
