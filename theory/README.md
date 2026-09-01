@@ -172,6 +172,7 @@ everything at once is not experimental, it is noise.
 - [`a-drifting-machine-must-land-on-an-eighth.md`](90-memories/a-drifting-machine-must-land-on-an-eighth.md) — An even-step cycle drifts against the bar and still lands on eighths
 - [`an-accelerating-click-train-can-diverge.md`](90-memories/an-accelerating-click-train-can-diverge.md) — A geometric accelerando converges, and the loop waiting for it never ends
 - [`a-wall-is-what-no-low-end-event-measures-as.md`](90-memories/a-wall-is-what-no-low-end-event-measures-as.md) — No bass instrument means nothing for a drop to land on
+- [`a-guitar-wall-is-one-take-not-chords.md`](90-memories/a-guitar-wall-is-one-take-not-chords.md) — A chord-per-segment rhythm guitar reads as a synth patch
 - [`a-held-pitch-is-not-a-bass-line.md`](90-memories/a-held-pitch-is-not-a-bass-line.md) — One note under a moving filter reads as low-frequency noise
 - [`many-distorted-kicks-merge-into-noise.md`](90-memories/many-distorted-kicks-merge-into-noise.md) — Eight hard-clipped kicks a bar stop being eight events
 - [`a-spark-is-a-click-with-no-body.md`](90-memories/a-spark-is-a-click-with-no-body.md) — Why a repeated click reads as electrical instead of mechanical
@@ -206,4 +207,4 @@ everything at once is not experimental, it is noise.
 - [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
 - [`top-end-from-transients-not-wash.md`](90-memories/top-end-from-transients-not-wash.md) — top-end-from-transients-not-wash.md
 
-**113 files.** Everything is plain Markdown with no external dependencies.
+**114 files.** Everything is plain Markdown with no external dependencies.

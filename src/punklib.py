@@ -17,6 +17,16 @@ Rhythm guitars are DOUBLE TRACKED: two separate takes, different seeds,
 different detune, a few milliseconds apart, hard left and hard right. No
 plugin widens a guitar the way two performances do.
 
+Two ways to render them. `gtr()`/`mute()` are chord-at-a-time - fine for a
+wall that changes once a bar. `riff()` renders a whole PHRASE as one take
+through one amp pass: strings ring into the next chord, restrikes re-excite
+strings that never stopped, chokes and pick scrapes land between events, and
+the amp hisses in the rests - which is what separates a performance from a
+patch being triggered. `jangle()` is the second guitar: single coils, edge
+of break-up, a chorus pedal - a different instrument, not a copy, and the
+two together are why a record sounds like a band. `GUITARS` holds the
+pickup voicings.
+
 The kit is acoustic, not a drum machine: shell modes with a pitch drop,
 wires, a beater click, and one shared room on the whole bus so the kit
 sounds like it was played in a place.
@@ -211,6 +221,171 @@ def clean(root, dur_steps=8, shape='min', level=1.0, take=0, bright=1.0):
             presence=1.2 * bright)
     y = y + 0.30 * hp(y, 3000) * bright
     return norm(y * adsr(n, a=0.003, r=0.06)[:, None], 0.8) * level
+
+
+# ---- guitars, plural ----
+# What makes one guitar not another one is not the string - it is where the
+# coil sits under it, where that coil resonates against the cable, and where
+# the pick lands. A humbucker at the bridge is fat and speaks at 2.7 kHz; a
+# single coil further up the body is thin, bright and peaks over 4 kHz. Give
+# a record two of these at once, through two different amps, and it stops
+# being "a guitar sound" and becomes a band.
+GUITARS = dict(
+    hb=dict(pickup=0.13, res_hz=2700.0, res_q=2.0, pick=0.20),   # the wall
+    sc=dict(pickup=0.21, res_hz=4300.0, res_q=3.1, pick=0.13),   # the shimmer
+)
+
+
+@cached
+def riff(events, bars=1, take=0, gain=18.0, heavy=0.0, guitar='hb', level=1.0,
+         tail=6, hiss=1.0, tight=None, thud=0.5, push=0.5, presence=1.0):
+    """One continuous rhythm-guitar take: the whole phrase into one amp.
+
+    `gtr()` renders every chord as its own segment through its own pass of
+    the amp, normalised to the same peak. That is a sampler playing a patch,
+    and it is audible as one: each chord starts from digital silence at a
+    loudness identical to the last. A recorded rhythm track is one
+    performance - the strings ring INTO the next chord until the fretting
+    hand chokes them, a restrike re-excites strings that never stopped, the
+    pick scrapes at every change, and the amp hisses in the rests. So the
+    whole phrase is built dry, as a performance, and the amp sees it once.
+
+    events: ((step, root, length_steps, kind), ...) with steps counted
+    across the whole phrase (0..16*bars). kind:
+      'chord'  open power chord; rings its written length, then is choked -
+               unless the next event restrikes the same root with no gap, in
+               which case the old strings keep ringing under the new strum
+      'oct'    root + octave, the two-string post-punk voicing
+      'note'   one string
+      'mute'   palm mute: dies by itself, with the palm's low thud
+    A chord whose written length runs past the end of the phrase is left to
+    ring into the tail (`bar-rendered-parts-must-overhang`)."""
+    body = int(bars * 16 * STEP)
+    n = body + max(int(tail * STEP), int(0.15 * SR))
+    rng = np.random.default_rng(6007 * take + 131 * len(events))
+    g = GUITARS[guitar]
+    dry = np.zeros(n)
+    thuds = np.zeros(n)
+    evs = sorted(events)
+    for i, (st, root, ln, kind) in enumerate(evs):
+        a = int(st * STEP) + (int(rng.integers(-88, 89)) if st else 0)
+        a = max(a, 0)
+        rel = min(int((st + ln) * STEP), n)
+        accent = st % 4 == 0
+        vel = 1.0 if accent else 0.82 + 0.10 * rng.random()
+        tilt = 0.0 if accent else -0.10                 # soft strokes are darker
+        if kind == 'mute':
+            m = min(n - a, max(int(0.30 * SR), rel - a))
+            tm = np.arange(m) / SR
+            x = np.zeros(m)
+            for j, nt in enumerate((root, root + 7)):
+                f = midi(nt) * (1 + 0.004 * (rng.random() - 0.5))
+                d = int(0.0022 * j * SR)
+                x[d:] += string(f, m - d, decay=0.070 + 0.02 * rng.random(),
+                                damp=0.070, pick=0.10 + 0.04 * rng.random(),
+                                B=1.6e-4, top=5200.0, polar=0.5, tilt=tilt,
+                                seed=int(311 * take + 17 * nt + 7 * i)) * (1 - 0.15 * j)
+            f0 = midi(root)                            # the palm on the string:
+            x += 0.8 * (np.sin(2 * np.pi * f0 * tm)    # this goes THROUGH the
+                        + 0.5 * np.sin(4 * np.pi * f0 * tm)   # amp - a driven
+                        ) * np.exp(-tm / 0.045)               # thud IS the chug
+            dry[a:a + m] += x * vel
+            thuds[a:a + m] += np.sin(2 * np.pi * f0 * tm) * np.exp(-tm / 0.050) * vel
+            continue
+        notes = ([root, root + 7, root + 12] if kind == 'chord' else
+                 [root, root + 12] if kind == 'oct' else [root])
+        ring = min(n - a, rel - a + int(0.45 * SR))    # ring past the note-off
+        x = np.zeros(ring)
+        for j, nt in enumerate(notes):
+            f = midi(nt) * (1 + 0.006 * (rng.random() - 0.5) * 2)
+            d = int((0.0048 * j + 0.0016 * rng.random()) * SR)
+            if ring - d < 64:
+                continue
+            x[d:] += string(f, ring - d, decay=0.9 * (1 - 0.08 * j), damp=0.026,
+                            pick=g['pick'] + 0.06 * rng.random(),
+                            pickup=g['pickup'], res_hz=g['res_hz'],
+                            res_q=g['res_q'], B=1.3e-4 * (82.0 / f) ** 0.4,
+                            tilt=tilt,
+                            seed=int(7919 * take + 13 * nt + 5 * i)) * (1 - 0.10 * j)
+        if rel - a < ring and st + ln < bars * 16 - 0.01:
+            # A restrike of the same chord with no gap only dips the old
+            # strings - the pick passes through them; a change or a rest is
+            # the fretting hand landing, and that is a choke.
+            nxt = evs[i + 1] if i + 1 < len(evs) else None
+            restrike = (nxt is not None and nxt[3] == kind and nxt[1] == root
+                        and nxt[0] - (st + ln) < 0.01)
+            floor_ = 0.34 if restrike else 0.06
+            c0 = max(rel - a - int(0.006 * SR), 0)
+            tt = np.arange(ring - c0) / SR
+            env = np.ones(ring)
+            env[c0:] = floor_ + (1 - floor_) * np.exp(-tt / 0.011)
+            x *= env
+        dry[a:a + ring] += x * vel
+        if i and kind in ('chord', 'oct'):             # the scrape at a change
+            m = min(int(0.007 * SR), n - a)
+            sc = rng.standard_normal(m) * np.exp(-np.arange(m) / SR / 0.0022)
+            b0 = max(a - int(0.003 * SR), 0)
+            dry[b0:b0 + m] += bandpass(sc[:, None], 1200, 5600)[:, 0] * 0.16
+    th = np.arange(n) / SR                             # the amp itself: hiss
+    bed = 0.0011 * rng.standard_normal(n)              # and mains hum, so the
+    bed += 0.0008 * np.sin(2 * np.pi * 50 * th)        # rests are a room, not
+    bed += 0.0005 * np.sin(2 * np.pi * 150 * th + 1.1) # a digital zero
+    dry = dry + hiss * bed
+    ck, tdef = _heavy_cab(heavy)
+    ck = dict(ck or {}, seed=take // 10)
+    if guitar == 'sc':
+        ck = dict(ck, high=ck.get('high', 4800.0) + 700.0,
+                  presence=ck.get('presence', 1.0) * 1.25)
+    y = amp(dry / 2.6, gain=gain, tight=tight if tight else tdef, push=push,
+            presence=presence, cab_kw=ck)
+    y = y / max(float(np.abs(y).max()), 1e-9) * 0.9
+    if thud:
+        y = y + stereo(thuds) * 0.5 * thud
+    k = int(0.05 * SR)
+    y[-k:] *= np.linspace(1, 0, k)[:, None]
+    return y.astype(np.float32) * level
+
+
+@cached
+def jangle(events, bars=1, take=0, level=1.0, bright=1.0, tail=10, drive=2.2,
+           chor=0.55):
+    """The other guitar. Single coils into an amp just past clean, then a
+    chorus pedal - the cold shimmer that answers the wall on every post-punk
+    record. Arpeggios and octaves, everything left ringing into everything
+    else: where the wall is a wall, this is the rain running down it.
+
+    Same event format as `riff()`; one continuous take, no chokes - a
+    picked arpeggio lives on its overlaps."""
+    n = int(bars * 16 * STEP) + max(int(tail * STEP), int(0.3 * SR))
+    rng = np.random.default_rng(3391 * take + 101 * len(events))
+    g = GUITARS['sc']
+    dry = np.zeros(n)
+    for i, (st, note, ln, kind) in enumerate(sorted(events)):
+        a = int(st * STEP) + (int(rng.integers(-66, 67)) if st else 0)
+        a = max(a, 0)
+        notes = ([note, note + 12] if kind == 'oct' else
+                 [note, note + 7, note + 12] if kind == 'chord' else [note])
+        ring = min(n - a, int(ln * STEP) + int(1.3 * SR))
+        vel = 1.0 if st % 4 == 0 else 0.84 + 0.10 * rng.random()
+        for j, nt in enumerate(notes):
+            f = midi(nt) * (1 + 0.005 * (rng.random() - 0.5))
+            d = int(0.006 * j * SR)
+            if ring - d < 64:
+                continue
+            dry[a + d:a + ring] += string(f, ring - d, decay=1.6, damp=0.030,
+                                          pick=g['pick'] + 0.05 * rng.random(),
+                                          pickup=g['pickup'], res_hz=g['res_hz'],
+                                          res_q=g['res_q'], B=9e-5, top=7000.0,
+                                          seed=int(1117 * take + 29 * nt + 3 * i)
+                                          ) * vel * (1 - 0.12 * j)
+    y = np.tanh(drive * stereo(dry / 1.8))
+    y = cab(y, seed=take // 10 + 3, low=105.0, high=5800.0, cone=0.4,
+            presence=1.5)
+    y = y + bright * 0.22 * hp(y, 3200)
+    y = chorus(y, voices=2, depth_ms=4.2, rate=0.45, base_ms=16.0, mix=chor)
+    k = int(0.08 * SR)
+    y[-k:] *= np.linspace(1, 0, k)[:, None]
+    return norm(y, 0.85) * level
 
 
 # ---- the bass ----
