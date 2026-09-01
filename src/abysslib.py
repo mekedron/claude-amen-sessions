@@ -24,16 +24,27 @@ Five things this module does that a note-sequenced bass cannot:
 4. **The distortion is serial with EQ between every stage**, and the last
    stage is a wavefolder rather than a saturator: `tanh` stops generating
    partials once it is flat and folding does not.
-5. **`resink()` is a resampling chain, not a polish pass.** Pitch the whole
+5. **Low and bright are different knobs.** Opening the cutoff for brightness
+   raises the whole spectrum and the ear hears a higher NOTE - which is how
+   this patch first ended up an octave up. The ring instead comes from two
+   narrow resonances at 23x and 43x the fundamental that TRACK the note, so
+   they fill 1-2 kHz without moving the pitch anybody hears.
+6. **`resink()` is a resampling chain, not a polish pass.** Pitch the whole
    patch down an octave, distort and filter it THERE, pitch it back - and
    then do it again upward with a different shaper. Every notch, formant and
    resonance ends up somewhere no oscillator put it.
 
-Three layers that never share a band: `core.subbar` under ~70 Hz for the
-fundamental and its octave, `maw()` from 78 Hz up for everything with teeth,
-and `leviathan()` behind both for the 100-600 Hz bed. The mid layer is
-highpassed at 78, not 105 - an F2 at 87 Hz has to keep its own fundamental
-or the "bass" is a mid-range instrument sitting on top of a separate sub.
+Every number in the bass is measured against `samples/reese_witch_a1_56hz.wav`
+rather than chosen: a 55.87 Hz fundamental, 43% of the energy in 120-300 Hz,
+4% above 800 Hz, and a third partial as loud as the first. That last one is
+why the low end here is additive - a filter can only take away, and a saw's
+own 1/k has already buried h3 ten decibels down before the filter sees it.
+
+It also settles the architecture. The reference has no separate sub anywhere
+in it: the reese IS the bass, fundamental included. So `maw()` carries h1
+upward from the same phase track as its character, and `core.subbar` is kept
+only for the sections where the creature is absent - two continuous
+oscillators at 43.65 Hz with unrelated phases cancel.
 """
 import numpy as np
 from core import *
@@ -94,7 +105,8 @@ def maw(notes, bars=2, rate=1.0, cut=1200.0, res=1.4, fmi=0.0, vow=0.0,
         ntch=900.0, syn=0.0, gat=1.0, pos=0.0, table='witch', detune=30.0,
         pos_lo=1.5, pos_hi=20.5, drive=2.3, fold_g=1.30, crush=0,
         vowels=('oh', 'ee'), vwet=0.40, nmix=0.55, sat=0.55, hits=(0.0,),
-        hpf=30.0, lpf=3400.0, sub=1.40, ktrack=0.85, tilt=-3.0, tail=6, seed=0, gain=1.0, glide=0.060):
+        hpf=30.0, lpf=3400.0, sub=1.40, ktrack=0.85, tilt=-3.0,
+        bite=0.62, bite_k=(23.0, 52.0), biteq=7.0, tail=6, seed=0, gain=1.0, glide=0.060):
     """The creature. One continuous oscillator, nine lanes of movement.
 
     Every lane is either a scalar or one value per sixteenth of the cell.
@@ -163,6 +175,7 @@ def maw(notes, bars=2, rate=1.0, cut=1200.0, res=1.4, fmi=0.0, vow=0.0,
     x = lp(hp(x, hpf, 2), 9200, 4)
     x = morph_formant(x, vowels[0], vowels[1], env=vowl, wet=vwet, gain=1.45)
     x = fold(norm(x, 0.62) * fold_g)
+    xd = x                                  # kept for the ring, below
     x = lp(hp(x, hpf, 2), lpf, 4)
     if crush:
         x = 0.72 * x + 0.28 * bitcrush(x, crush, 2)
@@ -191,6 +204,21 @@ def maw(notes, bars=2, rate=1.0, cut=1200.0, res=1.4, fmi=0.0, vow=0.0,
 
     if tilt:
         x = shelf(x, 760, tilt, 'high')
+
+    # --- the ring. Low and bright are not opposites, but they are not the same
+    # knob either: opening the cutoff to get brightness raises the whole
+    # spectrum and the ear then hears a HIGHER NOTE, which is how this patch
+    # ended up an octave up the first time. What reads as "low but ringing" is
+    # a pair of narrow resonances high in the harmonic series that TRACK the
+    # note - at 23x and 43x the fundamental they land near 1 and 1.9 kHz for an
+    # F1, so they fill the band between the bass and the hats without moving
+    # the pitch anyone hears. Fed from the pre-lowpass signal, because after a
+    # 3.4 kHz lowpass there is nothing up there to resonate.
+    if bite:
+        bx = drive_asym(norm(xd, 0.70), 3.4, 0.30)
+        r1 = svf(bx, np.clip(f * bite_k[0], 320, 9000), biteq, 'bp')
+        r2 = svf(bx, np.clip(f * bite_k[1], 600, 12000), biteq * 0.8, 'bp')
+        x = x + bite * (r1 + 0.85 * r2)
 
     x = x * (_swell(notes, n) * gatl)[:, None]
 
@@ -460,7 +488,7 @@ def tick(dur_steps=0.7, gain=1.0, open_=False, tone=1.0):
     n, t = steps(dur_steps if not open_ else max(dur_steps, 2.4))
     rs = np.random.RandomState(23)
     metal = sum(square(fq * tone, t) for fq in (318.0, 462.0, 611.0, 803.0)) / 4
-    x = hp(stereo(0.55 * metal + rs.randn(n) * 0.85), 6800 if not open_ else 5600, 2)
+    x = hp(stereo(0.78 * metal + rs.randn(n) * 0.72), 4200 if not open_ else 3600, 2)
     dec = 0.062 if open_ else 0.014
     e = np.exp(-t / dec)
     if open_:

@@ -16,11 +16,20 @@ anywhere: a bare fifth at the bottom and the Phrygian b2 two octaves above the
 root, which is dread rather than a chord.
 
 **The bass is one creature, not a bass part.** Every two-bar cell is a single
-oscillator running a lane of eight half-bar gestures from `abysslib.GESTURES`.
-The pitch moves five times in four minutes; the rate of the wavetable scan
-moves every sixteenth. `lurk` holds the timbre still and `shred` runs it at
-thirty-seconds, and the cell that goes `lurk draw chew shred` is one note
-accelerating from stillness to texture without ever restarting.
+oscillator running a lane of ten half-bar gestures from `abysslib.GESTURES`.
+The pitch barely moves; the rate of the wavetable scan moves every sixteenth.
+`lurk` holds the timbre still and `shred` runs it at thirty-seconds, and the
+cell that goes `lurk draw chew shred` is one note accelerating from stillness
+to texture without ever restarting. `reel` is the pair that does it in both
+directions - `stretch wind stretch shred`, the vibration drawn out until it
+nearly stops and then wound back up, measured at 234 -> 83 -> 366 Hz.
+
+**The pitch arc is saved for the end of each drop.** Ten bars of F, then a
+climb through the b3 and the b6 and a fall of a semitone onto a note that does
+not resolve - the b2 at the end of drop one, the tritone at the end of drop
+three. The fourth and the fifth barely appear: they are the two degrees of
+this scale that are neither major nor minor, and this record has no use for
+either.
 
 **The arrangement is a chase, so it has to actually accelerate.** Bar 80 is
 the floor of the record at -11.5 dB against the drops, and the ARC ride below
@@ -102,25 +111,25 @@ def kit(b, v=0, gain=1.0, hats=1.0, ghosts=1.0, opens=(6,), tick_pat=None):
 # Cells are named by what the thing is doing. Each is four half-bar gestures
 # handed to one oscillator, and the table underneath is which mouth it uses.
 CELLS = {
-    'wake':   (['lurk', 'lurk', 'draw', 'draw'], 'growl', {}),
-    'stalk':  (['lurk', 'draw', 'chew', 'shred'], 'growl', {}),
-    'answer': (['snap', 'snap', 'chew', 'gnash'], 'growl', dict(drive=2.7)),
-    'climb':  (['chew', 'shred', 'gnash', 'howl'], 'growl', dict(drive=2.6)),
-    'scream': (['howl', 'howl', 'gnash', 'sink'], 'vowel', dict(vwet=0.62, drive=2.4)),
-    'hunt':   (['gnash', 'shred', 'gnash', 'shred'], 'metal', dict(drive=2.9, fold_g=1.42)),
-    'bite':   (['snap', 'snap', 'snap', 'gnash'], 'metal', dict(drive=3.0)),
-    'hand':   (['shred', 'shred', 'gnash', 'sink'], 'growl', {}),
-    'tear':   (['gnash', 'gnash', 'shred', 'howl'], 'rip', dict(drive=3.1, fold_g=1.5,
+    'wake':   (['lurk', 'lurk', 'draw', 'draw'], 'growl', dict(bite=0.85)),
+    'stalk':  (['lurk', 'draw', 'chew', 'shred'], 'growl', dict(bite=0.80)),
+    'answer': (['snap', 'snap', 'chew', 'gnash'], 'growl', dict(bite=0.70, drive=2.7)),
+    'climb':  (['chew', 'shred', 'gnash', 'howl'], 'growl', dict(bite=0.42, drive=2.6)),
+    'scream': (['howl', 'howl', 'gnash', 'sink'], 'vowel', dict(bite=0.50, vwet=0.62, drive=2.4)),
+    'hunt':   (['gnash', 'shred', 'gnash', 'shred'], 'metal', dict(bite=0.34, drive=2.9, fold_g=1.42)),
+    'bite':   (['snap', 'snap', 'snap', 'gnash'], 'metal', dict(bite=0.34, drive=3.0)),
+    'hand':   (['shred', 'shred', 'gnash', 'sink'], 'growl', dict(bite=0.75)),
+    'tear':   (['gnash', 'gnash', 'shred', 'howl'], 'rip', dict(bite=0.30, drive=3.1, fold_g=1.5,
                                                                 crush=7)),
-    'talk':   (['chew', 'howl', 'chew', 'gnash'], 'vowel', dict(vwet=0.70,
+    'talk':   (['chew', 'howl', 'chew', 'gnash'], 'vowel', dict(bite=0.55, vwet=0.70,
                                                                 vowels=('oo', 'ee'))),
-    'wide':   (['draw', 'chew', 'chew', 'shred'], 'reeseb', dict(detune=32.0, drive=2.2)),
-    'crush':  (['lurk', 'lurk', 'sink', 'sink'], 'witch', dict(drive=2.5, fold_g=1.2)),
+    'wide':   (['draw', 'chew', 'chew', 'shred'], 'reeseb', dict(bite=0.72, detune=32.0, drive=2.2)),
+    'crush':  (['lurk', 'lurk', 'sink', 'sink'], 'witch', dict(bite=0.90, drive=2.5, fold_g=1.2)),
     # The reel: the vibration stretched out until it nearly stops, then wound
     # back up to thirty-seconds - and the pitch arc lifts on the cell after
     # it, so the phrase reads long, short, higher. One note the whole way.
-    'reel':   (['stretch', 'wind', 'stretch', 'shred'], 'witch', dict(drive=2.5)),
-    'reel2':  (['stretch', 'wind', 'gnash', 'wind'], 'reeseb', dict(detune=38.0)),
+    'reel':   (['stretch', 'wind', 'stretch', 'shred'], 'witch', dict(bite=0.80, drive=2.5)),
+    'reel2':  (['stretch', 'wind', 'gnash', 'wind'], 'reeseb', dict(bite=0.75, detune=38.0)),
 }
 _CACHE = {}
 
@@ -207,9 +216,9 @@ SUB_GATE[47 * 16 + 8:48 * 16] = 0.0
 s.place(s.pos(48), impact(24, 0.85), 1.0, 'fx')
 s.place(s.pos(48), hull(32 * 16, seed=14, lo=2000, hi=9000, density=0.6), 0.40, 'atmos')
 D1 = [('stalk', 29), ('answer', 29), ('stalk', 29), ('climb', 29),
-      ('stalk', 29), ('answer', 29), ('scream', 29), ('climb', 29),
-      ('hunt', 29), ('reel', 29), ('hunt', 29), ('bite', 32),
-      ('hunt', 36), ('climb', 37), ('scream', 36), ('hand', 29)]
+      ('stalk', 30), ('answer', 29), ('scream', 32), ('climb', 29),
+      ('hunt', 30), ('reel', 29), ('hunt', 29), ('bite', 32),
+      ('hunt', 37), ('climb', 36), ('scream', 30), ('hand', 29)]
 for i, (name, nt) in enumerate(D1):
     b = 48 + i * 2
     lay(b, name, nt, 1.0, seed=20 + i % 5)
@@ -264,9 +273,9 @@ s.place(s.pos(110), maw_rev(cell('hunt', 41, seed=28), 0.42), 1.0, 'fx')
 s.place(s.pos(112), impact(24, 1.0), 1.0, 'fx')
 s.place(s.pos(112), hull(32 * 16, seed=29, lo=2200, hi=9500, density=0.6), 0.42, 'atmos')
 D2 = [('hunt', 29), ('bite', 29), ('hunt', 29), ('tear', 29),
-      ('talk', 29), ('bite', 29), ('tear', 29), ('climb', 29),
-      ('hunt', 29), ('reel2', 29), ('wide', 32), ('bite', 34),
-      ('talk', 36), ('tear', 37), ('hunt', 36), ('hand', 29)]
+      ('talk', 32), ('bite', 29), ('tear', 30), ('climb', 29),
+      ('hunt', 32), ('reel2', 29), ('wide', 32), ('bite', 36),
+      ('talk', 37), ('tear', 36), ('hunt', 30), ('hand', 29)]
 for i, (name, nt) in enumerate(D2):
     b = 112 + i * 2
     lay(b, name, nt, 1.0, seed=40 + i % 6)
@@ -293,9 +302,9 @@ for b in range(144, 160):
         s.place(s.pos(b, 15), ghost(1.0), 0.5, 'drums')
     for st in (2, 6, 10, 14):
         s.place(s.pos(b, st), tick(open_=(st == 6)), 0.5, 'drums')
-for i, (name, nt) in enumerate([('crush', 29), ('scream', 29), ('crush', 29),
-                                ('talk', 32), ('crush', 36), ('scream', 37),
-                                ('wide', 36), ('tear', 29)]):
+for i, (name, nt) in enumerate([('crush', 29), ('scream', 30), ('crush', 29),
+                                ('talk', 32), ('crush', 37), ('scream', 36),
+                                ('wide', 30), ('tear', 29)]):
     lay(144 + i * 2, name, nt, 0.95, seed=50 + i)
 s.place(s.pos(156), scream(4 * 16, 0.70, seed=7, f0=200, f1=4200), 1.0, 'fx')
 s.place(s.pos(159, 8), descent(8, 1.15), 1.0, 'fx')
@@ -305,8 +314,8 @@ SUB_GATE[159 * 16 + 8:160 * 16] = 0.0
 s.place(s.pos(160), impact(24, 1.1), 1.0, 'fx')
 s.place(s.pos(160), hull(32 * 16, seed=32, lo=2400, hi=10000, density=0.6), 0.40, 'atmos')
 D3 = [('hunt', 29), ('scream', 29), ('tear', 29), ('answer', 29),
-      ('hunt', 29), ('bite', 29), ('climb', 29), ('tear', 29),
-      ('reel', 29), ('bite', 32), ('talk', 34), ('tear', 36),
+      ('hunt', 29), ('bite', 30), ('climb', 32), ('tear', 29),
+      ('reel', 29), ('bite', 32), ('talk', 37), ('tear', 36),
       ('hunt', 37), ('tear', 36), ('hunt', 35), ('hand', 29)]
 for i, (name, nt) in enumerate(D3):
     b = 160 + i * 2
