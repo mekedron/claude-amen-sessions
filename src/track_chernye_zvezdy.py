@@ -1,5 +1,14 @@
 """ЧЁРНЫЕ ЗВЁЗДЫ - darkstep at 174, G Phrygian, and the stars are going out.
 
+DOES NOT RENDER AT THIS COMMIT. The bass here is written against a
+`creature()` engine that only ever existed in a working tree; voidlib's
+committed API is `line()`/`bassline()` with the single-character gesture
+patterns, and the record is being rebuilt on it - the void_* A/B renders
+are that groundwork (bass tables, key, writing, the step, and the scream
+that will be its second voice). What this file still holds is the
+composition: the brief, the harmony, the arrangement and the motifs. The
+rewrite starts from those, not from zero.
+
 The brief: a very distant cyberpunk dystopia, people dying in numbers,
 something enormous coming, the universe closing on itself. Black stars.
 Hopelessness, rot, the abyss, the future. Cyber implants, cars, spaceflight.

@@ -509,6 +509,11 @@ def osc(ph, table, pos, L, n, voices=3, detune=19.0, seed=0, os_=4, spread=0.75)
 # note it is the sound of a needle being dragged across a record - and
 # neither does quantise, which is where the boiling came from.
 
+# EACH CHARACTER IS A DIFFERENT WAVEFORM, not the same one at a different
+# pitch. `tab` is which spectral table it reads and `det` how far its three
+# unison voices are spread, so a stab and a swell are two instruments that
+# happen to share a filter - which is the whole reason a wavetable synth has
+# more than one table in it.
 VOICE = {
     # The filter's whole travel lives between 140 and 1200 Hz. The bass line
     # sits just above the kick and it is a LOW instrument: everything above
@@ -516,22 +521,29 @@ VOICE = {
     #
     # name      the filter's travel        how long it takes    the table
     'L': dict(c0=115, c1=471, tau=0.30, rise=True,  pos=(0.05, 0.72),
-              res=0.52, dist=0.62, bend=0.25, pwm=0.0,  amp=1.00),   # вУУууу
+              res=0.52, dist=0.62, bend=0.25, pwm=0.0,  amp=1.00,
+              tab='reeseb', det=26.0),                               # вУУууу
     'W': dict(c0=533, c1=124, tau=0.085, rise=False, pos=(0.62, 0.14),
-              res=0.58, dist=0.67, bend=0.30, pwm=0.0,  amp=1.00),   # tum
+              res=0.58, dist=0.67, bend=0.30, pwm=0.0,  amp=1.00,
+              tab='growl', det=19.0),                                # tum
     'G': dict(c0=335, c1=205, tau=0.18, rise=False, pos=(0.35, 0.70),
-              res=0.66, dist=0.90, bend=0.0,  pwm=0.34, amp=0.98),   # growl
+              res=0.66, dist=0.90, bend=0.0,  pwm=0.34, amp=0.98,
+              tab='rip', det=15.0),                                  # growl
     'T': dict(c0=291, c1=174, tau=0.16, rise=False, pos=(0.22, 0.55),
               res=0.55, dist=0.54, bend=0.35, pwm=0.0,  amp=0.95,
-              vow=0.75),                                             # talking
+              vow=0.75, tab='vowel', det=12.0),                      # talking
     'S': dict(c0=713, c1=161, tau=0.030, rise=False, pos=(0.80, 0.32),
-              res=0.62, dist=0.74, bend=0.0,  pwm=0.28, amp=1.00),   # stab
+              res=0.62, dist=0.74, bend=0.0,  pwm=0.28, amp=1.00,
+              tab='hollow', det=9.0),                                # stab
     'B': dict(c0=180, c1=102, tau=0.20, rise=False, pos=(0.10, 0.04),
-              res=0.42, dist=0.40, bend=0.0,  pwm=0.0,  amp=1.00),   # round
+              res=0.42, dist=0.40, bend=0.0,  pwm=0.0,  amp=1.00,
+              tab='morph', det=22.0),                                # round
     'R': dict(c0=236, c1=608, tau=0.12, rise=True,  pos=(0.25, 0.88),
-              res=0.68, dist=0.84, bend=0.0,  pwm=0.40, amp=1.00),   # rip up
+              res=0.68, dist=0.84, bend=0.0,  pwm=0.40, amp=1.00,
+              tab='metal', det=17.0),                                # rip up
     'D': dict(c0=434, c1=90, tau=0.13, rise=False, pos=(0.58, 0.02),
-              res=0.50, dist=0.52, bend=0.40, pwm=0.0,  amp=1.00),   # falling
+              res=0.50, dist=0.52, bend=0.40, pwm=0.0,  amp=1.00,
+              tab='witch', det=24.0),                                # falling
 }
 
 
@@ -589,8 +601,12 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
              voices=3, detune=19.0, spread=0.9, sub=1.0, drive=1.0,
              top=6500.0, hpf=112.0, glide=0.024, h2=0.95, h3=0.34,
              subrel=0.13, edge_=1.0, char=1.0, teeth=0.55, deep=1.0,
+             h4=0.22, sublp=255.0, subsub=0.0, keyref=31,
              oct_=0.42, octcut=3.0, keytrack=0.5, subfold=38, bends=(),
-             bright=1.0):
+             bright=1.0, air=0.0, airband=(2600.0, 9500.0), oct_hi=3000.0,
+             hall=0.0, halldecay=3.2, hallcut=250.0, hallpre=0.038,
+             halltone=2400.0, move=0.0, notchd=0.0, notchrate=0.25,
+             stage2=0.0):
     """events: (step, length_in_steps, midi, character). Rests are simply
     steps no event covers, and they are the half of this that people hear.
 
@@ -634,25 +650,81 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     if pl.max() > 0.01:
         L['pwm_l'] = 0.5 + pl * (scan(n, 0.5, 'sine', phase0=2.2) - 0.5)
 
-    T = wt_time(tab)
-    x = osc(ph, T, np.clip(pos, 0, 1) * (T.shape[0] - 2), L, n, voices,
-            detune, seed, spread=spread)
+    used = []
+    for _, _, _, k in ev:
+        t = VOICE[k].get('tab', tab)
+        if t not in used:
+            used.append(t)
+    x = np.zeros((n, 2), dtype=np.float32)
+    for ti, t in enumerate(used):
+        T = wt_time(t)
+        m = np.zeros(n)
+        dt = detune
+        for st, ln, _, k in ev:
+            if VOICE[k].get('tab', tab) != t:
+                continue
+            a = min(int(st * STEP), n - 1)
+            e = min(n, a + int((ln + 4) * STEP))
+            m[a:e] = 1.0
+            dt = detune * VOICE[k].get('det', 19.0) / 19.0
+        m = uniform_filter1d(m, max(int(0.010 * SR), 3))
+        x += osc(ph, T, np.clip(pos, 0, 1) * (T.shape[0] - 2), L, n, voices,
+                 dt, seed + 3 * ti, spread=spread) * m[:, None]
     x = hp(x, hpf, 2)
+
+    if move:
+        # A held note with one filter sweep across it is one gesture, and a
+        # bar of one gesture is bland however good the gesture is. This
+        # steps the wavetable position and the cutoff at every EIGHTH inside
+        # any note long enough to have an inside - a stepped sequence, not
+        # an LFO, so it is heard as the sound changing on the grid rather
+        # than as a wobble. Seeded per note, so it repeats when the bar does.
+        seq = np.zeros(n)
+        for st, ln, _, kk in ev:
+            if ln < 3:
+                continue
+            rs2 = np.random.RandomState(int(st * 7 + seed) % 997)
+            ns = max(2, int(ln // 2))
+            vals = rs2.uniform(-1, 1, ns)
+            a = min(int(st * STEP), n - 1)
+            e = min(n, a + int(ln * STEP))
+            if e <= a:
+                continue
+            idx = np.clip((np.arange(e - a) / (e - a) * ns).astype(int), 0, ns - 1)
+            seq[a:e] = vals[idx]
+        seq = uniform_filter1d(seq, max(int(0.010 * SR), 3)) * move
+        pos = np.clip(pos + seq * 0.32, 0, 1)
+        cut = cut * (2.0 ** (seq * 0.75))
 
     res = float(np.median(_pernote(n, ev, 'res', 0.5)))
     # Key tracking. A cutoff fixed in hertz means an octave up has half the
     # harmonics under it and reads as a duller instrument rather than as the
     # same one higher; every synth has this control and it is why a line can
     # move register without changing character.
-    kt = (f / midi(31)) ** keytrack if keytrack else 1.0
+    kt = (f / midi(keyref)) ** keytrack if keytrack else 1.0
     y = ladder(x, np.clip(cut * kt, 90, 9000), res, 1.5 * drive, poles=2)
     vw = _pernote(n, ev, 'vow', 0.0)
     if float(vw.max()) > 0.02:
         y = y * (1 - vw[:, None]) + vw[:, None] * morph_formant(
             y, 'oo', 'aw', np.clip((cut - 200) / 900, 0, 1), 1.0, 1.4)
+    if notchd:
+        # One gap travelling through the harmonics. A swept lowpass reads as
+        # brightness; a swept notch reads as MOTION, and it is the thing
+        # that separates a reese from a detuned saw - the ear tracks the
+        # gap rather than the tone. One cycle per bar, so it is a phrase.
+        ne = scan(n, notchrate, 'sine', phase0=0.6)
+        y = y - notchd * sweep_bp(y, 420.0, 2800.0, ne, bands=6, width=0.20)
     dl = _pernote(n, ev, 'dist', 0.3)
     y = y / max(float(np.abs(y).max()), 1e-9)
     y = y * (1 - dl[:, None]) + dl[:, None] * drive_asym(y, 7.0, 0.24)
+    if stage2:
+        # A second gain stage with an EQ in front of it. Every stage after
+        # an EQ makes harmonics that were not there before, which is where
+        # the grit of this genre comes from - one saturator, however hard,
+        # only ever makes the same ones.
+        y = y + stage2 * bandpass(y, 400.0, 1800.0)
+        y = y / max(float(np.abs(y).max()), 1e-9)
+        y = drive_asym(y, 3.4, 0.20)
     if teeth:
         # An EQ between two gain stages, which is where a neuro bass gets
         # the part of it a phone can reproduce. The reference carries 3.7%
@@ -668,9 +740,15 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     # the sub, gated with the same notes but let go more slowly, so the low
     # end thins between them instead of switching off
     samp = _noteenv(n, ev, atk=0.006, rel=subrel)
-    body = np.sin(phs) + h2 * np.sin(2 * phs) + h3 * np.sin(3 * phs)
-    body = np.tanh(1.3 * body / (1 + h2 + h3)) / np.tanh(1.3)
-    low = lp(stereo(body * samp), 185, 4) * sub * 1.05 * deep
+    body = (np.sin(phs) + h2 * np.sin(2 * phs) + h3 * np.sin(3 * phs)
+            + h4 * np.sin(4 * phs))
+    if subsub:
+        # An octave under the root. On a rig it is the difference between a
+        # low note and a room moving; on a laptop it is nothing at all, and
+        # it costs headroom either way - so it is a knob and not a default.
+        body = body + subsub * np.sin(0.5 * phs)
+    body = np.tanh(1.3 * body / (1 + h2 + h3 + h4 + subsub)) / np.tanh(1.3)
+    low = lp(stereo(body * samp), sublp, 4) * sub * 1.05 * deep
 
     if oct_:
         xo = osc(ph * 2.0, T, np.clip(pos * 0.8 + 0.15, 0, 1) * (T.shape[0] - 2),
@@ -679,7 +757,33 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
                     res * 0.8, 1.3 * drive, poles=2)
         yo = yo / max(float(np.abs(yo).max()), 1e-9)
         yo = yo * (1 - dl[:, None]) + dl[:, None] * drive_asym(yo, 5.5, 0.24)
-        y = y + bandpass(yo, 460, 6800) * amp[:, None] * oct_
+        y = y + bandpass(yo, 420, oct_hi) * amp[:, None] * oct_
+
+    if air:
+        # The top layer. Two octaves up, band-limited, and following the
+        # same note envelope - so its spectrum FALLS above its band instead
+        # of being flattened into it. That distinction is the whole
+        # difference between a bright bass and a needle on a record.
+        Ta = wt_time('rip')
+        xa = osc(ph * 4.0, Ta, np.clip(pos * 0.6 + 0.35, 0, 1) * (Ta.shape[0] - 2),
+                 L, n, 2, detune * 0.45, seed + 13, spread=1.0)
+        ya = ladder(hp(xa, 700, 2), np.clip(cut * kt * octcut * 2.4, 700, 15000),
+                    res * 0.55, 1.2, poles=2)
+        ya = ya / max(float(np.abs(ya).max()), 1e-9)
+        ya = drive_asym(ya, 4.5, 0.22)
+        y = y + bandpass(ya, airband[0], airband[1]) * amp[:, None] * air
+
+    if hall:
+        # Depth, and only the band that can take it. A concert hall on the
+        # whole instrument smears the low end into a wash - the tail of a
+        # 49 Hz note is still sounding two bars later and every note after
+        # it sums against it at an unrelated phase. So the split is at 250
+        # Hz: everything under it stays dry and mono, and the room is put
+        # on the character. The pre-delay lets the dry attack land first,
+        # which is what makes a sound far away rather than blurred.
+        _, hb = split(y, hallcut)
+        y = y + hall * reverb(hb, decay=halldecay, wet=1.0, tone=halltone,
+                              predelay=hallpre)[:n]
 
     if edge_:
         y = y + edge(n, [int(st * STEP) for st, _, _, _ in ev],
@@ -1002,3 +1106,224 @@ def lead(notes, bars=4, gain=1.0, tail=6, glide=0.055, cut=(420.0, 2400.0),
     if space:
         y = y + space * reverb(y, decay=2.6, wet=1.0, tone=2600, predelay=0.035)[:n]
     return (y * 0.5).astype(np.float32) * gain
+
+
+def scream(dur_steps=2.0, note=72, gain=1.0, seed=0, tau=0.045,
+           v0='oh', v1='ah', drive=6.0, lo=230.0, hi=9000.0, decay=0.075,
+           noise=0.22, up=False, space=0.35, rough=0.55, fry=0.40,
+           overshoot=42.0, breakoff=65.0, vib=26.0, hold=0.80,
+           sus=0.0, morph=None):
+    """A shout, not a note in the top octave.
+
+    Three detuned saws with a formant pair on them is a synthesiser playing
+    high notes, and that is exactly what it sounds like. What separates a
+    cry from that is not its spectrum, it is that it BEHAVES like something
+    with a throat:
+
+      the pitch overshoots by most of a semitone in the first fifteen
+      milliseconds and falls back - nobody lands on a note when they shout;
+
+      it is rough. Real shouting drives the folds into a nonlinear regime
+      and the result is amplitude modulation in the twenties-to-seventies
+      and a subharmonic underneath - vocal fry. Both of those are here and
+      both decay, because the roughness is loudest at the start;
+
+      there is breath before there is tone;
+
+      the vibrato ARRIVES LATE, about a tenth of a second in, and grows;
+
+      the formants are fixed in hertz and there are three of them. The
+      third, at about 3 kHz, is the singer's formant - it is the reason a
+      voice cuts through an orchestra, and a two-formant model has no way
+      to do that;
+
+      it BREAKS at the end rather than decaying: the pitch drops away over
+      the last quarter and the tone goes with it.
+
+    And the brightness follows the loudness, because a shout opens the
+    tract as it gets louder rather than simply getting bigger.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed)
+    f0 = midi(note)
+    u = t / max(t[-1], 1e-9)
+    # THE CRY HAS TO SIT ON ITS NOTE. The overshoot is gone in thirty
+    # milliseconds - it reads as an attack, not as a pitch - and the break
+    # at the end only happens over the last fifth. In between, `hold` of the
+    # note is at the written pitch, and if it is not the melody is simply
+    # somewhere else than where it was written.
+    cents = (overshoot * np.exp(-t / 0.011)
+             - 7.0 * (1 - np.exp(-t / 0.10))
+             - breakoff * np.clip((u - hold) / max(1 - hold, 1e-3), 0, 1) ** 2)
+    if up:
+        cents = cents + 70.0 * np.clip((u - 0.5) / 0.5, 0, 1)
+    cents = cents + vib * np.sin(2 * np.pi * 5.9 * t) * np.clip((t - 0.060) / 0.12, 0, 1)
+    f = f0 * 2 ** (cents / 1200.0)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    fmax = float(f.max())
+
+    x = sum(saw_ph(ph * 2 ** (d / 1200.0) + rs.rand() * 6, fmax, kmax=110)
+            for d in (-19.0, 0.0, 19.0)) / 3
+    if fry:                                  # the subharmonic, at the onset
+        x = x + fry * saw_ph(0.5 * ph + rs.rand() * 6, fmax * 0.5, kmax=60) \
+            * np.exp(-t / 0.055)
+    # A sine at the written note, under everything. An 'ah' formant at 700
+    # Hz boosts the second harmonic of a 392 Hz cry and leaves the first at
+    # six percent, which is what a real throat does - and a real throat is
+    # also being listened to by someone who can see a face. Here the pitch
+    # has to be unambiguous, so the fundamental is put back explicitly.
+    x = x + 0.55 * np.sin(ph) * np.exp(-t / 0.10)
+    if noise:                                # breath before tone
+        br = rs.randn(n) * (np.exp(-t / 0.018) + 0.25 * np.exp(-t / 0.12))
+        x = x + noise * br
+    if rough:                                # driven folds: AM in the 20-70 Hz
+        rr = 38.0 + 26.0 * rs.rand()
+        x = x * (1 - rough * 0.45 * np.exp(-t / 0.06)
+                 * (0.5 + 0.5 * np.sin(2 * np.pi * rr * t + rs.rand() * 6)))
+
+    y = stereo(x.astype(np.float32))
+    if sus:
+        # A held shout is not a longer decay. It falls to a plateau, sits
+        # there while the vibrato grows into it, and then breaks - which is
+        # what a voice does and what an exponential cannot.
+        env = sus + (1 - sus) * np.exp(-t / decay)
+        k = int(hold * n)
+        if k < n:
+            env[k:] *= np.cos(np.linspace(0, np.pi / 2, n - k)) ** 1.6
+        env = env * adsr(n, a=0.0035, r=0.012)
+    else:
+        env = np.exp(-t / decay) * adsr(n, a=0.0025, r=0.02)
+    # the tract opens with the level rather than after it; a held note
+    # morphs across its own length instead
+    e = (np.clip(u ** 0.75, 0, 1) if sus else
+         np.clip(uniform_filter1d(env, max(int(0.004 * SR), 3)) ** 0.6, 0, 1))
+    if morph is not None:
+        e = np.clip(np.asarray(morph, dtype=np.float64) * np.ones(n), 0, 1)
+    y = morph_formant(y, v0, v1, e, wet=0.85, gain=1.7)
+    y = y + 0.45 * bandpass(y, 2750.0, 3350.0)          # the singer's formant
+    y = y / max(float(np.abs(y).max()), 1e-9)
+    y = drive_asym(y, drive, 0.26)
+    # The highpass has to sit BELOW the note. At 520 Hz every cry written
+    # under MIDI 72 lost its own fundamental and the ear then took the
+    # second harmonic as the pitch - the melody was being heard an octave
+    # above where it was written, which is what "совершенно не те ноты"
+    # sounds like.
+    y = bandpass(y, min(lo, midi(note) * 0.62), hi)
+    y = y * env[:, None]
+    if space:
+        y = y + space * reverb(y, decay=1.6, wet=1.0, tone=4200, predelay=0.014)[:n]
+    return norm(y, 0.95) * gain
+
+
+def screams(pat, note=72, bar=0, gain=1.0, seed=0, hi_note=None, sus=0.62,
+            **kw):
+    """`'A.......a...----'` - one character per sixteenth, and it holds.
+
+    A letter starts a cry, '.' holds it, '-' is a rest - the same convention
+    the bass patterns use. A lower-case letter is quieter and lands on
+    `note`, an upper-case one is louder and lands on `hi_note`. Anything
+    longer than two steps is rendered as a HELD shout: it falls to a plateau
+    and breaks at the end rather than simply decaying.
+
+    BOTH NOTES ARE GIVEN, and neither is derived by adding an interval. A
+    capital that is "a tone up" from whatever the lower one happens to be
+    walks straight out of the mode about half the time - which is not heard
+    as a variation, it is heard as the harmony going.
+    """
+    out = []
+    i = 0
+    while i < len(pat):
+        c = pat[i]
+        if c in '-. ':
+            i += 1
+            continue
+        j = i + 1
+        while j < len(pat) and pat[j] == '.':
+            j += 1
+        ln = j - i
+        big = c.isupper()
+        nt = (hi_note if hi_note else note) if big else note
+        long_ = ln > 2
+        seg = scream(ln + 1.6, nt, seed=(seed + bar * 16 + i) % 97,
+                     decay=(0.24 if long_ else (0.115 if big else 0.085)),
+                     drive=7.0 if big else 5.5,
+                     sus=(sus if long_ else 0.0),
+                     hold=0.80 if long_ else 0.80,
+                     vib=34.0 if long_ else 26.0, **kw)
+        out.append((i, seg, gain * (1.0 if big else 0.62)))
+        i = j
+    return out
+
+
+def bark(dur_steps=2.0, note=43, gain=1.0, seed=0, drop=0.55, tau=0.013,
+         decay=0.085, width=0.30, res=1.0, sync=0.0, drive=4.0, click=0.55,
+         lo=110.0, hi=2800.0, body=1.0, cut=(2400.0, 340.0)):
+    """The other instrument: something STRUCK, in the mid bass.
+
+    A held bass note and a run of short ones are two different objects, and
+    making the second out of the first - the same oscillator with a shorter
+    envelope - is why a bass line can be rhythmically right and still read
+    as one thing playing awkwardly. This is a different object: it has a
+    pitch that DROPS when it is hit, a fixed body resonance that rings
+    after the pitch has gone, a contact noise at the front, and no sustain
+    at all.
+
+    It is deliberately dry and deliberately mid - 110 Hz to 2.8 kHz - so it
+    sits on top of the sustained bass rather than fighting it for the same
+    octave.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed)
+    f0 = midi(note)
+    f = f0 * (1 + drop * np.exp(-t / tau))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    fmax = float(f.max())
+    # a band-limited pulse: two saws a fraction of a cycle apart
+    x = (saw_ph(ph, fmax, kmax=90)
+         - saw_ph(ph + 2 * np.pi * width, fmax, kmax=90)) * 0.5
+    if sync:
+        x = x * (1 - sync) + sync * _os_saw(ph, 1.0 + 3.0 * sync)
+    if click:
+        x = x + click * rs.randn(n) * np.exp(-t / 0.0035)
+    y = stereo(x.astype(np.float32))
+    env = np.exp(-t / decay)
+    y = morph_lp(y, cut[1], cut[0], np.exp(-t / (decay * 0.55)), bands=7)
+    if body:
+        # the box it is mounted in: two fixed resonances that do not move
+        # with the note, which is what makes it an object rather than a tone
+        for fr, g, d in ((186.0, 0.9, 0.11), (327.0, 0.55, 0.07)):
+            y = y + body * g * bandpass(y, fr * 0.92, fr * 1.10) \
+                * np.exp(-t / d)[:, None]
+    y = y / max(float(np.abs(y).max()), 1e-9)
+    y = drive_asym(y, drive, 0.24)
+    y = bandpass(y, lo, hi) * env[:, None]
+    return norm(y * adsr(n, a=0.0006, r=0.012)[:, None], 0.95) * gain
+
+
+def barks(pat, note=43, bar=0, gain=1.0, seed=0, hi_note=None, **kw):
+    """`'W..S..G-W..S..s-'` read as strikes rather than as bass notes.
+
+    Any letter is a hit; upper case is harder and lands on `hi_note` if one
+    is given. The length a letter holds sets how long it rings."""
+    out = []
+    i = 0
+    while i < len(pat):
+        c = pat[i]
+        if c in '-. ':
+            i += 1
+            continue
+        j = i + 1
+        while j < len(pat) and pat[j] == '.':
+            j += 1
+        ln = j - i
+        big = c.isupper()
+        nt = (hi_note if (big and hi_note) else note)
+        kk = dict(decay=0.055 + 0.030 * min(ln, 4),
+                  drive=5.0 if big else 3.6,
+                  width=0.24 + 0.10 * ((bar + i) % 3))
+        kk.update(kw)
+        out.append((i, bark(min(ln + 1.2, 6.0), nt,
+                            seed=(seed + bar * 16 + i) % 97, **kk),
+                    gain * (1.0 if big else 0.72)))
+        i = j
+    return out
