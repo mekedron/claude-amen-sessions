@@ -48,10 +48,18 @@ ABSTICH is fifty-six bars, so it has its own re-drop at 184: two bars
 stripped to the kick and the beam, a hole, and it lands again. Fifty-six bars
 at one level is a plateau however loud the level is.
 
+The offbeat kicks are a shorter, drier, low-passed voice rather than the same
+kick fired more often, and the kick itself is capped at 6.8 kHz. A doubly
+hard-clipped kick with a noise exhale falls to silence between hits at four a
+bar and only 15.7 dB at eight, so above that density the top of the kit stops
+being events and becomes one continuous rasp - the hats own everything above
+6.8 kHz and the kick keeps all of the weight and all of the beater.
+
 256 bars, 6:06. The kick is on every beat from bar 8 to the end except in the
 four holes. The lowest point is bar 136 and the peak starts at 160, which is
-62% of the way through and runs to 84%. Measured, the sections span 9.6 dB
-and the beat before each arrival sits 13 to 17 dB under the record.
+62% of the way through and runs to 84%. The body of the record spans 6.3 dB
+and the holes are 0.17 of a bar at -10 dB: enough to feel, not enough to hear
+as the record changing volume.
 """
 import numpy as np
 from industriallib import *
@@ -91,6 +99,18 @@ PLATES = (
     ((0, 47, 0.42), (12, 51, 0.38)),
 )
 
+# The bass. F Locrian from F1 = 29: F Gb Ab Bb Cb(B) Db Eb, and the line
+# lives on the root with the b2 above it and the b7 below. Written as
+# (step, midi, length) with real gaps in it - a held pitch under a moving
+# filter is a texture, and what the ear reports about a texture in the sub is
+# "low-frequency noise". The kick owns 0, 4, 8 and 12, so the line answers on
+# the offbeat eighths and only doubles the beat when it wants the weight.
+BASS_A = ((0, 29, 2.5), (6, 29, 2.0), (10, 30, 2.5), (14, 29, 1.5))
+BASS_B = ((0, 29, 2.0), (4, 29, 1.5), (6, 29, 1.5), (10, 27, 2.5), (14, 29, 1.5))
+BASS_C = ((0, 29, 2.0), (3, 29, 1.0), (6, 30, 2.0), (10, 29, 2.0),
+          (12, 29, 1.5), (14, 35, 1.5))
+BASS_D = ((0, 29, 3.0), (6, 27, 2.0), (10, 29, 2.0), (13, 30, 1.5))
+
 # The tritone, played as one object. No third, nothing to soften it.
 STAB_A = (midi(41), midi(47), midi(53))
 STAB_B = (midi(42), midi(48), midi(54))
@@ -99,32 +119,50 @@ s = Session(256, tail=4.0)
 
 # ---- the floor ----
 def floor(b, gain=1.0, beats=(0, 4, 8, 12), rum=1.0, wg=0.9, extra=(),
-          tune=ROOT, drive=13.0, decay=0.125, lpf=None, rdecay=0.85,
-          rtone=155, rdrive=2.9, hiss=0.75):
+          tune=ROOT, drive=13.0, decay=0.125, lpf=None, rdecay=0.62,
+          rtone=155, rdrive=2.9, hiss=0.45, air=0.32):
+    # `rdecay` is shorter wherever the shear plays. A rumble is the kick's
+    # room and at 0.85 s its tail spans two beats, which is longer than the
+    # holes the bass line is made of - so the growl fills them and the line
+    # reads as one continuous low noise however well it is written.
     """Three layers, one instrument: the punch, the room it is standing in,
     and the weight underneath both.
 
-    `extra` are additional kicks off the beat - the schranz gear. They get no
-    `weight`, because eight sine hits a bar at 44 Hz is one long smear rather
-    than eight times the floor, and no rumble either: two overlapping reverb
-    tails 178 ms apart stop being a pump and become a drone."""
+    `extra` are additional kicks off the beat - the schranz gear. They are a
+    SHORTER AND DRIER voice, not the same kick fired more often. An
+    industrial kick is hard-clipped twice and carries a noise exhale, and at
+    178 ms apart those exhales overlap: measured in 2-9 kHz, four kicks a bar
+    fall to silence between hits and eight fall only 15.7 dB, so the top of
+    the kit stops being eight events and becomes one continuous rasp. Half
+    the decay, a quarter of the hiss and a lowpass at 5 kHz takes that to
+    18.1 dB and keeps the density.
+
+    They get no `weight` either, because eight sine hits a bar at 44 Hz is
+    one long smear rather than eight times the floor, and no rumble: two
+    overlapping reverb tails 178 ms apart are a drone, not a pump."""
     for st in beats:
         t = s.pos(b, st)
         s.hit(t)
         k = industrialkick(tune=tune, drive=drive, decay=decay, hiss=hiss,
-                           seed=(b * 4 + int(st)) % 71)
-        s.place(t, lp(k, lpf) if lpf else k, gain, 'drums')
+                           air=air, seed=(b * 4 + int(st)) % 71)
+        # The second hard clip inside the kick is broadband by construction,
+        # and above about 7 kHz its products are not punch - they are the
+        # fizz that four or eight overlapping kicks sum into. The hats own
+        # that band; the kick keeps everything under it, which is all of the
+        # weight and all of the beater.
+        s.place(t, lp(k, lpf if lpf else 6800), gain, 'drums')
         if rum:
-            r = rumble(dur_steps=6, tune=tune, decay=rdecay, tone=rtone, drive=rdrive)
+            r = rumble(dur_steps=4.5, tune=tune, decay=rdecay, tone=rtone, drive=rdrive)
             s.place(t, lp(r, min(lpf * 1.6, 600)) if lpf else r, rum, 'rumble')
         if wg:
             s.place(t, weight(tune, 2.6, 0.095), wg, 'sub')
     for st in extra:
         t = s.pos(b, st)
         s.hit(t)
-        s.place(t, industrialkick(tune=tune * 1.02, drive=drive, decay=decay * 0.8,
-                                  hiss=hiss * 0.7, seed=(b * 7 + int(st) * 3) % 89),
-                gain * 0.82, 'drums')
+        s.place(t, lp(industrialkick(tune=tune * 1.02, drive=drive * 0.88,
+                                     decay=decay * 0.55, hiss=0.16, air=0.18,
+                                     seed=(b * 7 + int(st) * 3) % 89), 5000),
+                gain * 0.76, 'drums')
 
 def tops(b, gain=1.0, sixteenths=True, opens=(), claps=(4, 12), clapg=0.68,
          hatg=1.0):
@@ -135,10 +173,10 @@ def tops(b, gain=1.0, sixteenths=True, opens=(), claps=(4, 12), clapg=0.68,
             if i % 4 == 0:
                 continue                                 # the kick owns the beat
             v = 0.64 if i % 2 else 0.34
-            s.place(s.pos(b, i), metalhat(0.6, grit=0.6), gain * v * hatg * 0.85, 'drums')
+            s.place(s.pos(b, i), metalhat(0.6, grit=0.6), gain * v * hatg * 1.15, 'drums')
     for st in opens:
         s.place(s.pos(b, st), openhat(3.0, decay=0.24, metal=0.7),
-                gain * 0.46 * hatg, 'drums')
+                gain * 0.60 * hatg, 'drums')
 
 # ---- the shop ----
 # Three machines. Their cycles are 6, 10 and 14 steps, so they come home
@@ -224,6 +262,11 @@ def structure(b0, bars, f0, f1, gain=1.0, friction=0.55, drive=1.8, curve=1.0,
 
 # ---- bass and stabs ----
 def offbeat(b, gain=1.0, cutoff=430, note=41, steps_=(2, 6, 10, 14), dur=1.9):
+    """An offbeat filler for the sections the shear is NOT playing under.
+    Never both: `distbass` sits on 2, 6, 10 and 14 and the bass line answers
+    on 6, 10 and 14, so the two together fill every sixteenth of 60-400 Hz
+    and the line stops being a line. Measured, running them together left 2%
+    of the band's steps below -12 dB; the shear alone leaves 25%."""
     for st in steps_:
         s.place(s.pos(b, st), distbass(note, dur, cutoff=cutoff, drive=5.0),
                 gain, 'bass')
@@ -233,16 +276,24 @@ def stabs(b, chord, gain=1.0, steps_=(6, 14), dur=1.5, drive=8.0):
         s.place(s.pos(b, st), stab(chord, dur, drive=drive, metal=0.45),
                 gain, 'shop')
 
-def tear(b0, note, rates, t0, t1, gain=1.0, bars=8, drive=7.0, crush=0,
-         f_hi=4800.0, res=3.4, seed=0):
-    """One shear phrase, eight bars long and rendered as one call. `rates` is
-    one value per bar, in cycles per beat - 0.5 is a half-note sweep, 4 a
-    sixteenth, 16 a sixty-fourth - and the lane integrates them, so a rate
-    change accelerates a movement that is already running instead of starting
-    a new one."""
-    s.place(s.pos(b0), shear(note, bars * 16, gain=gain, rates=tuple(rates),
-                             tear=(t0, t1), drive=drive, crush=crush,
-                             f_hi=f_hi, res=res, seed=seed), 1.0, 'shear')
+def tear(b0, pat, rates, t0, t1, gain=1.0, bars=8, drive=6.0, res=3.0,
+         f_hi=4200.0, body=0.55, depth=0.45, oct_=0, seed=0):
+    """One shear phrase, eight bars long and rendered as one call, so the
+    oscillator is continuous and the note changes glide instead of
+    retriggering. `rates` is one value per bar in cycles per beat - 0.5 is a
+    half-note sweep, 4 a sixteenth, 16 a sixty-fourth - and the lane
+    integrates them, so a rate change accelerates a movement that is already
+    running rather than starting a new one.
+
+    No `crush`. Decimating a bass without an anti-alias filter folds
+    everything above 11 kHz back down as inharmonic noise, and on the lowest
+    element of the record that is not grit - it is a low frequency
+    crackling."""
+    p = tuple((st + 16 * k, nt + oct_, d)
+              for k in range(bars) for st, nt, d in pat)
+    s.place(s.pos(b0), shear(p, bars * 16, gain=gain, rates=tuple(rates),
+                             tear=(t0, t1), drive=drive, res=res, f_hi=f_hi,
+                             body=body, depth=depth, seed=seed), 1.0, 'shear')
 
 # ---- the voices in the shaft ----
 def choir(b0, bars, notes, gain=1.0, vowel='oh', seed=0):
@@ -309,15 +360,16 @@ hall(48, 32, grindg=1.45, sheetg=0.5, res=1.15, crush=8, note=47, seed=37)
 drone(48, 32, gain=0.8, note=30, motor=0.32)
 shop(48, 32, gain=1.05, lvl=(1.0, 0.85, 0.9), seed=307)
 structure(48, 32, ROOT * 1.09, TRIT, gain=0.58, friction=0.6, drive=2.0, seed=53)
-tear(48, 29, (0, 0.5, 1, 1, 2, 2, 4, 2), 0.15, 0.70, gain=0.85, seed=1)
-tear(56, 29, (1, 2, 2, 4, 4, 2, 8, 4), 0.25, 0.85, gain=0.92, seed=2)
-tear(64, 30, (0.5, 1, 2, 4, 4, 8, 8, 4), 0.30, 0.95, gain=0.95, drive=8.0, seed=3)
-tear(72, 29, (2, 4, 4, 8, 8, 4, 16, 8), 0.35, 1.00, gain=1.0, drive=8.5,
-     crush=8, seed=4)
+tear(48, BASS_A, (0.5, 1, 1, 2, 2, 1, 4, 2), 0.12, 0.50, gain=0.88, seed=1)
+tear(56, BASS_A, (1, 2, 2, 4, 2, 4, 4, 2), 0.18, 0.60, gain=0.94, seed=2)
+tear(64, BASS_D, (0.5, 1, 2, 4, 2, 4, 8, 4), 0.22, 0.66, gain=0.96,
+     drive=6.5, seed=3)
+tear(72, BASS_B, (2, 4, 2, 8, 4, 4, 8, 4), 0.26, 0.72, gain=1.0, drive=7.0,
+     seed=4)
 for b in range(48, 80):
     ph = b - 48
     last = (b == 79)
-    floor(b, gain=1.02, rum=1.0, wg=0.32,
+    floor(b, gain=1.02, rum=1.0, wg=0.32, rdecay=0.52,
           beats=(0, 4, 8) if last else (0, 4, 8, 12),
           extra=() if last else ((14,) if ph % 4 == 3 else ((6,) if ph % 8 == 5 else ())))
     tops(b, gain=0.95, claps=() if last else (4, 12), opens=(6, 14))
@@ -369,11 +421,12 @@ structure(96, 20, ROOT, TRIT, gain=0.66, friction=0.55, drive=2.1, seed=97)
 structure(116, 20, TRIT, ROOT * 1.06, gain=0.66, friction=0.68, drive=2.1, seed=113)
 choir(96, 20, (41, 47, 53, 60), gain=0.40, vowel='oh', seed=9)
 choir(116, 20, (42, 48, 54, 59), gain=0.44, vowel='uh', seed=11)
-tear(112, 29, (1, 2, 4, 4, 8, 4, 8, 8), 0.30, 0.95, gain=0.95, drive=8.0, seed=5)
-tear(120, 27, (2, 4, 8, 4, 8, 8, 16, 8), 0.40, 1.00, gain=1.0, drive=8.5,
-     crush=7, seed=6)
-tear(128, 29, (0.5, 1, 2, 4, 8, 8, 16, 16), 0.35, 1.00, gain=1.0, drive=9.0,
-     crush=7, seed=7)
+tear(112, BASS_B, (1, 2, 4, 2, 8, 4, 4, 8), 0.24, 0.68, gain=0.96,
+     drive=6.5, seed=5)
+tear(120, BASS_C, (2, 4, 8, 4, 4, 8, 8, 4), 0.30, 0.74, gain=1.0,
+     drive=7.0, seed=6)
+tear(128, BASS_D, (0.5, 1, 2, 4, 8, 4, 8, 8), 0.26, 0.72, gain=1.0,
+     drive=7.0, seed=7)
 for b in range(96, 136):
     ph = b - 96
     last = (b == 135)
@@ -381,15 +434,17 @@ for b in range(96, 136):
     if 8 <= ph < 16:
         ex = (14,) if ph % 4 == 3 else ()
     elif ph >= 16:
-        ex = (6, 14) if ph % 4 != 3 else (2, 6, 10, 14)
+        ex = (14,) if ph % 4 != 3 else (6, 14)
     floor(b, gain=1.05, rum=1.0, wg=0.88 if ph < 16 else 0.30,
+          rdecay=0.85 if ph < 16 else 0.52,
           beats=(0, 4, 8) if last else (0, 4, 8, 12), extra=() if last else ex)
     tops(b, gain=1.0, claps=() if last else (4, 12), opens=(6, 14),
          hatg=1.0 + 0.15 * (ph >= 24))
     pipes(b, idx=ph // 2, gain=1.0)
     clink(b, gain=0.65, seed=17)
     if ph >= 16:
-        offbeat(b, gain=0.60, cutoff=450 + 6 * ph, note=41 if ph % 8 < 4 else 47)
+        if ph < 16:                        # the shear takes over at 112
+            offbeat(b, gain=0.60, cutoff=450 + 6 * ph, note=41)
         stabs(b, STAB_A if ph % 8 < 4 else STAB_B, gain=0.55, steps_=(6, 14))
     if ph % 4 == 2:
         plates(b, idx=ph // 4 + 2, gain=0.62)
@@ -433,17 +488,17 @@ drone(152, 8, gain=0.9, note=29, motor=0.4)
 shop(152, 8, gain=1.15, lvl=(1.0, 1.0, 1.0), seed=701)
 structure(152, 8, TRIT * 1.03, ROOT * 2, gain=0.76, friction=0.7, drive=2.4,
           curve=0.7, seed=151)
-tear(152, 29, (0.25, 0.5, 1, 2, 4, 8, 16, 16), 0.10, 1.00, gain=1.0, drive=9.0,
-     crush=8, seed=8)
+tear(152, BASS_A, (0.25, 0.5, 1, 2, 4, 4, 8, 8), 0.10, 0.76, gain=1.0,
+     drive=7.0, seed=8)
 for b in range(152, 160):
     ph = b - 152
     last = (b == 159)
-    ex = (6, 14) if ph >= 2 else ()
+    ex = (14,) if ph >= 2 else ()
     if ph >= 5:
-        ex = (2, 6, 10, 14)
+        ex = (6, 14)
     if last:
-        ex = (1, 2, 3, 5, 6, 7)
-    floor(b, gain=0.92 + 0.02 * ph, rum=0.85, wg=0.34,
+        ex = (2, 6, 10)
+    floor(b, gain=0.92 + 0.02 * ph, rum=0.85, wg=0.34, rdecay=0.52,
           beats=(0, 4) if last else (0, 4, 8, 12), extra=ex)
     tops(b, gain=0.85, claps=() if last else (4, 12), opens=(6, 14),
          sixteenths=not last)
@@ -474,15 +529,15 @@ structure(200, 16, ROOT, TRIT * 1.02, gain=0.74, friction=0.7, drive=2.4, seed=1
 choir(160, 24, (41, 47, 53, 59, 65), gain=0.42, vowel='oh', seed=17)
 choir(184, 16, (42, 48, 54, 60), gain=0.46, vowel='ah', seed=19)
 choir(200, 16, (41, 47, 54, 59), gain=0.48, vowel='oh', seed=23)
-TEARS = ((160, 29, (2, 4, 4, 8, 8, 4, 8, 8), 0.45, 1.00, 9.0, 8),
-         (168, 30, (1, 2, 4, 8, 4, 8, 16, 8), 0.40, 1.00, 9.0, 0),
-         (176, 29, (4, 8, 8, 16, 8, 4, 16, 16), 0.55, 1.00, 9.5, 8),
-         (184, 27, (0.25, 0.5, 2, 4, 8, 16, 8, 16), 0.20, 1.00, 9.0, 7),
-         (192, 29, (2, 4, 8, 4, 16, 8, 16, 16), 0.50, 1.00, 9.5, 0),
-         (200, 30, (1, 2, 4, 8, 16, 8, 32, 16), 0.45, 1.00, 10.0, 8),
-         (208, 29, (4, 8, 16, 8, 16, 32, 16, 32), 0.60, 1.00, 10.0, 7))
-for i, (b0, nt, rt, t0, t1, dr, cr) in enumerate(TEARS):
-    tear(b0, nt, rt, t0, t1, gain=1.0, drive=dr, crush=cr, seed=20 + i)
+TEARS = ((160, BASS_B, (2, 4, 2, 8, 4, 4, 8, 4), 0.30, 0.74, 7.0),
+         (168, BASS_C, (1, 2, 4, 8, 4, 8, 4, 8), 0.28, 0.76, 7.0),
+         (176, BASS_D, (4, 8, 4, 8, 8, 4, 8, 8), 0.34, 0.78, 7.5),
+         (184, BASS_A, (0.25, 0.5, 2, 4, 8, 4, 8, 8), 0.16, 0.72, 6.5),
+         (192, BASS_C, (2, 4, 8, 4, 8, 8, 4, 8), 0.32, 0.78, 7.5),
+         (200, BASS_B, (1, 2, 4, 8, 8, 4, 8, 8), 0.30, 0.80, 7.5),
+         (208, BASS_C, (4, 8, 4, 8, 8, 4, 8, 8), 0.36, 0.82, 8.0))
+for i, (b0, pt, rt, t0, t1, dr) in enumerate(TEARS):
+    tear(b0, pt, rt, t0, t1, gain=1.0, drive=dr, seed=20 + i)
 # Bars 182-183 are the re-drop: two bars stripped to the kick and the beam,
 # a hole on the last beat, and then it lands again a hair louder. Fifty-six
 # bars at one level is a plateau however loud the level is.
@@ -491,11 +546,11 @@ for b in range(160, 216):
     ph = b - 160
     lull = b in LULL
     last = (b == 183)
-    ex = (6, 14) if ph % 4 != 3 else (2, 6, 10, 14)
+    ex = (14,) if ph % 4 != 3 else (6, 14)
     if 24 <= ph < 32 or 48 <= ph < 56:
-        ex = (2, 6, 10, 14)
+        ex = (6, 14) if ph % 4 != 3 else (2, 6, 10, 14)
     floor(b, gain=1.08, rum=1.0 if not lull else 0.45,
-          wg=0.30 if not lull else 0.55,
+          wg=0.30 if not lull else 0.55, rdecay=0.50,
           beats=(0, 4, 8) if last else (0, 4, 8, 12),
           extra=() if lull else ex)
     tops(b, gain=1.05 if not lull else 0.42, claps=() if lull else (4, 12),
@@ -503,7 +558,6 @@ for b in range(160, 216):
          sixteenths=not lull)
     if not lull:
         pipes(b, idx=ph // 2, gain=1.05)
-        offbeat(b, gain=0.62, cutoff=470, note=(41, 42, 47, 41)[(ph // 4) % 4])
         plates(b, idx=ph // 2, gain=0.55 if ph % 2 else 0.68)
         stabs(b, STAB_A if (ph // 4) % 2 == 0 else STAB_B, gain=0.62,
               steps_=(6, 14) if ph % 4 != 3 else (2, 6, 10, 14))
@@ -530,21 +584,24 @@ structure(216, 16, TRIT * 1.02, ROOT, gain=0.64, friction=0.6, drive=2.0, seed=2
 structure(232, 16, ROOT, ROOT * 1.12, gain=0.56, friction=0.75, drive=1.8,
           curve=1.4, seed=227)
 choir(216, 16, (41, 47, 53, 59), gain=0.40, vowel='oh', seed=29)
-tear(216, 29, (2, 4, 8, 4, 8, 8, 16, 8), 0.45, 1.00, gain=0.95, drive=9.0,
-     crush=8, seed=31)
-tear(224, 30, (1, 2, 4, 8, 4, 8, 8, 4), 0.35, 0.85, gain=0.80, drive=8.0, seed=32)
+tear(216, BASS_B, (2, 4, 8, 4, 4, 8, 8, 4), 0.32, 0.76, gain=0.95,
+     drive=7.0, seed=31)
+tear(224, BASS_A, (1, 2, 4, 4, 2, 4, 4, 2), 0.24, 0.62, gain=0.80,
+     drive=6.5, seed=32)
 for b in range(216, 248):
     ph = b - 216
     u = ph / 31
     floor(b, gain=1.03 - 0.12 * u, rum=1.0 - 0.35 * u,
           wg=0.32 if ph < 16 else 0.60 + 0.25 * u,
-          extra=(6, 14) if ph % 4 != 3 and ph < 24 else ())
+          rdecay=0.52 if ph < 16 else 0.85,
+          extra=(14,) if ph % 4 != 3 and ph < 24 else ())
     tops(b, gain=1.0 - 0.35 * u, claps=(4, 12) if ph < 24 else (12,),
          opens=(6, 14) if ph < 16 else (14,), sixteenths=ph < 28)
     pipes(b, idx=ph // 2 + 2, gain=0.95 - 0.35 * u)
     clink(b, gain=0.65 - 0.2 * u, seed=29)
     if ph < 24:
-        offbeat(b, gain=0.60 - 0.3 * u, cutoff=440, note=41 if ph % 8 < 4 else 42)
+        if ph >= 16:                       # the shear stops at 232
+            offbeat(b, gain=0.60 - 0.3 * u, cutoff=440, note=41)
         stabs(b, STAB_A if ph % 8 < 4 else STAB_B, gain=0.55 - 0.25 * u)
     if ph % 4 == 2:
         plates(b, idx=ph // 4, gain=0.6 - 0.2 * u)
@@ -577,7 +634,7 @@ s.bus['hall']   = bus_reverb(s.bus['hall'],   decay=2.6, wet=0.22, tone=4200)
 s.bus['struct'] = bus_reverb(s.bus['struct'], decay=3.4, wet=0.26, tone=3400)
 s.bus['voice']  = bus_reverb(s.bus['voice'],  decay=3.0, wet=0.38, tone=3800)
 
-s.bus['shop']   = hp(s.bus['shop'], 95)             # the kick owns 20-95
+s.bus['shop']   = hp(s.bus['shop'], 138)            # 20-138 is the kick and the line
 s.bus['hall']   = hp(s.bus['hall'], 58)
 s.bus['struct'] = hp(s.bus['struct'], 92)
 s.bus['voice']  = hp(s.bus['voice'], 180)
@@ -586,7 +643,11 @@ s.bus['voice']  = hp(s.bus['voice'], 180)
 # the voices. A wavefolder for the last stage on the shop: tanh stops making
 # partials once it is flat and folding does not, which is the difference
 # between a loud machine and a screaming one.
-s.bus['drums']  = softclip(drive_asym(s.bus['drums'], 1.5, asym=0.20), 1.10, knee=0.82)
+# Gentle, because the kick is already hard-clipped twice inside itself. A
+# heavy bus stage on top of that is not making the kit harder, it is
+# intermodulating overlapping kicks with each other, and that is heard as a
+# hoarse noise rather than as drive.
+s.bus['drums']  = softclip(drive_asym(s.bus['drums'], 1.22, asym=0.18), 1.02, knee=0.86)
 s.bus['rumble'] = softclip(s.bus['rumble'], 1.02, knee=0.85)
 s.bus['sub']    = softclip(s.bus['sub'], 1.0, knee=0.9)
 s.bus['shear']  = softclip(s.bus['shear'], 1.06, knee=0.80)
@@ -602,26 +663,29 @@ s.bus['hall']  = narrow(s.bus['hall'], 0.84)
 # ---- the arc ----
 # Every section already has its own parts and its own gains, and that is not
 # a level: a different set of loud parts is still loud. This is the ride, in
-# decibels per bar. The one-beat notches at 47.75, 95.75, 135.75 and 159.75
-# are the holes in front of the three drops - a drop is the gap before it,
-# and no arrangement can make one, because a gap means every bus at once.
-ARC = [(0, -9.6), (4, -8.0), (8, -5.6), (12, -4.8), (15.9, -4.8),
-       (16, -4.6), (24, -4.2), (32, -3.6), (40, -3.0), (44, -2.6),
-       (47.0, -2.4), (47.74, -2.4), (47.78, -17.0), (47.99, -17.0),
-       (48, -2.7), (56, -2.3), (64, -2.0), (72, -1.8), (79.4, -1.8),
-       (79.6, -5.0), (79.99, -5.0),
-       (80, -8.6), (86, -8.2), (90, -6.6), (93, -5.0), (95.4, -4.2),
-       (95.76, -14.0), (95.99, -14.0),
-       (96, -2.6), (104, -2.2), (112, -0.9), (124, -0.7), (135.4, -0.7),
-       (135.76, -15.0), (135.99, -15.0),
-       (136, -10.4), (140, -9.6), (144, -8.2), (148, -6.4), (151.5, -5.6),
-       (152, -4.6), (154, -3.4), (156, -2.2), (158, -1.0),
-       (159.6, -1.0), (159.74, -22.0), (159.99, -22.0),
+# decibels per bar. The notches before 48, 96, 160 and 184 are the holes in
+# front of the drops - a gap means every bus at once, so it can only be made
+# here and not in the arrangement. They are 0.17 of a bar at -10 dB, which is
+# a stumble; deeper or longer than that and the hole stops reading as part of
+# the beat and starts reading as the record changing volume, which is the one
+# thing this whole ride exists to avoid.
+ARC = [(0, -7.4), (4, -6.2), (8, -4.4), (12, -3.8), (15.9, -3.8),
+       (16, -3.4), (24, -3.0), (32, -2.6), (40, -2.2), (44, -1.9),
+       (47.0, -1.8), (47.80, -1.8), (47.87, -10.5), (47.99, -10.5),
+       (48, -2.6), (56, -2.3), (64, -2.1), (72, -1.9), (79.4, -1.9),
+       (79.7, -3.4), (79.99, -3.4),
+       (80, -3.8), (86, -3.4), (90, -3.0), (93, -2.6), (95.4, -2.3),
+       (95.84, -9.5), (95.99, -9.5),
+       (96, -2.0), (104, -1.7), (112, -0.8), (124, -0.6), (135.4, -0.6),
+       (135.84, -10.0), (135.99, -10.0),
+       (136, -5.4), (140, -5.0), (144, -4.4), (148, -3.6), (151.5, -3.2),
+       (152, -3.0), (154, -2.2), (156, -1.4), (158, -0.7),
+       (159.6, -0.7), (159.82, -11.0), (159.99, -11.0),
        (160, -0.4), (168, -0.2), (176, -0.2), (181.9, -0.2),
-       (182, -6.2), (183.4, -5.0), (183.74, -18.0), (183.99, -18.0),
+       (182, -4.4), (183.4, -3.6), (183.82, -10.0), (183.99, -10.0),
        (184, 0.0), (192, 0.0), (200, 0.0), (208, 0.0), (215.9, 0.0),
-       (216, -1.2), (232, -2.4), (244, -4.0), (247.9, -4.0),
-       (248, -5.6), (252, -8.4), (256, -14.0)]
+       (216, -1.0), (232, -1.8), (244, -3.0), (247.9, -3.0),
+       (248, -4.4), (252, -7.0), (256, -12.0)]
 _bars = np.array([p[0] for p in ARC]) * BAR
 _db = np.array([p[1] for p in ARC])
 _ride = 10 ** (np.interp(np.arange(s.total, dtype=np.float64), _bars, _db) / 20.0)
@@ -629,8 +693,8 @@ _ride = uniform_filter1d(_ride, int(0.020 * SR))                 # no zipper
 for b in s.bus:
     s.bus[b] = (s.bus[b] * _ride[:, None]).astype(np.float32)
 
-GAINS = {'drums': 0.80, 'rumble': 0.50, 'sub': 0.42, 'bass': 0.18,
-         'shear': 0.62, 'shop': 0.58, 'struct': 0.37, 'hall': 0.30,
+GAINS = {'drums': 0.80, 'rumble': 0.44, 'sub': 0.32, 'bass': 0.18,
+         'shear': 0.58, 'shop': 0.66, 'struct': 0.37, 'hall': 0.30,
          'voice': 0.26, 'fx': 0.30}
 # Scale the sum to a known peak before the clipper, so `clip=` only ever sees
 # the tip of a transient instead of doing the mixing.
@@ -641,6 +705,6 @@ del _sum
 s.report(GAINS)
 s.ownership(3000, 16000, GAINS, 'top  3-16k')
 s.ownership(20, 120, GAINS, 'low  20-120')
-s.render('industrial_walzwerk_168.wav', drive=0.70, duck=0.50, duck_rel=0.15,
+s.render('industrial_walzwerk_168.wav', drive=0.70, duck=0.42, duck_rel=0.15,
          clip=1.35, peak=0.95, fade=2.4, gains=GAINS,
          brick=dict(gain=1.22, ceiling=0.89))

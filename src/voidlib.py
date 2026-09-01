@@ -510,24 +510,28 @@ def osc(ph, table, pos, L, n, voices=3, detune=19.0, seed=0, os_=4, spread=0.75)
 # neither does quantise, which is where the boiling came from.
 
 VOICE = {
+    # The filter's whole travel lives between 140 and 1200 Hz. The bass line
+    # sits just above the kick and it is a LOW instrument: everything above
+    # the cutoff is what the distortion makes of it, not where the notes are.
+    #
     # name      the filter's travel        how long it takes    the table
-    'L': dict(c0=240, c1=1250, tau=0.30, rise=True,  pos=(0.05, 0.80),
-              res=0.52, dist=0.50, bend=0.25, pwm=0.0,  amp=1.00),   # вУУууу
-    'W': dict(c0=1450, c1=210, tau=0.085, rise=False, pos=(0.70, 0.15),
-              res=0.58, dist=0.55, bend=0.30, pwm=0.0,  amp=1.00),   # tum
-    'G': dict(c0=760, c1=430, tau=0.18, rise=False, pos=(0.35, 0.72),
-              res=0.66, dist=0.78, bend=0.0,  pwm=0.34, amp=0.98),   # growl
-    'T': dict(c0=620, c1=330, tau=0.16, rise=False, pos=(0.22, 0.55),
-              res=0.55, dist=0.42, bend=0.35, pwm=0.0,  amp=0.95,
+    'L': dict(c0=115, c1=471, tau=0.30, rise=True,  pos=(0.05, 0.72),
+              res=0.52, dist=0.62, bend=0.25, pwm=0.0,  amp=1.00),   # вУУууу
+    'W': dict(c0=533, c1=124, tau=0.085, rise=False, pos=(0.62, 0.14),
+              res=0.58, dist=0.67, bend=0.30, pwm=0.0,  amp=1.00),   # tum
+    'G': dict(c0=335, c1=205, tau=0.18, rise=False, pos=(0.35, 0.70),
+              res=0.66, dist=0.90, bend=0.0,  pwm=0.34, amp=0.98),   # growl
+    'T': dict(c0=291, c1=174, tau=0.16, rise=False, pos=(0.22, 0.55),
+              res=0.55, dist=0.54, bend=0.35, pwm=0.0,  amp=0.95,
               vow=0.75),                                             # talking
-    'S': dict(c0=1750, c1=320, tau=0.030, rise=False, pos=(0.82, 0.35),
-              res=0.62, dist=0.62, bend=0.0,  pwm=0.28, amp=1.00),   # stab
-    'B': dict(c0=330, c1=175, tau=0.20, rise=False, pos=(0.10, 0.04),
-              res=0.42, dist=0.28, bend=0.0,  pwm=0.0,  amp=1.00),   # round
-    'R': dict(c0=520, c1=1500, tau=0.12, rise=True,  pos=(0.25, 0.92),
-              res=0.68, dist=0.72, bend=0.0,  pwm=0.40, amp=1.00),   # rip up
-    'D': dict(c0=980, c1=150, tau=0.13, rise=False, pos=(0.60, 0.02),
-              res=0.50, dist=0.40, bend=0.40, pwm=0.0,  amp=1.00),   # falling
+    'S': dict(c0=713, c1=161, tau=0.030, rise=False, pos=(0.80, 0.32),
+              res=0.62, dist=0.74, bend=0.0,  pwm=0.28, amp=1.00),   # stab
+    'B': dict(c0=180, c1=102, tau=0.20, rise=False, pos=(0.10, 0.04),
+              res=0.42, dist=0.40, bend=0.0,  pwm=0.0,  amp=1.00),   # round
+    'R': dict(c0=236, c1=608, tau=0.12, rise=True,  pos=(0.25, 0.88),
+              res=0.68, dist=0.84, bend=0.0,  pwm=0.40, amp=1.00),   # rip up
+    'D': dict(c0=434, c1=90, tau=0.13, rise=False, pos=(0.58, 0.02),
+              res=0.50, dist=0.52, bend=0.40, pwm=0.0,  amp=1.00),   # falling
 }
 
 
@@ -584,13 +588,34 @@ def _cutlane(n, ev):
 def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
              voices=3, detune=19.0, spread=0.9, sub=1.0, drive=1.0,
              top=6500.0, hpf=112.0, glide=0.024, h2=0.95, h3=0.34,
-             subrel=0.10, edge_=1.0, char=1.0):
+             subrel=0.13, edge_=1.0, char=1.0, teeth=0.55, deep=1.0,
+             oct_=0.42, octcut=3.0, keytrack=0.5, subfold=38):
     """events: (step, length_in_steps, midi, character). Rests are simply
-    steps no event covers, and they are the half of this that people hear."""
+    steps no event covers, and they are the half of this that people hear.
+
+    THREE BANDS, one instrument. They share a phase track and a note
+    envelope, so they cannot disagree about the note or about when it ends,
+    and each is filtered for the octave it lives in:
+
+        sub     a locked sine, 20-120 Hz. `deep` is its weight.
+        body    the wavetable through the ladder, 110-900 Hz. The notes.
+        oct     the same oscillator an octave up through its own ladder at
+                `octcut` times the cutoff, band-passed 340-3200 Hz. This is
+                what makes the instrument span five octaves instead of two,
+                and it is a BAND-LIMITED layer following the same envelope -
+                not a separate voice with a spectrum of its own.
+    """
     n = int((bars * 16 + tail) * STEP)
     ev = sorted(events)
     f = _ftrack([(st, m) for st, _, m, _ in ev], n, glide)
     ph = 2 * np.pi * np.cumsum(f) / SR
+    # The sub folds down an octave for anything the line plays above
+    # `subfold`, so the bottom of the instrument stays where it was while
+    # the line moves up. Without it a phrase an octave up has no weight and
+    # reads as a different, smaller instrument.
+    fs = _ftrack([(st, m - 12 if m >= subfold else m) for st, _, m, _ in ev],
+                 n, glide)
+    phs = 2 * np.pi * np.cumsum(fs) / SR
 
     amp = _noteenv(n, ev)
     cut, pos = _cutlane(n, ev)
@@ -609,7 +634,12 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     x = hp(x, hpf, 2)
 
     res = float(np.median(_pernote(n, ev, 'res', 0.5)))
-    y = ladder(x, np.clip(cut, 90, 6000), res, 1.5 * drive, poles=2)
+    # Key tracking. A cutoff fixed in hertz means an octave up has half the
+    # harmonics under it and reads as a duller instrument rather than as the
+    # same one higher; every synth has this control and it is why a line can
+    # move register without changing character.
+    kt = (f / midi(31)) ** keytrack if keytrack else 1.0
+    y = ladder(x, np.clip(cut * kt, 90, 6000), res, 1.5 * drive, poles=2)
     vw = _pernote(n, ev, 'vow', 0.0)
     if float(vw.max()) > 0.02:
         y = y * (1 - vw[:, None]) + vw[:, None] * morph_formant(
@@ -617,6 +647,13 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     dl = _pernote(n, ev, 'dist', 0.3)
     y = y / max(float(np.abs(y).max()), 1e-9)
     y = y * (1 - dl[:, None]) + dl[:, None] * drive_asym(y, 7.0, 0.24)
+    if teeth:
+        # An EQ between two gain stages, which is where a neuro bass gets
+        # the part of it a phone can reproduce. The reference carries 3.7%
+        # of its energy in 800-3000 Hz and a filter this low leaves 1.5%.
+        y = y + teeth * bandpass(y, 700, 2600)
+        y = y / max(float(np.abs(y).max()), 1e-9)
+        y = np.tanh(1.7 * y) / np.tanh(1.7)
     _pk = max(float(np.abs(y).max()), 1e-9)
     y = compress(y, thresh=0.30, ratio=3.5, attack=0.005, release=0.085)
     y = y * (_pk / max(float(np.abs(y).max()), 1e-9))
@@ -625,9 +662,18 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     # the sub, gated with the same notes but let go more slowly, so the low
     # end thins between them instead of switching off
     samp = _noteenv(n, ev, atk=0.006, rel=subrel)
-    body = np.sin(ph) + h2 * np.sin(2 * ph) + h3 * np.sin(3 * ph)
+    body = np.sin(phs) + h2 * np.sin(2 * phs) + h3 * np.sin(3 * phs)
     body = np.tanh(1.3 * body / (1 + h2 + h3)) / np.tanh(1.3)
-    low = lp(stereo(body * samp), 175, 4) * sub * 0.46
+    low = lp(stereo(body * samp), 185, 4) * sub * 1.05 * deep
+
+    if oct_:
+        xo = osc(ph * 2.0, T, np.clip(pos * 0.8 + 0.15, 0, 1) * (T.shape[0] - 2),
+                 L, n, max(voices - 1, 2), detune * 0.7, seed + 7, spread=1.0)
+        yo = ladder(hp(xo, 230, 2), np.clip(cut * kt * octcut, 200, 7000),
+                    res * 0.8, 1.3 * drive, poles=2)
+        yo = yo / max(float(np.abs(yo).max()), 1e-9)
+        yo = yo * (1 - dl[:, None]) + dl[:, None] * drive_asym(yo, 5.5, 0.24)
+        y = y + bandpass(yo, 460, 4600) * amp[:, None] * oct_
 
     if edge_:
         y = y + edge(n, [int(st * STEP) for st, _, _, _ in ev],
@@ -661,16 +707,27 @@ def parse(pat, note=31, unit=1):
     return ev
 
 
-def line(bars_pat, notes=None, root=31, bars=None, **kw):
-    """A phrase: one pattern string per bar, and optionally one note per bar
-    (or per event) to move the line off the root."""
+def line(bars_pat, notes=None, root=31, bars=None, moves=(), **kw):
+    """A phrase: one pattern string per bar, one note per bar, and `moves` -
+    (bar, step, midi) - for the places the line jumps register inside a bar.
+
+    Register is half of what makes a bass line dynamic rather than a loop,
+    and it costs nothing here: the sub folds an octave down above `subfold`
+    and the filter key-tracks, so the line can go up an octave and the
+    instrument stays the same size."""
     pats = bars_pat if isinstance(bars_pat, (list, tuple)) else [bars_pat]
     bars = bars or len(pats)
+    mv = sorted((int(b) * 16 + float(st), int(m)) for b, st, m in moves)
     ev = []
     for b, p in enumerate(pats):
         nt = root if notes is None else notes[b % len(notes)]
         for st, ln, _, k in parse(p, nt):
-            ev.append((st + 16 * b, ln, nt, k))
+            a = st + 16 * b
+            m = nt
+            for pos, mm in mv:
+                if pos <= a + 1e-6:
+                    m = mm
+            ev.append((a, ln, m, k))
     return bassline(ev, bars=bars, **kw)
 def subline(notes, bars=2, gain=1.0, tail=4, glide=0.030, h2=0.90, h3=0.32,
             gatep=None, drive=1.3, decay=0.0):

@@ -1432,63 +1432,89 @@ def girder(f0=43.65, f1=0.0, dur_steps=128, gain=1.0, modes=6, friction=0.55,
 
 
 @cached
-def shear(note=29, dur_steps=32, gain=1.0, rates=(1, 1, 2, 2, 4, 4, 8, 8),
-          tear=(0.20, 1.00), sub=1.0, drive=7.0, res=3.4, crush=0,
-          f_lo=95.0, f_hi=4800.0, split=92.0, curve=1.0, width=0.35, seed=0):
+def shear(pattern, dur_steps=32, gain=1.0, rates=(1, 1, 2, 2, 4, 4, 8, 8),
+          tear=(0.20, 0.75), sub=1.0, body=0.55, drive=6.0, res=3.0, crush=0,
+          f_lo=95.0, f_hi=4200.0, split=92.0, curve=1.0, glide=0.022,
+          rel=0.020, depth=0.45, width=0.35, seed=0):
     """The moment the plate lets go: a sub that comes apart under load.
 
-    Nothing else on this palette is a bass instrument. `rumble` is a room,
-    `weight` is a floor and `distbass` fills an offbeat - none of them can be
-    the thing a drop lands on, and a hard record with no low-end EVENT is a
-    wall however loud it is.
+    Nothing else in this palette is a bass instrument. `rumble` is a room,
+    `weight` is a floor and `distbass` fills an offbeat - none of them is the
+    thing a drop lands on.
 
-    It is split, because every bass in this project is: below `split` one
-    clean sine carries the weight and is never touched, and everything above
-    it is the SAME oscillator being torn. Two distorted fundamentals under
-    90 Hz intermodulate and the low end gets smaller, not bigger.
+    `pattern` is `(step, midi, length_in_steps)` and it is not optional. One
+    held pitch under a moving filter is not a bass LINE however violent the
+    filter is: with no articulation and no note changes the ear has nothing
+    to separate, and what it reports is low-frequency noise. The frequency
+    comes from `core._ftrack`, so the oscillator is continuous across the
+    whole call and the note changes GLIDE - nothing is retriggered, and there
+    is no phase discontinuity to click - while the gate is built from the
+    note lengths, so the gaps are real gaps.
 
-    What tears it is a wavefolder whose amount ramps from `tear[0]` to
-    `tear[1]` across the whole call, fed through a resonant lowpass whose
-    cutoff is moved by a `scanlane` - a lane whose RATE is sequenced rather
-    than its value, so the crackle accelerates from a quarter to a
-    thirty-second inside one note that is never retriggered. `tanh` stops
-    making partials the moment it is flat and a folder does not, which is the
-    whole difference between a sub that is loud and a sub that is coming
-    apart.
+    Three layers, and only one of them is torn:
 
-    One call per phrase, not per bar. The oscillator runs the whole way, so
-    there is no edge on the bar line and nothing to reset: the gesture is the
-    acceleration, and a run of retriggered notes is a different instrument.
+    - the **weight**, below `split`: one clean sine, centred, untouched. Two
+      distorted fundamentals under 90 Hz intermodulate and the low end gets
+      smaller, which is why every bass in this project is split.
+    - the **body**, `body`: the 2nd and 3rd harmonics, lightly saturated and
+      band-limited to 120-800 Hz. This is the layer that says which note it
+      is. Without it the character layer's harmonic structure is folded into
+      a buzz and the part reads as a texture rather than as a pitch.
+    - the **tear**: a wavefolder whose amount ramps from `tear[0]` to
+      `tear[1]` across the call, fed through a resonant lowpass moved by a
+      `scanlane` - a lane whose RATE is sequenced rather than its value, so
+      the crackle accelerates from a quarter to a thirty-second inside notes
+      that are never retriggered. `tanh` stops making partials the moment it
+      is flat and a folder does not.
+
+    `depth` is how much of the lane goes on the LEVEL as well as the cutoff.
+    It has to be small: a deep amplitude lane is not a rattle, it is a
+    tremolo, and a tremolo on the loudest element of the record is heard as
+    the mix changing volume.
+
+    `crush` is off by default and should usually stay off. `bitcrush` with
+    `downsample=2` decimates without an anti-alias filter, so everything
+    above 11 kHz folds back down as inharmonic noise - on a bass that is not
+    grit, it is a low frequency crackling, which is exactly what it sounds
+    like.
     """
     n, t = steps(dur_steps)
     rs = np.random.RandomState(seed + 941)
-    f = midi(note)
-    ph = 2 * np.pi * f * t
+    pat = [(float(st), int(nt), float(d)) for st, nt, d in pattern]
+    f = core._ftrack([(st, nt) for st, nt, _ in pat], n, glide)
+    ph = 2 * np.pi * np.cumsum(f) / SR
 
-    # the weight: clean, centred, and out of the way of everything that follows
+    gate = np.zeros(n)
+    for st, _, d in pat:
+        a0 = min(int(st * STEP), n)
+        b0 = min(int((st + d) * STEP), n)
+        if b0 > a0:
+            gate[a0:b0] = 1.0
+    gate = uniform_filter1d(gate, max(int(rel * SR), 3)).astype(np.float32)
+
+    # the weight: clean, centred, and out of the way of everything above it
     low = lp(stereo(np.sin(ph) * 0.85 + 0.15 * np.sin(2 * ph)), split, order=4)
 
-    # the character: the same phase, torn
-    x = saw_ph(ph, f, nyq=16000.0, kmax=96) * 0.62 + square(f, t, kmax=44) * 0.38
+    # the body: which note this is
+    bod = np.sin(2 * ph) * 0.75 + np.sin(3 * ph) * 0.40 + np.sin(4 * ph) * 0.18
+    bod = bandpass(stereo(np.tanh(1.9 * bod / 1.33)), 118, 820)
+
+    # the tear: the same phase, coming apart
+    x = saw_ph(ph, f.mean(), nyq=16000.0, kmax=96) * 0.62 + square(f.mean(), t, kmax=44) * 0.38
     lane = scanlane(n, rates, lo=0.0, hi=1.0, shape='sine', curve=1.15, smooth=0.004)
     y = morph_lp(stereo(x * 0.55), f_lo, f_hi, 0.10 + 0.90 * lane, bands=8, res=res)
     y = np.tanh(drive * y)
     ten = (tear[0] + (tear[1] - tear[0]) * np.linspace(0, 1, n) ** curve).astype(np.float32)
-    y = np.sin((1.0 + 2.4 * ten)[:, None] * np.pi * 0.5 * np.clip(y, -2, 2))
-    y = np.clip(y * (1.25 + 0.75 * ten)[:, None], -1.0, 1.0)
+    y = np.sin((1.0 + 2.2 * ten)[:, None] * np.pi * 0.5 * np.clip(y, -2, 2))
+    y = np.clip(y * (1.20 + 0.60 * ten)[:, None], -1.0, 1.0)
     if crush:
         y = bitcrush(y, bits=crush, downsample=2)
     y = hp(y, split, order=4)
-    # The rattle. A folder pushed hard flattens the amplitude as well as the
-    # spectrum, so by the end of the ramp the tear stops being rhythmic and
-    # becomes a block - which is loud and is not "coming apart". The lane goes
-    # on the level as well as on the cutoff, so the break-up gets FASTER
-    # rather than merely denser, and that acceleration is the drop.
-    y = y * (0.30 + 0.70 * lane ** 0.7).astype(np.float32)[:, None]
+    y = y * (1.0 - depth + depth * lane ** 0.7).astype(np.float32)[:, None]
     y[:, 1] = np.roll(y[:, 1], int(SR * 0.0006 * width))
 
-    out = sub * low * 0.55 + y * 1.25
-    a = min(int(0.012 * SR), n // 2); r = min(int(0.030 * SR), n // 2)
+    out = (sub * low * 0.62 + body * bod * 0.55 + y * 0.95) * gate[:, None]
+    aa = min(int(0.010 * SR), n // 2); rr = min(int(0.030 * SR), n // 2)
     env = np.ones(n, dtype=np.float32)
-    env[:a] = np.linspace(0, 1, a); env[-r:] *= np.linspace(1, 0, r)
-    return (out * env[:, None]).astype(np.float32) * gain * 0.62
+    env[:aa] = np.linspace(0, 1, aa); env[-rr:] *= np.linspace(1, 0, rr)
+    return (out * env[:, None]).astype(np.float32) * gain * 0.66

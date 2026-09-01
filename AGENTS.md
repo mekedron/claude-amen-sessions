@@ -370,6 +370,8 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/a-drifting-machine-must-land-on-an-eighth.md
 @theory/90-memories/an-accelerating-click-train-can-diverge.md
 @theory/90-memories/a-wall-is-what-no-low-end-event-measures-as.md
+@theory/90-memories/a-held-pitch-is-not-a-bass-line.md
+@theory/90-memories/many-distorted-kicks-merge-into-noise.md
 @theory/90-memories/a-saw-edge-is-not-a-click.md
 @theory/90-memories/an-open-hat-must-end-before-the-next-one.md
 @theory/90-memories/bar-rendered-parts-must-overhang.md

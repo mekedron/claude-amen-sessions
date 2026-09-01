@@ -172,6 +172,8 @@ everything at once is not experimental, it is noise.
 - [`a-drifting-machine-must-land-on-an-eighth.md`](90-memories/a-drifting-machine-must-land-on-an-eighth.md) — An even-step cycle drifts against the bar and still lands on eighths
 - [`an-accelerating-click-train-can-diverge.md`](90-memories/an-accelerating-click-train-can-diverge.md) — A geometric accelerando converges, and the loop waiting for it never ends
 - [`a-wall-is-what-no-low-end-event-measures-as.md`](90-memories/a-wall-is-what-no-low-end-event-measures-as.md) — No bass instrument means nothing for a drop to land on
+- [`a-held-pitch-is-not-a-bass-line.md`](90-memories/a-held-pitch-is-not-a-bass-line.md) — One note under a moving filter reads as low-frequency noise
+- [`many-distorted-kicks-merge-into-noise.md`](90-memories/many-distorted-kicks-merge-into-noise.md) — Eight hard-clipped kicks a bar stop being eight events
 - [`a-saw-edge-is-not-a-click.md`](90-memories/a-saw-edge-is-not-a-click.md) — The click detector fires on a sawtooth's own reset edge
 - [`an-open-hat-must-end-before-the-next-one.md`](90-memories/an-open-hat-must-end-before-the-next-one.md) — an-open-hat-must-end-before-the-next-one.md
 - [`bar-rendered-parts-must-overhang.md`](90-memories/bar-rendered-parts-must-overhang.md) — bar-rendered-parts-must-overhang.md
@@ -203,4 +205,4 @@ everything at once is not experimental, it is noise.
 - [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
 - [`top-end-from-transients-not-wash.md`](90-memories/top-end-from-transients-not-wash.md) — top-end-from-transients-not-wash.md
 
-**110 files.** Everything is plain Markdown with no external dependencies.
+**112 files.** Everything is plain Markdown with no external dependencies.

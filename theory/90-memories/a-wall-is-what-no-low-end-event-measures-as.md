@@ -37,8 +37,18 @@ bus at once, so it belongs in the ride: a notch to -17 dB for the last beat
 before each arrival, ramped over 40 ms. Measured, those beats sit 13-17 dB
 under the record.
 
-After both, the sections span **9.6 dB** and the curve reads -21 -> -7 ->
--18 -> -6.5 -> -12.6 -> -5.9 -> -13.
+**And then it went too far the other way.** The first repair opened the
+sections to 9.6 dB and the 8-bar rows to 12, and he heard that as the record
+changing volume rather than as structure - which is what
+[[section-contrast-belongs-in-level]] already says the window is for. Pulled
+back, the body of the record spans **6.3 dB**, the holes are 0.17 of a bar at
+-10 dB rather than a full beat at -22, and the intro and outro are the only
+things outside it because they are fades.
+
+The lesson is not the number. It is that **the two faults have different
+fixes and only one of them is the ride**: the palette differences and the
+bass instrument are what make a drop, and the level is what stops it being a
+jump.
 
 **A fifty-six bar drop needs its own re-drop.** ABSTICH measured a 0.4 dB
 plateau across its whole length until bars 182-183 were stripped to the kick
