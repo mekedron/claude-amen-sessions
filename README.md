@@ -49,6 +49,13 @@ sidechain depth and transient punch against the tracks that already worked.
                       notes die first) and `ens()` (a string section whose
                       players enter late and drift apart, rather than one
                       detuned oscillator)
+    verify.clicks()   where a render has a discontinuity, in seconds and in
+                      bars. The naive test - a big jump between two samples -
+                      finds every kick and every hat, because a transient IS
+                      a big jump and is meant to be; this one lowpasses at
+                      2 kHz first, where a 46 Hz sine moves 0.0066 per sample
+                      and any step is something that was cut rather than
+                      something that was played
     src/verify.py     what a finished render actually contains: integrated
                       LUFS, true peak, PLR, band balance, crest PER BAND,
                       mono compatibility, a short-term loudness curve per
@@ -64,6 +71,12 @@ sidechain depth and transient punch against the tracks that already worked.
                       standing under". A sustained source above about 20% of
                       3-16 kHz is a noise bed, and a noise bed at 6-9 kHz is
                       what hurts after ninety seconds
+    core: the turntable  `rewind()`, `tape_stop()`, `scratch()` and `spin()`
+                      read a segment with a varying rate, so the pitch travels
+                      with the hand the way it does on a deck. A reversed copy
+                      of a sample is not a scratch: the gesture is the pitch
+                      moving, and `scratch()` reverses the read whenever its
+                      rate goes negative
     src/amenlib.py    the Amen module: one Sample, prepared and named
     src/idmlib.py     the drill'n'bass module, 174 BPM: the same break, and a
                       knife. `edit()` writes a bar as sixteen tablature
@@ -75,7 +88,11 @@ sidechain depth and transient punch against the tracks that already worked.
                       falls, each repeat is cut to a fraction of the gap it
                       has, and the last one is allowed to ring past its slot.
                       Under it `thump` and `crack` hold a pulse the break is
-                      never asked to carry, and `felt()` is a piano modelled
+                      never asked to carry. `set_tempo()` moves the grid and
+                      re-cuts the sample onto it - the slices are audio, not
+                      note events, so a tempo change without a re-fit leaves
+                      every chop playing at the old speed. And `felt()` is a
+                      piano modelled
                       mode by mode - stiffness-stretched partials, a prompt
                       sound, two polarisations, hammer noise, and a `roll`
                       that stops a chord arriving as one event
@@ -123,7 +140,13 @@ sidechain depth and transient punch against the tracks that already worked.
                       and `stitch()` cuts two finished patches against each
                       other at the gesture boundaries
     src/industriallib.py  the industrial techno module: the rumble, the
-                      machine hall, the acid and the choir, 152 BPM
+                      machine hall, the acid and the choir, 152 BPM. Also
+                      `deepacid()` - a 303 written as the BASS part, with its
+                      overdrive split off the fundamental so the drive never
+                      touches the sub, and the line's own octave under it as
+                      a clean sine - and `openhat()`, six inharmonic squares
+                      that ring for 400 ms and shed their top first, because
+                      an open hat is not a closed hat with a longer envelope
                       (set_tempo() re-grids it for a slower piece). Also
                       `glare()` - a section of detuned saws that enter in
                       pitch order and wander in intonation like `ens()`, put
@@ -182,12 +205,31 @@ sidechain depth and transient punch against the tracks that already worked.
                       organ through a Leslie, a stiff steel string with
                       stretched partials, a dispersive spring, synthesised
                       speech and an accelerating retrigger
+    src/junglelib.py  the jungle module, 166 BPM: the 1993-95 UK sound, which
+                      is a reggae record with a funk break running over the
+                      top. It borrows `idmlib`'s knife at a slower tempo and
+                      adds what jungle is made of - `dubplate()` for the Akai
+                      S950 (12 bits truncated, a converter that stops at
+                      11 kHz), `deck()` for the second turntable, `smear()`
+                      for the 1994 time-stretch with the combing left in on
+                      purpose, `contrabass()` for a double bass played
+                      pizzicato - stiffness-stretched partials, a decay rate
+                      per mode, two polarisations, a wooden box with four
+                      resonances, and the finger and the fingerboard at every
+                      attack, all off one phase track so the portamento is a
+                      fretless slide - `organbass()` for the same line on a
+                      drawbar organ, `skank()` for the offbeat organ chop,
+                      `figure()` which writes a bass line
+                      as a rhythm with holes in it rather than as a row of
+                      notes, `throw()` for the dub send that is opened for one
+                      hit and closed again, and `ride()` for a gain move in
+                      decibels per bar over the finished buses
 
 A genre module sets the grid, adds its own kit and re-exports core, so
 `from amenlib import *`, `from phonklib import *`, `from hardlib import *`,
 `from industriallib import *`, `from punklib import *`,
 `from bigbeatlib import *`, `from latinlib import *` and
-`from skanklib import *` are the same API
+`from skanklib import *` and `from junglelib import *` are the same API
 with a different palette. One small script per piece,
 arrangement only.
 
@@ -224,6 +266,7 @@ All finished audio lives in `renders/`.
 | `acid_nebel_130.wav` | Dub techno with acid in it, 6:24: an offbeat chord thrown into a delay that saturates inside its own feedback, and a 303 arriving from behind it. No kick for sixteen bars |
 | `acid_rausch_138.wav` | Acid breakbeat in D minor, 5:37: no kick on every beat, ghost snares carrying the groove, and the 303 sharing the bar with hoovers, orchestra hits and a rave piano |
 | `acid_saeure_146.wav` | Hard acid in E minor, 6:38: kick tuned to E1, and a 303 that descends from E3 to three octaves at once. Sixteen bars of hard-clipped industrial kicks before the finale |
+| `acid_finsternis_142.wav` | Dark acid techno in D# minor / D# Phrygian, 7:16, and the fifth record here with a 303 in it - the way it avoids being the fifth is register. Every acid line in this project high-passes itself at 165-240 Hz because the sub belongs to the kick, which is right when the 303 is a hook over a bassline. Here there is no bassline: `deepacid()` is the same machine written to OWN 60-300 Hz, with its overdrive split off the fundamental so the drive that makes a 303 sound like one never touches the sub, and the line's own octave added underneath as a clean sine. It measures 15% in 60-120 Hz and 62% in 120-300 where the old one measures 0% and 8%. Nothing from the machine hall is in it - no anvils, no forge, no steam, no siren. The shape is an eclipse and it is written in the spectrum rather than in the level: 3 kHz upward is EMPTY for a hundred and twenty bars, 0.02% of the record's energy through the umbra, and 6.3% in the last section - you cannot open a band that was never closed. One note carries the harmony: the fifth flattens to the b5, and D# Phrygian becomes Locrian, a tritone standing on the kick. The kick is a part rather than a constant, moving through six patterns; at the exact midpoint everything that was closed opens at once; and eight bars before the end the record narrows to nothing but four enormous kicks a bar |
 | `acid_spirale_140.wav` | Acid techno in A minor, 7:22: two 303 lines, one on a sixteen-step bar and one on a fifteen-step cycle, so they drift apart and meet again every fifteen bars. No rumble - the low end belongs to the bassline |
 | `industrial_untertage_136.wav` | Industrial techno in G minor, 5:43: a shift underground. The choir is the instrument - `labourchoir` divides the formants, and a vocal tract scaled up reads as a bigger body at the same pitch, so four saw stacks become something the size of the room. They sag flat across every phrase, answer the press rather than the beat, and keep walking into the augmented second a harmonic-minor V puts under them |
 | `punk_griptape_186.wav` | Skate punk in E major, 2:58, no vocals: a stiff steel string modelled mode by mode, through a three-stage valve amp with power-supply sag, a convolved 4x12 and a microphone - double tracked and hard panned, over an acoustic kit. The tune a singer would have had is played by a lead guitar. Two verses, a bridge with the distortion off, a harmonised twin lead, and gang shouts on the last chorus |
@@ -258,6 +301,7 @@ All finished audio lives in `renders/`.
 | `amen_vozduh_174.wav` | Liquid in E dorian (~4:51): the break rolls for four minutes without playing the same bar twice — the anchors are nailed down and only the ghost notes between them are re-dealt, so the 48-bar drop is 48 different bars. One tune passed between nine voices and six transformations, with climbs, dives and wingbeats between the statements, and slow voices placed early so their peak lands on the beat. The name means air |
 | `amen_finale_174.wav` | The farewell: every track returns once to say goodbye, and the last word, in morse code, is AMEN |
 | `amen_descarga_174.wav` | Latin jungle in A minor (~4:58): 174 BPM is a drum & bass tempo and it is also a salsa tempo, and two bars at 174 is exactly one son clave — so the break and a Cuban rhythm section fit inside the same bar without either being retimed. They also agree about where the hole goes: jungle leaves beat 1 of the bass empty and calls it the missing downbeat, a tumbao leaves it empty and calls it the anticipation. The clave is the law, the break included, and the whole re-cut is one kick moving onto step 6 on the three side and one kick moving from step 10 to step 8 on the two side — one sixteenth every two bars, and a 1969 funk drummer is locked to a Cuban timeline. Around him a rhythm section built from nothing: congas with four strokes, a mambo bell hit on the mouth and on the neck, a timbale shell, claves, a gourd, a piano playing a guajeo whose rhythm never changes while its shape turns over every sixteen bars, and horns that get brighter the harder they are blown. `descarga` is the word for the jam in the middle, where the drums stop and the piano takes a solo over the one thing that never stops, which is the clave |
+| `jungle_ruffneck_166.wav` | Jungle in G minor (~5:04), and the point of the record is what it is *not*. Drum & bass is a drum sound; jungle is a bass culture, so the break is played before it is cut, the tempo is 166 rather than 174, and the bass is a **tune** - a four-bar reggae riff at 49-78 Hz played pizzicato on a double bass - stiffness-stretched partials, a decay rate per mode, a wooden box with four resonances, the finger and the fingerboard at every attack, and one phase track across the bar so the portamento is a fretless slide. It is split at 130 Hz across two buses rather than doubled by a separate sine, because two oscillators at one pitch with unrelated phases cancel and one oscillator cut in half cannot. The riff is written as a rhythm with holes in it rather than as a row of notes: three of the four hits in every bar are the root, the spacings are 6, 3, 5, 2, and bar 3 is bar 1 moved to the bVI with its timing untouched - a bass that puts a different degree on every fourth sixteenth is a scale being picked through, and the ear hears an arpeggiator. Nine bars of tablature for five minutes, because a jungle bar rebuilt from scratch stops swinging; There is no chord instrument at all - an offbeat organ skank is the reggae signature and it is also the funk keyboard vamp, and at 166 BPM over a break the ear picks the second one, so the harmony is the bass line and a string section with its filter shut. A second turntable runs the same break an octave up so two kits' ghost notes interleave; a 12-bit dubplate pass, scratches, dub echo throws opened for one hit and closed again, and a rewind into the last drop. `ruffneck` is a 1994 word and the record is a 1994 record |
 | `amen_zaika_174.wav` | Drill'n'bass in G Dorian (~4:28): a tune a music box could play, over a break that cannot get through a bar without tripping. The edits are written rather than sprayed - every bar is an ordinary bar with one to three steps interfered with, and the interference is a parameter lock: this snare is a six-hit ratchet that accelerates through a fifth, that kick is reversed and a fifth down, this one is stretched to twice its length without moving in pitch. What makes that legible instead of noise is that **the pulse is not in the break**: a tuned thud on 1 and 3, a snare with a 95 Hz bottom on 2 and 4, and a sub that is one unbroken oscillator across eight bars, with the break riding on top filtered off at 150 Hz - so it can fall apart for a beat at a time and the body still knows where the beat is. There is no chord instrument at all: the harmony is a string section with no attack and single felt-piano notes dropped one at a time across the bar, because a block chord next to a break cut into thirty pieces reads as something pasted in from another session. `zaika` means the one who stutters |
 
 Short studies (~30 s): `amen_dnb_174.wav`, `amen_jungle_174.wav`,
@@ -286,6 +330,7 @@ python3 src/track_kartridzh.py   # writes renders/chip_kartridzh_138.wav
 python3 src/track_untertage.py   # writes renders/industrial_untertage_136.wav
 python3 src/track_blendung.py    # writes renders/industrial_blendung_154.wav
 python3 src/track_spirale.py     # writes renders/acid_spirale_140.wav
+python3 src/track_finsternis.py  # writes renders/acid_finsternis_142.wav
 python3 src/track_saeure.py      # writes renders/acid_saeure_146.wav
 python3 src/track_rausch.py      # writes renders/acid_rausch_138.wav
 python3 src/track_nebel.py       # writes renders/acid_nebel_130.wav
@@ -294,6 +339,7 @@ python3 src/track_alive.py       # writes renders/amen_alive_174.wav
 python3 src/track_zub4atka.py    # writes renders/amen_zub4atka_174.wav
 python3 src/track_vozduh.py      # writes renders/amen_vozduh_174.wav
 python3 src/track_descarga.py    # writes renders/amen_descarga_174.wav
+python3 src/track_ruffneck.py    # writes renders/jungle_ruffneck_166.wav
 ```
 
 Every track script prints a mix report before it renders — per bus level, peak,

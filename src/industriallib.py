@@ -28,7 +28,7 @@ Usage:
 import numpy as np
 import core
 from core import *
-from scipy.signal import fftconvolve
+from scipy.signal import fftconvolve, butter, sosfiltfilt, resample_poly
 
 BAR, STEP = core.set_grid(bpm=152)
 BPM = core.BPM
@@ -71,7 +71,8 @@ def bus_reverb(buf, decay=2.0, wet=0.25, tone=4000, block_bars=24):
 # ---- the kick ----
 @cached
 def techkick(dur_steps=2.2, tune=43.65, rise=3.2, tau=0.019, drive=6.5, decay=0.19,
-             body=1.1, mid=1.6, click=1.0, grit=0.35, tone=7000, gain=1.0):
+             body=1.1, mid=1.6, click=1.0, grit=0.35, tone=7000, gain=1.0,
+             ctone=2100.0, ctrack=0.0, cdecay=0.0028, cseed=7):
     """The floor. A sine dives onto `tune` and is driven, EQ'd and driven
     again - every stage after an EQ makes new harmonics, and that is where a
     techno kick gets its bite without getting longer. Shorter and less shrill
@@ -85,13 +86,44 @@ def techkick(dur_steps=2.2, tune=43.65, rise=3.2, tau=0.019, drive=6.5, decay=0.
     x = x + mid * bandpass(x, 220, 1500)                         # the part you hear
     x = np.tanh(2.0 * x / (1 + mid * 0.4))                       # stage 2
     if grit:
-        g = np.tanh(6 * saw_ph(ph, tune * 11))
-        g = bandpass(stereo(g), 350, 5200) * np.exp(-t / 0.035)[:, None]
-        x = x + grit * fold(g, 1.0)
+        # This layer is two waveshapers in series - a hard tanh on a swept
+        # saw, then a wavefolder - and a waveshaper makes harmonics without
+        # asking whether they fit under Nyquist. `ph` here is the KICK's
+        # phase, which starts (1+rise) times higher than `tune`, so the saw
+        # is momentarily at 163 Hz and its partials reach 68 kHz. Measured
+        # against an 8x reference, computing this at 1x has -21 dB of
+        # aliasing error: 9% of the layer arriving as inharmonic fizz on the
+        # attack of every kick, and identical on every one of them, which is
+        # what a metronome is. At 4x the error is -34 dB.
+        OS = 4
+        sr = SR * OS
+        t4 = np.arange(n * OS) / sr
+        f4 = tune * (1 + rise * np.exp(-t4 / tau))
+        ph4 = 2 * np.pi * np.cumsum(f4) / sr
+        g = np.tanh(6 * saw_ph(ph4, tune * 11 * (1 + rise), nyq=sr * 0.45, kmax=60))
+        g = np.stack([g, g], 1).astype(np.float32)
+        g = sosfiltfilt(butter(2, [350, 5200], 'band', fs=sr, output='sos'),
+                        g, axis=0).astype(np.float32)
+        g = fold(g * np.exp(-t4 / 0.035)[:, None], 1.0)
+        g = np.stack([resample_poly(g[:, c], 1, OS) for c in range(2)],
+                     1)[:n].astype(np.float32)
+        x = x + grit * g
     x = x * np.exp(-t / decay)[:, None]
     if click:
-        c = np.random.RandomState(7).randn(n) * np.exp(-t / 0.0016) * 0.9
-        c += np.sin(2 * np.pi * 2100 * t) * np.exp(-t / 0.0028) * 0.45
+        # The beater. Half of it is a noise burst and half is tonal, and the
+        # tonal half is where a kick turns into a metronome: a sine at a
+        # FIXED frequency, the same pitch and the same length on every beat,
+        # a thousand times in a record, is exactly what a metronome is - and
+        # `cseed` fixed at 7 meant every kick got the same noise as well, so
+        # there was not even variation to hide it behind.
+        #
+        # `ctrack` ties that tone to the kick's own phase instead. At 1.0 it
+        # starts at (1+rise) x ctone and falls with the drum, which is what a
+        # beater exciting the head actually does, and it stops being a pitch
+        # the ear can lock onto. `cseed` varies the noise per hit.
+        c = np.random.RandomState(cseed).randn(n) * np.exp(-t / 0.0016) * 0.9
+        cph = (1 - ctrack) * (2 * np.pi * ctone * t) + ctrack * (ph * (ctone / tune))
+        c += np.sin(cph) * np.exp(-t / cdecay) * 0.45
         x = x + hp(stereo(c), 2500) * 0.5 * click
     return norm(hp(x, 30) * adsr(n, a=0.0004, r=0.012)[:, None], 0.97) * gain
 
@@ -991,3 +1023,146 @@ def sheet(dur_steps=32, gain=1.0, bands=7, lo=2600.0, hi=12000.0, rate=0.11,
     a = min(int(0.25 * SR), n // 2); r = min(int(0.35 * SR), n // 2)
     env[:a] = np.linspace(0, 1, a); env[-r:] *= np.linspace(1, 0, r)
     return out * env[:, None] * gain * 0.22
+
+
+# ---- the 303 as the bassline ----
+def deepacidline(pattern, dur_bars=1, cutoff=0.16, res=5.6, envmod=0.60,
+                 decay=0.24, cut_decay=0.105, drive=4.2, acc_amt=0.55,
+                 sag=0.30, f_lo=76.0, f_hi=2400.0, split=105.0, sine=0.34,
+                 sub_oct=0.0, even=0.14, tame=6200.0, low=44.0, wave='saw', bands=11,
+                 slide_tau=0.060, glide_ms=2.0, knob=None, gain=1.0):
+    """A TB-303 played DOWN THERE - the acid line as the bass part.
+
+    Every 303 in this project so far high-passes itself at 165-240 Hz on the
+    principle that the sub belongs to the kick, which is correct when the
+    line is a hook riding over a bassline. It is the wrong instrument for the
+    kind of acid techno where there IS no separate bassline: the 303 is at
+    F#1-F#2, the filter rests below 150 Hz, and what the room feels is the
+    resonant peak crawling around in the low harmonics.
+
+    Doing that naively turns the low end to mud, because the overdrive that
+    makes a 303 sound like a 303 is generating intermodulation products all
+    over the sub. So the drive is applied to a SPLIT signal:
+
+        filter (three-pole) -> supply sag -> split at `split` Hz
+                                              |          |
+                                    clean, mono          driven, folded
+                                              \\________ /
+                                                  sum
+
+    which is the same rule every bass in this engine obeys - one clean thing
+    at the bottom - applied to a 303 rather than to a layered synth. `sine`
+    adds a tracked sine at the fundamental underneath, so the note keeps its
+    weight even at the cutoff settings where the filter has taken it away.
+
+    Three things it inherits from `minimallib.acidline`, which is the most
+    faithful 303 here and the reason that one and not `acidline` was the
+    starting point: an 18 dB/octave filter rather than 24, so the resonant
+    peak sits on a bed of harmonics instead of on silence; the overdrive
+    AFTER the filter; and `cutoff` and `envmod` as two knobs rather than one.
+
+    `knob` sweeps the resting cutoff across the whole call - the hand on the
+    control while the pattern stays fixed, which is what playing one means.
+    """
+    n = int(round(dur_bars * BAR + 1.5 * STEP))
+    fs, amp, cut = core._line_envs(pattern, n, decay, cut_decay, acc_amt, 0.0,
+                                   glide_ms, slide_tau)
+    ph = 2 * np.pi * np.cumsum(fs) / SR
+    top = float(fs.max())
+    if wave == 'square':
+        x = (2 / np.pi) * sum(np.sin(k * ph) / k for k in range(1, 46, 2)) * 2
+    else:
+        x = saw_ph(ph, top, kmax=72)
+
+    base = cutoff
+    if knob is not None:
+        k = np.atleast_1d(np.asarray(knob, dtype=np.float64))
+        base = k[0] if len(k) == 1 else np.interp(np.linspace(0, 1, n),
+                                                  np.linspace(0, 1, len(k)), k)
+    env = np.clip(base + envmod * cut, 0.0, 1.0)
+
+    st = stereo(x * amp)
+    out = morph_lp(st, f_lo, f_hi, env, bands=bands, res=res, order=3)
+    out = out / (1 + res * 0.30)
+    out = out * accent_sag(pattern, n, sag, step=STEP)[:, None]
+
+    if split:
+        lo = lp(out, split, order=4)                   # the one clean thing
+        hi = hp(out, split, order=4)
+    else:
+        lo, hi = np.zeros_like(out), out               # split=0 drives all of it
+    hi = np.tanh(drive * hi) / np.tanh(drive)
+    if even:
+        y = hi * hi * np.sign(hi)
+        hi = hi + even * (y - y.mean(axis=0, keepdims=True))
+    out = lo + hi
+    if sine:
+        out = out + sine * stereo(np.sin(ph) * amp) * 0.7
+    if sub_oct:
+        # The line's own octave down, as a clean tracked sine. A 303 written
+        # at F#2 has its fundamentals at 92-185 Hz, which IS the 120-300 band
+        # - so a record whose bass is the 303 comes out low-MIDDLE rather
+        # than low, and measures 48% there against 29% under 120 Hz. This is
+        # the fix, and it has to be a sine and it has to be clean, because it
+        # is the one thing allowed down there.
+        out = out + sub_oct * lp(stereo(np.sin(0.5 * ph) * amp), 115, order=2) * 0.9
+
+    out = lp(out, tame, order=2)
+    out = hp(out, low, order=2)
+    return fade_edges(out.astype(np.float32), 2.0) * gain * 0.55
+
+@cached
+def _deepacid_cached(key, dur_bars, **kw):
+    return deepacidline(list(key), dur_bars, **kw)
+
+def deepacid(pattern, dur_bars=1, **kw):
+    """cached deepacidline - the knob positions are part of the key, so a
+    swept line is a sequence of distinct cached phrases rather than one
+    phrase repeated"""
+    k = kw.pop('knob', None)
+    if k is not None:
+        k = tuple(np.atleast_1d(k).tolist())
+    return _deepacid_cached(tuple(tuple(p) for p in pattern), dur_bars,
+                            knob=k, **kw)
+
+
+@cached
+def openhat(dur_steps=4.0, gain=1.0, tone=1.0, decay=0.42, strike=0.05,
+            metal=0.6, air=1.0, hpf=6200.0, seed=0):
+    """A 909 open hat: metal that rings, not a burst of noise.
+
+    `hat909(open_=True)` is band-passed white noise under one exponential
+    decay. As a CLOSED hat - 28 ms - that is exactly right, because a 28 ms
+    noise tick is what a closed hat is. Opened out it stops working, for
+    three reasons which the ear reads as a rattle rather than as a cymbal:
+
+    - **It is noise only.** A hi-hat is two metal discs, and the pitched,
+      inharmonic partials are most of what makes it one.
+    - **One envelope**, so every frequency decays together. Real metal sheds
+      its top first, which is why a cymbal changes colour while it rings; a
+      sound whose spectrum is fixed while it fades is a sample being turned
+      down.
+    - **One seed.** `hat909` draws from RandomState(77) every call, so every
+      open hat in a record is bit-identical. Nothing in a kit repeats
+      exactly, and a short bright sound that does stops being an instrument
+      and becomes a tick.
+
+    Six squares at the 808's inharmonic ratios supply the metal, a noise
+    layer supplies the sizzle and decays faster than the metal does, and
+    `hpf` keeps all of it above the 2-5 kHz band - a bright short sound down
+    there is an ice-pick, not air.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 313)
+    base = 317.0 * tone * (1.0 + 0.02 * (rs.rand() - 0.5))       # per-hit detune
+    m = sum(square(base * p, t) for p in
+            (1.0, 1.342, 1.612, 1.996, 2.441, 2.786)) / 6.0
+    m = np.tanh(2.4 * m)
+    body = stereo(m) * np.exp(-t / decay)[:, None]
+    top = hp(stereo(m), hpf * 1.6) * np.exp(-t / (decay * 0.40))[:, None]
+    nz = hp(stereo(rs.randn(n)), hpf) * np.exp(-t / (decay * 0.28))[:, None]
+    out = metal * (body + 0.55 * top) + air * 0.5 * nz
+    out = out + hp(stereo(rs.randn(n)), 9000) * np.exp(-t / strike)[:, None] * 0.30
+    out = hp(out, hpf, order=2)
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0009))
+    return out * adsr(n, a=0.0005, r=0.03)[:, None] * gain * 0.42

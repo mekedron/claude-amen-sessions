@@ -942,6 +942,36 @@ def rewind(seg, accel=3.0):
     out = np.stack([np.interp(idx, np.arange(n), r[:, c]) for c in range(2)], axis=1)
     return fade_edges(out.astype(np.float32))
 
+def scratch(seg, cycles=2.0, depth=1.9, cut=True, gain=1.0):
+    """A baby scratch: the record dragged back and forth under the needle.
+
+    The playback rate is a cosine that goes negative, so the sound reverses and
+    the pitch goes with it - one index track, no crossfading of separate takes.
+    `cut` closes the fader on the backward half, which turns a drag into the
+    chirp everyone actually recognises."""
+    n = len(seg)
+    u = np.linspace(0, 1, n)
+    rate = 1.0 + depth * np.sin(2 * np.pi * cycles * u)
+    idx = np.clip(np.cumsum(rate) * 0.5, 0, n - 1)
+    base = np.arange(n, dtype=np.float64)
+    out = np.stack([np.interp(idx, base, seg[:, c]) for c in range(2)], 1)
+    if cut:
+        g = np.clip(np.sign(rate) * 0.5 + 0.5, 0.12, 1.0)
+        out *= uniform_filter1d(g, max(int(0.003 * SR), 3))[:, None]
+    return fade_edges(out.astype(np.float32)) * gain
+
+def spin(seg, r0=0.55, r1=1.0, curve=1.4):
+    """A record brought up to speed by hand, or let go of. The pitch goes with
+    the rate because on a turntable it always did, and a time-stretcher - which
+    would hold the pitch - gets the one thing about this gesture wrong."""
+    n = len(seg)
+    m = int(n / max(min(r0, r1), 0.05) * 1.3) + 16
+    u = np.linspace(0, 1, m) ** curve
+    idx = np.cumsum(r0 + (r1 - r0) * u)
+    idx = idx[idx < n - 1]
+    out = np.stack([np.interp(idx, np.arange(n), seg[:, c]) for c in range(2)], 1)
+    return fade_edges(out.astype(np.float32), ms=1.5)
+
 # ---- space ----
 _IR_CACHE = {}
 def _reverb_ir(decay, tone):
@@ -2038,6 +2068,35 @@ def duck_env(n, hits, depth=0.35, hold=0.012, release=0.19, attack=0.0022):
             np.minimum(env[t:e], curve[:e - t], out=env[t:e])
     return env
 
+def accent_sag(pattern, n, depth=0.28, hold=0.006, dur=0.055, step=None):
+    """The power supply giving way under an accent.
+
+    A 303's accent is not a velocity. The accent circuit shares its supply
+    with the filter, so an accented step momentarily starves the rest of the
+    voice: the note hits harder and then everything sags for about 50 ms and
+    climbs back. That dip is the "wow" nobody has ever managed to remove from
+    an acid line, and a synth that only raises the level on an accent does
+    not sound like one.
+
+    Returns a per-sample gain of length `n`. `pattern` is the usual
+    (step, note, dur, accent, slide) list; only the accent flag is read.
+    """
+    g = np.ones(n, dtype=np.float64)
+    if not depth:
+        return g
+    sp = STEP if step is None else step
+    h, d = int(hold * SR), max(int(dur * SR), 8)
+    curve = np.concatenate([np.linspace(1.0, 1.0 - depth, max(h, 2)),
+                            (1.0 - depth) + depth * (1 - np.exp(-np.linspace(0, 3.5, d)))])
+    for ev in pattern:
+        if not ev[3]:
+            continue
+        a = int(round(ev[0] * sp))
+        e = min(a + len(curve), n)
+        if a < n:
+            np.minimum(g[a:e], curve[:e - a], out=g[a:e])
+    return g
+
 def softclip(x, ceiling=1.0, knee=0.65):
     """rounds off the peaks and leaves the body alone: everything under
     knee*ceiling passes untouched, the rest curves into the ceiling"""
@@ -2220,13 +2279,24 @@ def bus_reverb(buf, decay=2.0, wet=0.25, tone=4000, block_bars=24):
     return out
 
 
-def _line_envs(pattern, n, decay, cut_decay, acc_amt, hold, glide_ms, slide_tau):
+def _line_envs(pattern, n, decay, cut_decay, acc_amt, hold, glide_ms, slide_tau,
+               release=0.006, cut_smooth=0.004):
     """Per-sample frequency, amplitude and cutoff for a whole bar.
 
     The frequency track is forward-filled through every gap, so the
     oscillator that renders it never sees a jump to zero and never restarts.
     Note changes are smoothed by `glide_ms`; a note flagged `slide` gets a
-    real exponential approach from the previous pitch instead."""
+    real exponential approach from the previous pitch instead.
+
+    A note whose amplitude envelope simply stops is a click. With a 240 ms
+    decay a one-step note at 142 BPM is still at 64% of its level when its
+    span ends, and `amp` outside that span is zero - so the waveform steps
+    from 0.64 to 0 in a single sample, on most notes, for the length of the
+    record. `release` fades it out instead; 6 ms is far shorter than any
+    note and removes the step completely. `cut_smooth` does the same job
+    for the filter envelope, where a step swaps the filter bank
+    mid-waveform - audible as a tick at the top of the spectrum.
+    """
     fs = np.zeros(n)
     amp = np.zeros(n)
     cut = np.zeros(n)
@@ -2249,6 +2319,11 @@ def _line_envs(pattern, n, decay, cut_decay, acc_amt, hold, glide_ms, slide_tau)
         e = (np.minimum(tt / 0.0022, 1.0)
              * (hold + (1 - hold) * np.exp(-tt / (decay * (0.82 if acc else 1.0)))))
         np.maximum(amp[a:b], lvl * e, out=amp[a:b])
+        rn = int(release * SR)
+        if rn and b < n:
+            rb = min(b + rn, n)
+            np.maximum(amp[b:rb], (lvl * e[-1]) * np.linspace(1, 0, rb - b),
+                       out=amp[b:rb])
         c = (0.58 + (0.42 if acc else 0.0)) * np.exp(-tt / (cut_decay * (1.7 if acc else 1.0)))
         np.maximum(cut[a:b], c, out=cut[a:b])
         prev = f
@@ -2260,6 +2335,8 @@ def _line_envs(pattern, n, decay, cut_decay, acc_amt, hold, glide_ms, slide_tau)
     fs = fs[idx]
     k = max(int(glide_ms / 1000.0 * SR), 3)
     fs = uniform_filter1d(fs, k)          # micro-portamento; also kills the step
+    if cut_smooth:
+        cut = uniform_filter1d(cut, max(int(cut_smooth * SR), 3))
     return fs, amp, cut
 
 

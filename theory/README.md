@@ -175,10 +175,16 @@ everything at once is not experimental, it is noise.
 - [`dnb-bass-is-gestures-not-notes.md`](90-memories/dnb-bass-is-gestures-not-notes.md) — dnb-bass-is-gestures-not-notes.md
 - [`fm-index-turns-a-rhodes-into-a-bell.md`](90-memories/fm-index-turns-a-rhodes-into-a-bell.md) — fm-index-turns-a-rhodes-into-a-bell.md
 - [`industrial-techno-measures-too-dark.md`](90-memories/industrial-techno-measures-too-dark.md) — industrial-techno-measures-too-dark.md
+- [`a-repeated-hit-must-not-be-identical.md`](90-memories/a-repeated-hit-must-not-be-identical.md) — Identical noise on every hit reads as a metronome
+- [`an-open-hat-is-not-a-closed-hat-opened.md`](90-memories/an-open-hat-is-not-a-closed-hat-opened.md) — An open hat is a different instrument, not a longer envelope
+- [`note-envelopes-need-a-release.md`](90-memories/note-envelopes-need-a-release.md) — A note envelope that stops instead of fading is a click
+- [`dark-is-register-and-mode-not-key.md`](90-memories/dark-is-register-and-mode-not-key.md) — "Darker" is register and mode, never the key name
+- [`the-303-can-be-the-bass-part.md`](90-memories/the-303-can-be-the-bass-part.md) — A 303 written as the bassline needs its drive split off the fundamental
 - [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
 - [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal-is-holes-not-a-full-spectrum.md
 - [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md
 - [`neurofunk-bass-is-a-dark-reese.md`](90-memories/neurofunk-bass-is-a-dark-reese.md) — neurofunk-bass-is-a-dark-reese.md
+- [`one-oscillator-cut-in-half-not-two-oscillators.md`](90-memories/one-oscillator-cut-in-half-not-two-oscillators.md) — one-oscillator-cut-in-half-not-two-oscillators.md
 - [`pitched-metal-reads-as-cheerful.md`](90-memories/pitched-metal-reads-as-cheerful.md) — pitched-metal-reads-as-cheerful.md
 - [`section-contrast-belongs-in-level.md`](90-memories/section-contrast-belongs-in-level.md) — section-contrast-belongs-in-level.md
 - [`smoothers-return-tiny-negatives.md`](90-memories/smoothers-return-tiny-negatives.md) — smoothers-return-tiny-negatives.md
@@ -187,4 +193,4 @@ everything at once is not experimental, it is noise.
 - [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
 - [`top-end-from-transients-not-wash.md`](90-memories/top-end-from-transients-not-wash.md) — top-end-from-transients-not-wash.md
 
-**106 files.** Everything is plain Markdown with no external dependencies.
+**107 files.** Everything is plain Markdown with no external dependencies.
