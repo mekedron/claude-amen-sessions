@@ -361,7 +361,11 @@ Everything below is loaded into every session by the harness.
 @theory/40-reference/04-glossary.md
 @theory/40-reference/05-quick-decision-tables.md
 @theory/90-memories/README.md
+@theory/90-memories/a-bassline-written-as-notes-is-an-arpeggio.md
+@theory/90-memories/a-breakdown-must-keep-its-kick.md
 @theory/90-memories/a-chord-must-not-arrive-as-one-event.md
+@theory/90-memories/additive-stacks-clip-into-squares.md
+@theory/90-memories/a-sliced-break-must-not-be-jittered.md
 @theory/90-memories/an-open-hat-must-end-before-the-next-one.md
 @theory/90-memories/bar-rendered-parts-must-overhang.md
 @theory/90-memories/bass-must-keep-its-own-fundamental.md

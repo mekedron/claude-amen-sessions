@@ -22,6 +22,37 @@ Supporting moves that go with it: a low shelf at 190 Hz on the bass bus,
 `mono_below` raised to 150 Hz so the extra weight is mono, and `reese(sub=…)`
 adding a clean sine at the played note underneath the distortion.
 
+## And the highpass is only half of it: check the octave
+
+On `tvar` the same complaint came back twice - "оно стало ниже, но ноты всё
+равно кажутся высокими" - while the mix measured *fatter* every time: 50% of
+the energy under 120 Hz, 27% in 60-120, exactly the reference proportions. The
+numbers were right and the ear was still right, because **perceived pitch is
+the fundamental of the character layer**, and no amount of energy underneath it
+changes what note the listener thinks they are hearing.
+
+The character layer was playing F2, 87 Hz. He handed over the reference he had
+in mind - `samples/reese_witch_a1_56hz.wav` - and it measures a fundamental of
+**55.87 Hz**, with 28.8% of its energy under 60 Hz and no separate sub anywhere
+in it. The reese *is* the bass, fundamental and all. Moving the note down an
+octave to F1 fixed in one edit what three rounds of EQ had not touched.
+
+So the layer split is not sub / mid / character. It is:
+
+| | What it is |
+|---|---|
+| the creature | ONE oscillator carrying h1 upward, its own fundamental included |
+| the sub bus | only the sections where the creature is absent or sparse |
+
+Two continuous oscillators at 43.65 Hz with unrelated phases cancel, so if the
+character layer has its own fundamental the separate sub has to get out of the
+way rather than reinforce it. Building the low partials from the **same phase
+track** as the character makes that impossible by construction.
+
+**How to test it:** print the fundamental of the part in isolation and compare
+it with the reference's, before touching a filter. A part an octave high reads
+as "too high" through any EQ curve, and the band percentages will not say so.
+
 **Why:** "deep" is not a frequency, it is whether the fundamental of the note
 you are playing is present. Adding sub *underneath* a thin bass makes two
 instruments; letting the bass keep its own bottom makes one.

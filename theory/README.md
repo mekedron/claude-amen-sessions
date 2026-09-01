@@ -163,7 +163,11 @@ everything at once is not experimental, it is noise.
 ### `90-memories/` — Memories — what has been learned about this project
 
 - [`README.md`](90-memories/README.md) — Memories
+- [`a-bassline-written-as-notes-is-an-arpeggio.md`](90-memories/a-bassline-written-as-notes-is-an-arpeggio.md) — a-bassline-written-as-notes-is-an-arpeggio.md
+- [`a-breakdown-must-keep-its-kick.md`](90-memories/a-breakdown-must-keep-its-kick.md) — a-breakdown-must-keep-its-kick.md
 - [`a-chord-must-not-arrive-as-one-event.md`](90-memories/a-chord-must-not-arrive-as-one-event.md) — a-chord-must-not-arrive-as-one-event.md
+- [`additive-stacks-clip-into-squares.md`](90-memories/additive-stacks-clip-into-squares.md) — additive-stacks-clip-into-squares.md
+- [`a-sliced-break-must-not-be-jittered.md`](90-memories/a-sliced-break-must-not-be-jittered.md) — a-sliced-break-must-not-be-jittered.md
 - [`an-open-hat-must-end-before-the-next-one.md`](90-memories/an-open-hat-must-end-before-the-next-one.md) — an-open-hat-must-end-before-the-next-one.md
 - [`bar-rendered-parts-must-overhang.md`](90-memories/bar-rendered-parts-must-overhang.md) — bar-rendered-parts-must-overhang.md
 - [`bass-must-keep-its-own-fundamental.md`](90-memories/bass-must-keep-its-own-fundamental.md) — bass-must-keep-its-own-fundamental.md
@@ -183,4 +187,4 @@ everything at once is not experimental, it is noise.
 - [`the-felt-pulse-is-in-the-low-band.md`](90-memories/the-felt-pulse-is-in-the-low-band.md) — the-felt-pulse-is-in-the-low-band.md
 - [`top-end-from-transients-not-wash.md`](90-memories/top-end-from-transients-not-wash.md) — top-end-from-transients-not-wash.md
 
-**103 files.** Everything is plain Markdown with no external dependencies.
+**106 files.** Everything is plain Markdown with no external dependencies.
