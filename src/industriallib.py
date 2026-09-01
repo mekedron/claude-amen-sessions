@@ -1518,3 +1518,75 @@ def shear(pattern, dur_steps=32, gain=1.0, rates=(1, 1, 2, 2, 4, 4, 8, 8),
     env = np.ones(n, dtype=np.float32)
     env[:aa] = np.linspace(0, 1, aa); env[-rr:] *= np.linspace(1, 0, rr)
     return (out * env[:, None]).astype(np.float32) * gain * 0.66
+
+
+@cached
+def ratchet(dur_steps=16, rate=9.0, accel=3.0, note=64, gain=1.0, rmax=88.0,
+            body=1.0, pawl=0.45, spin=0.22, seed=0):
+    """A pawl clicking over a gear wheel as it spins up.
+
+    `servo()` does the same structural job - an accelerating train of clicks,
+    which is the cheapest way to raise density into a transition - and it
+    does not belong in a machine shop. Its clicks are 10 ms, band-passed
+    1800-11000 Hz and accelerate to 340 a second, and that combination is an
+    electrical arc: no object was struck, so it has no body and nothing in
+    the room answers it.
+
+    This is the mechanical version of the same gesture, and the three things
+    that separate them are all physical:
+
+    - **A body.** Every click is a small struck object - four inharmonic
+      partials around `note` with the top ones dying first - not a burst of
+      band-passed noise.
+    - **A pawl.** The spring-loaded catch has mass, so each click carries a
+      low thud at a fixed pitch of its own. That thud is most of what makes
+      it read as a mechanism rather than as a spark.
+    - **A top speed.** `rmax` is 88 a second, not 340. Past about a hundred
+      clicks a second the ear stops hearing separate impacts and starts
+      hearing a buzz, and a buzz in that band is electrical again whatever
+      it is made of.
+
+    The whole thing is band-limited to 180-6500 Hz, so it never reaches the
+    band a spark lives in.
+    """
+    n, t = steps(dur_steps)
+    dur_s = n / SR
+    rs = np.random.RandomState(seed + 577)
+    f = midi(note)
+    ts, cur, r = [], 0.0, rate
+    while cur < dur_s:
+        ts.append(cur)
+        cur += 1.0 / r
+        r = min(r * accel ** (1.0 / max(rate * dur_s, 1)), rmax)
+    x = np.zeros(n)
+    low = np.zeros(n)
+    for i, c in enumerate(ts):
+        k = int(c * SR)
+        m = min(int(0.075 * SR), n - k)
+        if m <= 32:
+            break
+        tt = np.arange(m) / SR
+        det = rs.uniform(0.95, 1.06)
+        amp = rs.uniform(0.68, 1.0)
+        hit = np.zeros(m)
+        for p, g_, d in ((1.0, 1.0, 0.030), (1.71, 0.62, 0.019),
+                         (2.63, 0.40, 0.012), (4.11, 0.24, 0.007)):
+            hit += g_ * np.sin(2 * np.pi * f * det * p * tt) * np.exp(-tt / d)
+        hit /= 2.26                                       # before any drive
+        hit += rs.randn(m) * np.exp(-tt / 0.0016) * 0.95  # the contact
+        x[k:k + m] += hit * amp * body
+        if pawl:
+            # the catch has mass, and its pitch does not change with the rate
+            pw = np.sin(2 * np.pi * 152.0 * (1 + 0.02 * (rs.rand() - 0.5)) * tt)
+            low[k:k + m] += pw * np.exp(-tt / 0.024) * amp * pawl
+    out = bandpass(stereo(np.tanh(1.7 * x)), 180, 6500)
+    out = out + bandpass(stereo(low), 110, 340) * 0.45
+    if spin:
+        # the wheel itself, speeding up with the pawl
+        u = np.clip(np.arange(n) / max(n - 1, 1), 0, 1)
+        fw = 96.0 * (1 + 1.9 * u)
+        wh = saw_ph(2 * np.pi * np.cumsum(fw) / SR, 120.0, nyq=7000.0, kmax=22)
+        out = out + bandpass(morph_lp(stereo(np.tanh(1.4 * wh)), 420.0, 2400.0,
+                                      0.15 + 0.7 * u, bands=5), 300, 4200) * spin * 0.45
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0012))
+    return out * adsr(n, a=0.004, r=0.03)[:, None] * gain * 0.5

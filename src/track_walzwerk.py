@@ -320,8 +320,13 @@ for b in range(8, 16):
     if b >= 12:
         tops(b, gain=0.55, sixteenths=False, claps=(), opens=(6, 14))
     clink(b, gain=0.55, steps_=(7, 15), seed=5)
-s.place(s.pos(14), servo(16, rate=15.0, accel=2.6, note=71, gain=0.5, seed=4),
-        1.0, 'fx')
+# The pawl, not a spark. `servo()` is an accelerating train of 10 ms clicks
+# band-passed 1800-11000 Hz, which is an arc: nothing was struck, so it has
+# no body and nothing in the room answers it. Everything else in this shop is
+# a struck object and this has to be one too - `ratchet()` puts its energy in
+# 300-2000 Hz, where the pipes and the plates already live.
+s.place(s.pos(14), ratchet(16, rate=9.0, accel=3.0, note=64, gain=0.60, seed=4),
+        1.0, 'shop')
 
 # ======================= WALZWERK  bars 16-47 =======================
 # The floor, and deliberately only the floor. No stabs, no plates, no bass and
@@ -347,8 +352,8 @@ for b in range(16, 48):
 for b in (16, 24, 32, 40):
     stamp(b, gain=0.85 if b >= 32 else 0.6)
 forge(39, gain=0.7)
-s.place(s.pos(44), servo(64, rate=9.0, accel=4.0, note=69, gain=0.55, seed=6),
-        1.0, 'fx')
+s.place(s.pos(44), ratchet(64, rate=5.0, accel=4.5, note=62, gain=0.62, seed=6),
+        1.0, 'shop')
 s.place(s.pos(45), riser(48, gain=0.5, f0=190, f1=1700), 1.0, 'fx')
 s.place(s.pos(47, 8), steam(8, f0=700, f1=7600, gain=0.75, seed=3), 1.0, 'fx')
 
@@ -406,8 +411,8 @@ for b in range(80, 96):
     clink(b, gain=0.40, steps_=(11,), seed=13)
 s.place(s.pos(82), groan(41, 24, gain=0.42, fall=3.0, vowel='uh', seed=3), 1.0, 'voice')
 s.place(s.pos(88), press(28, tune=ROOT, gain=0.45, seed=5), 1.0, 'fx')
-s.place(s.pos(92), servo(24, rate=11.0, accel=3.2, note=69, gain=0.55, seed=8),
-        1.0, 'fx')
+s.place(s.pos(92), ratchet(24, rate=7.0, accel=3.4, note=64, gain=0.60, seed=8),
+        1.0, 'shop')
 s.place(s.pos(94), riser(32, gain=0.55, f0=200, f1=1900), 1.0, 'fx')
 
 # ======================= HOCHOFEN  bars 96-135  ** DROP 2 ** ===========
@@ -510,8 +515,8 @@ for b in range(152, 160):
           steps_=(6, 14) if ph < 4 else (2, 6, 10, 14))
 for b in (153, 155, 157):
     stamp(b, gain=0.9)
-s.place(s.pos(152), servo(96, rate=8.0, accel=5.0, note=67, gain=0.62, seed=11),
-        1.0, 'fx')
+s.place(s.pos(152), ratchet(96, rate=4.5, accel=5.0, note=59, gain=0.66, seed=11),
+        1.0, 'shop')
 s.place(s.pos(154), riser(80, gain=0.62, f0=180, f1=2400), 1.0, 'fx')
 s.place(s.pos(156), alarm(64, f0=180, f1=520, cycles=1.0, gain=0.40), 1.0, 'fx')
 s.place(s.pos(159, 4), steam(8, f0=900, f1=9500, gain=0.85, seed=11), 1.0, 'fx')

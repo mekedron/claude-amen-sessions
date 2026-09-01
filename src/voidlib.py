@@ -565,7 +565,7 @@ def _pernote(n, ev, key, default=0.0, per_sample=None):
     return uniform_filter1d(out, max(int(0.006 * SR), 3))
 
 
-def _cutlane(n, ev):
+def _cutlane(n, ev, bright=1.0):
     """The filter envelope, once per note. This is where the sound is: a
     sweep that HAPPENS ONCE across a note is an articulation, and the same
     sweep repeating four times a beat is a wobble."""
@@ -579,7 +579,7 @@ def _cutlane(n, ev):
             continue
         t = np.arange(e - k) / SR
         u = 1 - np.exp(-t / v['tau'])
-        cut[k:e] = v['c0'] * (v['c1'] / v['c0']) ** u
+        cut[k:e] = v['c0'] * bright * (v['c1'] / v['c0']) ** u
         pos[k:e] = v['pos'][0] + (v['pos'][1] - v['pos'][0]) * u
     return (uniform_filter1d(cut, max(int(0.005 * SR), 3)),
             uniform_filter1d(pos, max(int(0.008 * SR), 3)))
@@ -589,7 +589,8 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
              voices=3, detune=19.0, spread=0.9, sub=1.0, drive=1.0,
              top=6500.0, hpf=112.0, glide=0.024, h2=0.95, h3=0.34,
              subrel=0.13, edge_=1.0, char=1.0, teeth=0.55, deep=1.0,
-             oct_=0.42, octcut=3.0, keytrack=0.5, subfold=38):
+             oct_=0.42, octcut=3.0, keytrack=0.5, subfold=38, bends=(),
+             bright=1.0):
     """events: (step, length_in_steps, midi, character). Rests are simply
     steps no event covers, and they are the half of this that people hear.
 
@@ -607,18 +608,23 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     """
     n = int((bars * 16 + tail) * STEP)
     ev = sorted(events)
-    f = _ftrack([(st, m) for st, _, m, _ in ev], n, glide)
+    # `bends` go into the PITCH track and not into the note envelope, so the
+    # line changes note without re-articulating. That is legato, and on this
+    # instrument it is the difference between a phrase and a list of events:
+    # the oscillator never stops, so the slide is the sound of one thing
+    # moving rather than of two things next to each other.
+    pp = sorted([(st, m) for st, _, m, _ in ev] + [(float(a), int(b)) for a, b in bends])
+    f = _ftrack(pp, n, glide)
     ph = 2 * np.pi * np.cumsum(f) / SR
     # The sub folds down an octave for anything the line plays above
     # `subfold`, so the bottom of the instrument stays where it was while
     # the line moves up. Without it a phrase an octave up has no weight and
     # reads as a different, smaller instrument.
-    fs = _ftrack([(st, m - 12 if m >= subfold else m) for st, _, m, _ in ev],
-                 n, glide)
+    fs = _ftrack([(st, m - 12 if m >= subfold else m) for st, m in pp], n, glide)
     phs = 2 * np.pi * np.cumsum(fs) / SR
 
     amp = _noteenv(n, ev)
-    cut, pos = _cutlane(n, ev)
+    cut, pos = _cutlane(n, ev, bright)
     L = {'bend_l': None, 'pwm_l': None, 'sync_l': None, 'fm_l': None,
          'quant_l': None}
     bl = _pernote(n, ev, 'bend', 0.0)
@@ -639,7 +645,7 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     # same one higher; every synth has this control and it is why a line can
     # move register without changing character.
     kt = (f / midi(31)) ** keytrack if keytrack else 1.0
-    y = ladder(x, np.clip(cut * kt, 90, 6000), res, 1.5 * drive, poles=2)
+    y = ladder(x, np.clip(cut * kt, 90, 9000), res, 1.5 * drive, poles=2)
     vw = _pernote(n, ev, 'vow', 0.0)
     if float(vw.max()) > 0.02:
         y = y * (1 - vw[:, None]) + vw[:, None] * morph_formant(
@@ -651,7 +657,7 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
         # An EQ between two gain stages, which is where a neuro bass gets
         # the part of it a phone can reproduce. The reference carries 3.7%
         # of its energy in 800-3000 Hz and a filter this low leaves 1.5%.
-        y = y + teeth * bandpass(y, 700, 2600)
+        y = y + teeth * bandpass(y, 700, 2600) + teeth * 0.55 * bandpass(y, 2200, 5200)
         y = y / max(float(np.abs(y).max()), 1e-9)
         y = np.tanh(1.7 * y) / np.tanh(1.7)
     _pk = max(float(np.abs(y).max()), 1e-9)
@@ -669,11 +675,11 @@ def bassline(events, bars=2, seed=0, gain=1.0, tail=6, tab='growl',
     if oct_:
         xo = osc(ph * 2.0, T, np.clip(pos * 0.8 + 0.15, 0, 1) * (T.shape[0] - 2),
                  L, n, max(voices - 1, 2), detune * 0.7, seed + 7, spread=1.0)
-        yo = ladder(hp(xo, 230, 2), np.clip(cut * kt * octcut, 200, 7000),
+        yo = ladder(hp(xo, 230, 2), np.clip(cut * kt * octcut, 200, 13000),
                     res * 0.8, 1.3 * drive, poles=2)
         yo = yo / max(float(np.abs(yo).max()), 1e-9)
         yo = yo * (1 - dl[:, None]) + dl[:, None] * drive_asym(yo, 5.5, 0.24)
-        y = y + bandpass(yo, 460, 4600) * amp[:, None] * oct_
+        y = y + bandpass(yo, 460, 6800) * amp[:, None] * oct_
 
     if edge_:
         y = y + edge(n, [int(st * STEP) for st, _, _, _ in ev],
@@ -707,28 +713,43 @@ def parse(pat, note=31, unit=1):
     return ev
 
 
-def line(bars_pat, notes=None, root=31, bars=None, moves=(), **kw):
+def line(bars_pat, notes=None, root=31, bars=None, moves=(), slides=(),
+         push=(), **kw):
     """A phrase: one pattern string per bar, one note per bar, and `moves` -
     (bar, step, midi) - for the places the line jumps register inside a bar.
 
     Register is half of what makes a bass line dynamic rather than a loop,
     and it costs nothing here: the sub folds an octave down above `subfold`
     and the filter key-tracks, so the line can go up an octave and the
-    instrument stays the same size."""
+    instrument stays the same size.
+
+    `slides` - (bar, step, midi) - bend the pitch mid-note with no attack.
+    `push`   - (bar, step, delta) - move one event off the grid, in steps.
+               A sixteenth-note line where every event is exactly on its
+               step is the thing that reads as monotonous however good the
+               notes are; a third of a step late on one hit per bar is not
+               heard as lateness, it is heard as a player."""
     pats = bars_pat if isinstance(bars_pat, (list, tuple)) else [bars_pat]
     bars = bars or len(pats)
     mv = sorted((int(b) * 16 + float(st), int(m)) for b, st, m in moves)
     ev = []
     for b, p in enumerate(pats):
         nt = root if notes is None else notes[b % len(notes)]
-        for st, ln, _, k in parse(p, nt):
+        # A bar written with 32 characters is read in thirty-seconds, which
+        # is what a group of fast stabs needs: at 174 one of them is 43 ms.
+        for st, ln, _, k in parse(p, nt, unit=16.0 / len(p)):
             a = st + 16 * b
             m = nt
             for pos, mm in mv:
                 if pos <= a + 1e-6:
                     m = mm
             ev.append((a, ln, m, k))
-    return bassline(ev, bars=bars, **kw)
+    for pb, ps, d in push:
+        a0 = int(pb) * 16 + float(ps)
+        ev = [(st + d, ln, m, k) if abs(st - a0) < 1e-6 else (st, ln, m, k)
+              for st, ln, m, k in ev]
+    bd = [(int(b) * 16 + float(st), int(m)) for b, st, m in slides]
+    return bassline(sorted(ev), bars=bars, bends=bd, **kw)
 def subline(notes, bars=2, gain=1.0, tail=4, glide=0.030, h2=0.90, h3=0.32,
             gatep=None, drive=1.3, decay=0.0):
     """The clean mono sub for the sections where the creature is absent or

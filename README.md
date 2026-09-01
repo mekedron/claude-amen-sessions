@@ -198,7 +198,11 @@ sidechain depth and transient punch against the tracks that already worked.
                       struck from the inside whose bracket buzzes while it is
                       still moving, `girder()`, a beam excited by friction
                       rather than struck and gliding a tritone across forty
-                      seconds, `shear()`, a sub split at 92 Hz with the top
+                      seconds, `ratchet()`, a pawl clicking over a gear
+                      wheel as it spins up - the mechanical answer to
+                      `servo()`, whose noise-burst clicks at 1.8-11 kHz and
+                      340 a second are an electrical arc rather than
+                      anything anybody struck - `shear()`, a sub split at 92 Hz with the top
                       half through a folder whose amount ramps and a lane
                       that accelerates, and `weight()`, the clean sine the
                       punch and the growl stand on. Also
