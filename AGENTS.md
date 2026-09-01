@@ -376,6 +376,8 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/fm-index-turns-a-rhodes-into-a-bell.md
 @theory/90-memories/industrial-techno-measures-too-dark.md
 @theory/90-memories/a-repeated-hit-must-not-be-identical.md
+@theory/90-memories/a-rising-sweep-must-not-also-crescendo.md
+@theory/90-memories/a-sparse-part-needs-a-high-percentile.md
 @theory/90-memories/an-open-hat-is-not-a-closed-hat-opened.md
 @theory/90-memories/note-envelopes-need-a-release.md
 @theory/90-memories/dark-is-register-and-mode-not-key.md

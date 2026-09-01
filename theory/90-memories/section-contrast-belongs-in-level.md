@@ -63,6 +63,29 @@ off far enough that the ride survives it - `brick=dict(gain=1.24)` here, 0.8 dB
 of mean reduction. With both, the same arrangement went from a 1.5 dB spread
 across four minutes to -16.3 at the trough and -4.9 at the peak.
 
+## And it cuts both ways: the ride must not double the arrangement
+
+`revashol`'s bridge has no drums, no guitar and no percussion in it. That is
+worth six or seven dB on its own - and the ride then took another **eleven**
+off the same bars, on the theory that a breakdown should be quiet. The result
+measured thirteen dB under the choruses, and he heard it as a fault rather
+than as contrast: *"где-то очень он тихий становится в середине... там сейчас
+звук тише, чем в остальном треке"*.
+
+Three to six dB is the whole window, and it is the TOTAL - the arrangement
+and the ride together, not each. So write the ride for the part the
+arrangement cannot do:
+
+| The arrangement does | The ride does |
+|---|---|
+| removes the drums, the guitar, the percussion | the 2-3 dB dip in the bar before an arrival |
+| a section that is genuinely thinner | the slow lift across an intro |
+| the hole before a drop | nothing else |
+
+Measured after the fix, with the ride's bridge cut at -4.6 instead of -11.0:
+the breakdown sits **5.7 dB** under the peak and the intro climbs -19 -> -17
+-> -15 -> -13 -> -12 -> -10 -> -9 in seven rows of the energy curve.
+
 **How to apply:** print the section table before mixing anything. Check three
 things: the curve rises overall, the minimum precedes the maximum, and the
 peak lands 60-90% of the way through. Fix a flat curve with a ride over the

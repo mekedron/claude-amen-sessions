@@ -178,6 +178,8 @@ everything at once is not experimental, it is noise.
 - [`fm-index-turns-a-rhodes-into-a-bell.md`](90-memories/fm-index-turns-a-rhodes-into-a-bell.md) — fm-index-turns-a-rhodes-into-a-bell.md
 - [`industrial-techno-measures-too-dark.md`](90-memories/industrial-techno-measures-too-dark.md) — industrial-techno-measures-too-dark.md
 - [`a-repeated-hit-must-not-be-identical.md`](90-memories/a-repeated-hit-must-not-be-identical.md) — Identical noise on every hit reads as a metronome
+- [`a-rising-sweep-must-not-also-crescendo.md`](90-memories/a-rising-sweep-must-not-also-crescendo.md) — Why a riser reads as a scream, and where harshness actually comes from
+- [`a-sparse-part-needs-a-high-percentile.md`](90-memories/a-sparse-part-needs-a-high-percentile.md) — A 5% duty cycle measures 30 dB wrong at pct=90
 - [`an-open-hat-is-not-a-closed-hat-opened.md`](90-memories/an-open-hat-is-not-a-closed-hat-opened.md) — An open hat is a different instrument, not a longer envelope
 - [`note-envelopes-need-a-release.md`](90-memories/note-envelopes-need-a-release.md) — A note envelope that stops instead of fading is a click
 - [`dark-is-register-and-mode-not-key.md`](90-memories/dark-is-register-and-mode-not-key.md) — "Darker" is register and mode, never the key name
