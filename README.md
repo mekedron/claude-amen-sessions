@@ -49,6 +49,12 @@ sidechain depth and transient punch against the tracks that already worked.
                       notes die first) and `ens()` (a string section whose
                       players enter late and drift apart, rather than one
                       detuned oscillator)
+    verify.ticks()    how much of the top end is isolated clicks rather than
+                      sound - the other complaint, and the one a scattered
+                      texture layer produces the moment it is too loud. It
+                      separates a fault from a part by GRID LOCK: nine ticks
+                      a second at 142 BPM is a hi-hat line if their phases
+                      within the step agree and dust if they do not
     verify.clicks()   where a render has a discontinuity, in seconds and in
                       bars. The naive test - a big jump between two samples -
                       finds every kick and every hat, because a transient IS
@@ -113,6 +119,19 @@ sidechain depth and transient punch against the tracks that already worked.
                       string bank whose oscillators never restart, and - built
                       but deliberately unused on the first record - a modal
                       vibraphone and a one-oscillator-per-phrase alto
+    src/trancelib.py  the uplifting trance module, 138 BPM: a kick that is
+                      bright and short where the house one is round and the
+                      hard-dance one is a distortion chain, a clap with a
+                      900 ms plate on it, an open hat truncated at 340 ms,
+                      `rollbass()` - three sixteenths after every kick as one
+                      phase track per phrase with the sub taken as sin(ph/2)
+                      off that same track - `hypersaw()`, the JP-8000 stack
+                      whose seven voices spread on an ACCELERATING curve and
+                      which high-passes itself at 270 Hz so it does not eat
+                      the bassline, `stack3()` for the lead in three octaves
+                      at once, `tgate()`, and `uplift()`, a riser built as a
+                      resonant band climbing exponentially rather than as a
+                      crossfade between static filters
     src/hardlib.py    the hardstyle module: the kick, 170 BPM
     src/neurolib.py   the neurofunk module: the tight kit, the bass design
                       chain - reese, growl, talking formants, hard sync - and

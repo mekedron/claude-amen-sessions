@@ -367,6 +367,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/a-timbre-figure-must-not-repeat-exactly.md
 @theory/90-memories/additive-stacks-clip-into-squares.md
 @theory/90-memories/a-sliced-break-must-not-be-jittered.md
+@theory/90-memories/a-saw-edge-is-not-a-click.md
 @theory/90-memories/an-open-hat-must-end-before-the-next-one.md
 @theory/90-memories/bar-rendered-parts-must-overhang.md
 @theory/90-memories/bass-must-keep-its-own-fundamental.md
@@ -380,6 +381,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/dark-is-register-and-mode-not-key.md
 @theory/90-memories/the-303-can-be-the-bass-part.md
 @theory/90-memories/shimmer-is-the-only-reverb-that-adds-notes.md
+@theory/90-memories/do-not-fix-a-band-number-with-a-texture.md
 @theory/90-memories/loud-masters-need-a-true-peak-limiter.md
 @theory/90-memories/minimal-is-holes-not-a-full-spectrum.md
 @theory/90-memories/minimal-means-fewer-voices.md

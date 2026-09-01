@@ -38,6 +38,64 @@ BANDS = ((20, 60), (60, 120), (120, 300), (300, 800),
          (800, 3000), (3000, 10000), (10000, 20000))
 
 
+def ticks(x, band=3000.0, ratio=6.0, label='', floor_db=-58.0, bpm=None):
+    """How much of the top end is isolated clicks rather than sound.
+
+    `clicks()` finds discontinuities. This finds the other complaint - a
+    texture of short high-frequency bursts, which is what a vinyl-crackle or
+    dust layer turns into the moment it is too loud, and which the ear
+    reports as "потрескивания" rather than as brightness.
+
+    Count short excursions in the high band that stand more than `ratio`
+    times above that band's own median. A record whose top end is instruments
+    scores near zero; a record whose top end is a scatter of micro-clicks
+    scores in the tens. Measured here: blendung 0.0/s, nebel 0.0/s,
+    finsternis 6.4/s, and a draft of heimweg 19.5/s, which is the one the
+    human heard.
+
+    The floor matters as much as the count, in both directions. Ticks stand
+    out against silence, so a quiet high band with a few in it is worse than
+    a busy one with many - but below about -58 dB there is nothing up there
+    to hear at all, and a purely relative test reports hundreds of ticks a
+    second in a fade-out because every sample is above the median of nothing.
+    `floor_db` is that guard, and without it this function cries wolf on
+    every quiet section.
+    """
+    m = np.asarray(x).mean(axis=1)
+    hi = np.abs(sosfilt(butter(4, band, 'high', fs=SR, output='sos'), m))
+    w = max(int(0.003 * SR), 3)
+    env = np.convolve(hi, np.ones(w) / w, mode='same')
+    med = float(np.median(env[env > 0])) if (env > 0).any() else 0.0
+    # Against the LOCAL surroundings, not the file's median. A tick is an
+    # isolated event and stands above its own neighbourhood; a noise floor
+    # does not, and measuring it against a global median reports every wiggle
+    # in a fade-out as a click - 826 a second in one test, which is a
+    # detector describing itself rather than the audio.
+    lw = max(int(0.100 * SR), 9)
+    ref = np.convolve(env, np.ones(lw) / lw, mode='same') + 1e-9
+    absmin = 10 ** (floor_db / 20)
+    pk = ((env[1:-1] > env[:-2]) & (env[1:-1] > env[2:])
+          & (env[1:-1] > ref[1:-1] * ratio) & (env[1:-1] > absmin))
+    rate = int(pk.sum()) / max(len(m) / SR, 1e-9)
+    # A hi-hat is a tick too, and a record with sixteenths at 142 BPM has 9.5
+    # of them a second by design. What separates a part from crackle is not
+    # how many there are, it is whether they land on the grid: rhythmic ticks
+    # share a phase within the step, scattered ones do not. `lock` is the
+    # resultant vector length of those phases - near 1 is a hi-hat line,
+    # near 0 is dust.
+    lock = 0.0
+    if bpm and pk.any():
+        step = SR * 60.0 / bpm / 4.0
+        ph = 2 * np.pi * ((np.flatnonzero(pk) + 1) % step) / step
+        lock = float(np.abs(np.exp(1j * ph).mean()))
+    verdict = 'clean' if rate < 3 else ('played' if lock > 0.55 else
+                                        'CRACKLE' if rate > 8 else 'busy')
+    print(f"  ticks{(' ' + label) if label else ''}: {rate:.1f}/s above {band:.0f} Hz, "
+          f"floor {20 * np.log10(max(med, 1e-9)):.1f} dB"
+          + (f", grid-lock {lock:.2f}" if bpm else "") + f"  ({verdict})")
+    return rate
+
+
 def clicks(x, bpm=None, thresh=8.0, limit=20, band=2000.0):
     """Where a render has a discontinuity, in seconds and in bars.
 
@@ -61,7 +119,7 @@ def clicks(x, bpm=None, thresh=8.0, limit=20, band=2000.0):
     w = int(0.030 * SR)
     ref = np.convolve(d, np.ones(w) / w, mode='same') + 1e-7
     r = d / ref
-    idx = np.where(r > thresh)[0]
+    idx = np.where((r > thresh) & (d > 0.004))[0]
     if not len(idx):
         print(f"  clicks: none under {band:.0f} Hz above {thresh:.0f}x local slope")
         return []

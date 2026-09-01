@@ -169,6 +169,7 @@ everything at once is not experimental, it is noise.
 - [`a-timbre-figure-must-not-repeat-exactly.md`](90-memories/a-timbre-figure-must-not-repeat-exactly.md) — a-timbre-figure-must-not-repeat-exactly.md
 - [`additive-stacks-clip-into-squares.md`](90-memories/additive-stacks-clip-into-squares.md) — additive-stacks-clip-into-squares.md
 - [`a-sliced-break-must-not-be-jittered.md`](90-memories/a-sliced-break-must-not-be-jittered.md) — a-sliced-break-must-not-be-jittered.md
+- [`a-saw-edge-is-not-a-click.md`](90-memories/a-saw-edge-is-not-a-click.md) — The click detector fires on a sawtooth's own reset edge
 - [`an-open-hat-must-end-before-the-next-one.md`](90-memories/an-open-hat-must-end-before-the-next-one.md) — an-open-hat-must-end-before-the-next-one.md
 - [`bar-rendered-parts-must-overhang.md`](90-memories/bar-rendered-parts-must-overhang.md) — bar-rendered-parts-must-overhang.md
 - [`bass-must-keep-its-own-fundamental.md`](90-memories/bass-must-keep-its-own-fundamental.md) — bass-must-keep-its-own-fundamental.md
@@ -182,6 +183,7 @@ everything at once is not experimental, it is noise.
 - [`dark-is-register-and-mode-not-key.md`](90-memories/dark-is-register-and-mode-not-key.md) — "Darker" is register and mode, never the key name
 - [`the-303-can-be-the-bass-part.md`](90-memories/the-303-can-be-the-bass-part.md) — A 303 written as the bassline needs its drive split off the fundamental
 - [`shimmer-is-the-only-reverb-that-adds-notes.md`](90-memories/shimmer-is-the-only-reverb-that-adds-notes.md) — A transposition inside a reverb's feedback path
+- [`do-not-fix-a-band-number-with-a-texture.md`](90-memories/do-not-fix-a-band-number-with-a-texture.md) — A band number is a symptom, not a target
 - [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
 - [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal-is-holes-not-a-full-spectrum.md
 - [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md
