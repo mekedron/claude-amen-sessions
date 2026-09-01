@@ -62,6 +62,16 @@ sidechain depth and transient punch against the tracks that already worked.
                       2 kHz first, where a 46 Hz sine moves 0.0066 per sample
                       and any step is something that was cut rather than
                       something that was played
+    src/lab/          the bench: diagnostics for the things you are still
+                      holding rather than for a finished file - band shares
+                      and stereo width of any segment, a section table that
+                      says whether the arrangement has a shape, a bar-by-bar
+                      walk for locating where something jumps, and per-voice
+                      tests for unfaded edges, for whether a seeded voice
+                      actually varies, and for aliasing measured against an
+                      oversampled reference. Nothing imports it and deleting
+                      it changes no record here: it is optional, editable,
+                      and meant to be added to
     src/verify.py     what a finished render actually contains: integrated
                       LUFS, true peak, PLR, band balance, crest PER BAND,
                       mono compatibility, a short-term loudness curve per
