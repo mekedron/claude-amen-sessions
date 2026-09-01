@@ -2300,23 +2300,39 @@ def squash(seg, thresh=0.28, ratio=6.0, attack=0.010, release=0.14, makeup=None,
     return (out * mix + seg * (1 - mix)).astype(np.float32)
 
 
-def bus_reverb(buf, decay=2.0, wet=0.25, tone=4000, block_bars=24):
+def bus_reverb(buf, decay=2.0, wet=0.25, tone=4000, block_bars=24,
+               pre=0.0, hp_hz=0.0):
     """Reverb across a whole bus, one block at a time (overlap-add), so a
     six-minute buffer never asks for a six-minute FFT. One shared space that
     several parts are sent into is what makes them sound like they are in the
-    same room; a separate reverb per voice makes a collage."""
+    same room; a separate reverb per voice makes a collage.
+
+    `hp_hz` high-passes the WET path, and on a busy record it is not optional.
+    A convolution returns the whole spectrum, so a three-second tail on four
+    different buses puts four decaying copies of 200-800 Hz - the most
+    crowded band there is - underneath everything, permanently. The dry parts
+    are then competing with the reverb of the parts next to them as well as
+    with each other, and the result is a mix where nothing has an edge.
+    300-500 Hz is the usual place to cut it.
+
+    `pre` is the pre-delay in seconds. Letting the dry transient arrive
+    10-40 ms before the room does is what keeps a part legible AND big; with
+    no gap the tail starts on top of the attack and smears it."""
     n = len(buf)
     out = np.array(buf, dtype=np.float32, copy=True)
     ir = _reverb_ir(decay, tone)
+    k = int(pre * SR)
     step_n = max(int(block_bars * BAR), 1)
     for a in range(0, n, step_n):
         seg = buf[a:a + step_n]
         if np.abs(seg).max() < 1e-5:
             continue
-        for c in range(2):
-            y = fftconvolve(seg[:, c], ir[:, c])
-            e = min(a + len(y), n)
-            out[a:e, c] += (wet * y[:e - a]).astype(np.float32)
+        y = np.stack([fftconvolve(seg[:, c], ir[:, c]) for c in range(2)], 1)
+        if hp_hz:
+            y = hp(y.astype(np.float32), hp_hz, order=2)
+        e = min(a + k + len(y), n)
+        if e > a + k:
+            out[a + k:e] += (wet * y[:e - a - k]).astype(np.float32)
     return out
 
 

@@ -799,3 +799,225 @@ def ramp(a, b, i, n, shape=1.0):
     """linear (or curved) interpolation across a section, for gain rides"""
     u = (i / max(n - 1, 1)) ** shape
     return a + (b - a) * u
+
+
+# =============================================================== the piano ==
+def grand(events, dur_steps=16, level=1.0, vel=0.80, seed=0, tail=6.0,
+          decay=3.2, hold=15.0, spread=0.80, lid=0.45, drive=1.06):
+    """A grand piano with the pedal down.
+
+    `latinlib.montuno` is already the right STRING - stiffness so partial k
+    sits at `k*f0*sqrt(1+B*k^2)`, the hammer's missing-partial comb at an
+    eighth of the length, felt that hardens with velocity so a hard note is
+    brighter and not merely louder, three courses per note beating against
+    each other, and a convolved soundboard. None of that is Cuban. What is
+    Cuban is the SETTINGS: a montuno is played staccato with the lid fully
+    open and a microphone inside it, so its damper falls after two steps, its
+    strings ring for under two seconds and its top is lifted hard.
+
+    A pop piano is the same instrument on the short stick with the mics back
+    and the sustain pedal down: `hold` most of a bar, `decay` over three
+    seconds so the octaves in the right hand bloom into each other, and `lid`
+    at less than half. So this is a parameter change and not a second piano -
+    which is why `montuno` grew a `lid` argument rather than being copied."""
+    return latinlib.montuno(events, dur_steps=dur_steps, gain=level, vel=vel,
+                            seed=seed, hold=hold, decay=decay, board=1.0,
+                            spread=spread, drive=drive, tail=tail, lid=lid)
+
+
+# =============================================================== the choir ==
+# (F1, F2, F3, F4) and their gains. A vowel is not an EQ curve applied to a
+# saw - it is four resonances of a tube that happens to be a throat, and the
+# fourth one, the "singer's formant" near 2.9 kHz, is the entire reason a
+# trained voice is audible over an orchestra playing fortissimo.
+_VOWEL = {
+    'ah': ((730.0, 1090.0, 2540.0, 3400.0), (1.00, 0.55, 0.26, 0.13)),
+    'oh': ((570.0,  840.0, 2410.0, 3300.0), (1.00, 0.48, 0.19, 0.10)),
+    'oo': ((300.0,  870.0, 2240.0, 3200.0), (1.00, 0.36, 0.13, 0.07)),
+    'ee': ((270.0, 2290.0, 3010.0, 3300.0), (1.00, 0.58, 0.32, 0.16)),
+    'eh': ((530.0, 1840.0, 2480.0, 3400.0), (1.00, 0.60, 0.28, 0.14)),
+}
+
+def voices(notes, bars=1, tail=8.0, singers=7, level=1.0, vowel='ah',
+           vib=1.0, drift=1.0, seed=0, glide=0.030, attack=0.060,
+           breath=1.0, tape=1.0, air=1.0, cutoff=9500.0, take=0):
+    """A choir on one sustained vowel - and it is not speech.
+
+    There is a rule in this project against synthesised speech, and it is a
+    good one: formant synthesis driven by a sequence of vowels and consonants
+    produces a robot mumbling, every time. This is the other thing formants
+    are for. One vowel, held, sung by seven people - no consonants, nothing
+    to mumble, and what comes out is a texture rather than a word.
+
+    Four resonances of a throat over a sawtooth, which is close enough to a
+    glottal pulse; and then the three things that make it a CHOIR rather than
+    one voice through a chorus pedal:
+
+    * **Nobody starts together.** Each singer enters 8-40 ms late, per note.
+    * **Nobody is in tune.** Each has a fixed offset of a few cents and a slow
+      random walk on top, so the beating never repeats.
+    * **Nobody's vibrato agrees.** Rates between 5.0 and 6.6 Hz, depths
+      between 12 and 22 cents, and every one of them ramps in over a quarter
+      of a second FROM EACH ATTACK - which is the single thing that separates
+      a sung note from a held oscillator.
+
+    `tape` is Michael Tretow's trick, and it is why an ABBA record sounds like
+    thirty people when it is two: the second and third takes were recorded
+    with the tape machine running at a slightly different speed, so the
+    doubles are detuned AND a fraction longer. Here the singers are dealt into
+    three "takes" at about -14, 0 and +14 cents with their own small delays,
+    which is a much wider spread than the drift and is heard as a crowd rather
+    than as a chorus.
+
+    `notes` is `(step, midi, length_steps[, vel])`. Harmony is the caller's
+    job: call it twice, a third apart, the way two singers actually do it."""
+    n = int(bars * BAR + tail * STEP)
+    t = np.arange(n) / SR
+    evs = sorted((float(e[0]), int(e[1]), float(e[2]),
+                  float(e[3]) if len(e) > 3 else 1.0) for e in notes)
+    if not evs:
+        return np.zeros((n, 2), dtype=np.float32)
+    rs = np.random.RandomState(9300 + seed * 17 + take)
+    fmax = max(midi(nt) for _, nt, _, _ in evs) * 1.05
+    fmin = min(midi(nt) for _, nt, _, _ in evs)
+    kmax = int(np.clip(cutoff * 1.4 / max(fmin, 90), 8, 48))
+
+    src = np.zeros((n, 2), dtype=np.float64)
+    onset = np.zeros(n)
+    for v in range(singers):
+        # three takes, not seven soloists
+        take_c = (-14.0, 0.0, 14.0)[v % 3] * tape
+        lag = rs.uniform(0.008, 0.040) + (0.0, 0.004, 0.009)[v % 3] * tape
+        cents = take_c + rs.uniform(-6, 6) * drift
+        walk = uniform_filter1d(rs.randn(n), max(int(0.45 * SR), 3))
+        walk *= drift * 7.0 / max(np.abs(walk).max(), 1e-9)
+        vr, vph = rs.uniform(5.0, 6.6), rs.rand() * 6.283
+        vdep = rs.uniform(12.0, 22.0) * vib
+
+        shift = lag * SR / STEP
+        f = _ftrack([(st_ + shift, nt) for st_, nt, _, _ in evs], n, glide)
+        ramp = np.zeros(n)
+        env = np.zeros(n)
+        for st_, nt, ln, vl in evs:
+            k = min(int((st_ + shift) * STEP), n - 1)
+            L = min(n - k, int(ln * STEP))
+            if L < 64:
+                continue
+            # the vibrato arrives a quarter of a second after the note does
+            R = min(n - k, L + int(0.30 * SR))
+            ramp[k:k + R] = np.minimum(np.arange(R) / SR / 0.26, 1.0)
+            a = min(int(attack * rs.uniform(0.7, 1.5) * SR), max(L // 2, 8))
+            r = min(int(0.16 * SR), n - k - L)
+            seg = np.ones(L + r) * vl
+            seg[:a] = np.linspace(0, 1, a) ** 1.4 * vl
+            if r > 2:
+                seg[L:] = vl * np.exp(-np.linspace(0, 3.6, r))
+            np.maximum(env[k:k + len(seg)], seg, out=env[k:k + len(seg)])
+            if v == 0:
+                M = min(n - k, int(0.10 * SR))
+                np.maximum(onset[k:k + M],
+                           np.exp(-np.arange(M) / SR / 0.030), out=onset[k:k + M])
+        env = np.maximum(uniform_filter1d(env, max(int(0.009 * SR), 3)), 0.0)
+
+        vc = vdep * np.sin(2 * np.pi * vr * t + vph) * ramp
+        ph = 2 * np.pi * np.cumsum(f * 2 ** ((cents + walk + vc) / 1200.0)) / SR \
+            + rs.rand() * 6.283
+        y = saw_ph(ph, fmax, kmax=kmax) * env
+        pan = (v / max(singers - 1, 1) - 0.5) * 1.45 + rs.uniform(-0.12, 0.12)
+        ang = (np.clip(pan, -1, 1) + 1) * np.pi / 4
+        src[:, 0] += y * np.cos(ang)
+        src[:, 1] += y * np.sin(ang)
+    src = (src / max(singers, 1) ** 0.70).astype(np.float32)
+
+    fs, gs = _VOWEL.get(vowel, _VOWEL['ah'])
+    out = np.zeros_like(src)
+    for f0, g in zip(fs, gs):
+        out += g * bandpass(src, f0 * 0.80, f0 * 1.24, order=2)
+    # the singer's formant: the reason a voice cuts through a band
+    out = out + air * 0.42 * bandpass(src, 2650.0, 3250.0, order=2)
+    out = out + 0.16 * lp(src, 420.0, order=2)          # the chest under it all
+    if breath:
+        nz = bandpass(np.stack([rs.randn(n), rs.randn(n)], 1).astype(np.float32),
+                      2600, 9000, order=2)
+        out = out + nz * (np.maximum(uniform_filter1d(onset, 220), 0.0)
+                          ** 1.4)[:, None] * 0.085 * breath
+    out = _asym(out / max(np.abs(out).max(), 1e-9), 1.20)
+    out = hp(lp(out, cutoff, order=2), 130, order=2)
+    return out.astype(np.float32) * level * 0.52
+
+
+# ============================================================ the six-string ==
+@cached
+def strum(notes, dur_steps=8, level=1.0, take=0, up=False, twelve=0.0,
+          decay=1.30, damp=0.030, spread=0.0055, bright=1.0, gain=1.0,
+          rake=0.013, ring=True):
+    """An open chord, strummed, and left to ring.
+
+    `chank` is the other guitar on this record and it is the opposite
+    instrument: four strings choked by the heel of the hand, gone inside a
+    sixteenth. This one is a plectrum dragged across all six with nothing
+    stopping them - so the rake is four times as long (a real strum takes
+    50-90 ms to cross the neck, and hearing that is most of what says
+    "acoustic"), the decay is over a second, and the amp is clean.
+
+    `twelve` turns it into a twelve-string: each of the four lower courses
+    gets a second string an octave up, tuned a handful of cents off and
+    struck a millisecond later, because they are two wires under one
+    plectrum. It is the single most 1974 sound available and it is why a
+    strummed chord on those records shimmers without a chorus pedal on it."""
+    n, t = steps(dur_steps, floor=int(0.5 * SR))
+    order = list(range(len(notes)))[::-1] if up else list(range(len(notes)))
+    rng = np.random.default_rng(5400 * take + int(sum(notes)) + (3 if up else 0))
+    x = np.zeros(n)
+    for j, i in enumerate(order):
+        nt = notes[i]
+        d = int((rake * j / max(len(notes) - 1, 1) + 0.0016 * rng.random()) * SR)
+        if d >= n - 64:
+            continue
+        f = midi(nt) * (1 + spread * (rng.random() - 0.5) * 2)
+        x[d:] += string(f, n - d, decay=decay * (1 - 0.06 * j), damp=damp,
+                        pick=0.20 + 0.07 * rng.random(), pickup=0.5,
+                        B=1.1e-4 * (110.0 / max(f, 40.0)) ** 0.35,
+                        top=7200.0, res_hz=4200.0, res_q=1.6, tilt=0.05,
+                        polar=1.0,
+                        seed=int(1571 * take + 31 * nt + 7 * j)) * (1 - 0.07 * j)
+        if twelve and j < 4:
+            do = d + int(0.0011 * SR)
+            x[do:] += string(f * 2 * (1 + 0.0045 * (rng.random() - 0.5) * 2),
+                             n - do, decay=decay * 0.72, damp=damp * 1.5,
+                             pick=0.24, pickup=0.5, B=6.0e-5, top=8000.0,
+                             res_hz=4600.0, res_q=1.5,
+                             seed=int(1571 * take + 31 * nt + 97)) * 0.55 * twelve
+    st = stereo(x / max(len(notes), 1) ** 0.8)
+    st = _asym(st / max(np.abs(st).max(), 1e-9), 1.10)
+    st = cab(st, seed=take % 3 + 1, low=88.0, high=7000.0 * bright, cone=0.35,
+             presence=1.05, mic=0.75)
+    env = (np.ones(n) if ring else np.exp(-t / 0.22)) * adsr(n, a=0.0006, r=0.05)
+    return (st * env[:, None]).astype(np.float32) * level * gain * 0.34
+
+
+# ================================================================= the ride ==
+@cached
+def dride(dur_steps=4, gain=1.0, seed=0, bell=0.0, size=1.0, decay=1.9):
+    """A 20" ride: a PING and a wash, and they are two different sounds.
+
+    The stick lands on a spot two inches from the edge and the bow answers
+    with a short, almost pitched attack; the whole plate then keeps talking
+    for two seconds underneath it at a quarter the level. A ride programmed as
+    one envelope is a crash played quietly. `bell` moves the stick to the cup,
+    where the low modes cannot flex and what survives is a clear tone."""
+    n, t = steps(dur_steps, floor=int(0.55 * SR))
+    rng = np.random.default_rng(seed * 787 + 31)
+    ratios = (1.0, 1.52, 2.13, 2.78, 3.46, 4.51, 5.83, 7.44)
+    ping = np.zeros(n)
+    for i, r in enumerate(ratios):
+        w = (1.0 if bell else 1.0 / (1 + 0.5 * i)) * (1.0 - 0.55 * bell * (i > 2))
+        ping += w * np.sin(2 * np.pi * 520 / size * r * t + rng.random() * 6) * \
+            np.exp(-t / (decay * (0.30 + 0.75 * bell) * (1.0 - 0.09 * i)))
+    stick = rng.standard_normal(n) * np.exp(-t / 0.0022)
+    wash = rng.standard_normal(n) * np.exp(-t / (decay * 0.55)) * (0.85 - 0.6 * bell)
+    st = (bandpass(stereo(ping / len(ratios)), 900, 9000, order=2) * 1.5
+          + bandpass(stereo(stick), 2500, 9000, order=2) * 0.45
+          + hp(stereo(wash), 5200, order=2) * 0.55)
+    st = lp(np.tanh(1.3 * st), 13000, order=2)
+    return (st * adsr(n, a=0.0006, r=0.12)[:, None]).astype(np.float32) * gain * 0.26

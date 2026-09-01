@@ -393,7 +393,7 @@ def _piano_note(f0, n, t, strikes, vel, seed, B=2.4e-4, hammer=0.125,
 
 @cached
 def montuno(events, dur_steps=16, gain=1.0, vel=0.85, seed=0, hold=2.2,
-            decay=1.9, board=1.0, spread=0.85, drive=1.3, tail=5.0):
+            decay=1.9, board=1.0, spread=0.85, drive=1.3, tail=5.0, lid=1.0):
     """A salsa piano, one bar at a time.
 
     `events` is a tuple of (step, (midi, ...), velocity) - the montuno is
@@ -452,7 +452,11 @@ def montuno(events, dur_steps=16, gain=1.0, vel=0.85, seed=0, hold=2.2,
         for c in range(2):
             out[:, c] = fftconvolve(st_[:, c], ir)[:n]
         st_ = st_ * (1 - board * 0.55) + out * board * 2.4
-    st_ = st_ + 0.55 * bandpass(st_, 1600, 4200)      # the lid, and the room
+    # The lid. A salsa piano is played with it fully open and a microphone
+    # inside, which is where the brightness of a montuno comes from; a pop
+    # record's piano is on the short stick with the mics further back, so
+    # `lid` is not a tone control, it is where the instrument was recorded.
+    st_ = st_ + lid * 0.55 * bandpass(st_, 1600, 4200)
     st_ = np.tanh(drive * st_) / np.tanh(drive)
     st_ = hp(st_, 90, order=2)
     return (st_ * adsr(n, a=0.0008, r=0.006)[:, None]).astype(np.float32) * gain * 0.55

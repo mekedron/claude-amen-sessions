@@ -243,17 +243,25 @@ def steam(dur_steps=6, gain=1.0, f0=700.0, f1=7000.0, seed=0):
     return widen(x, 1.1) * (u ** 0.8)[:, None] * gain * 0.5
 
 @cached
-def servo(dur_steps=4, rate=26.0, accel=2.4, note=72, gain=1.0, seed=0):
+def servo(dur_steps=4, rate=26.0, accel=2.4, note=72, gain=1.0, rmax=340.0, seed=0):
     """A stepper motor. Very short metallic clicks whose repetition rate
     accelerates - machine percussion, and the cheapest way to raise rhythmic
-    density without adding a drum."""
+    density without adding a drum.
+
+    `rmax` is the motor's top speed, and it is not cosmetic. The gap between
+    two clicks is 1/r and r grows geometrically, so the gaps are a geometric
+    series: for a slow start and a hard acceleration that series CONVERGES,
+    and if it converges to less than the segment's length the loop placing the
+    clicks never reaches the end and never terminates. rate=11, accel=3.2 over
+    2.1 s converges at 1.9 s and hangs. A real stepper reaches its top speed
+    and stays there, which is both the physical behaviour and the bound."""
     n, t = steps(dur_steps)
     dur_s = n / SR
     ts, cur, r = [], 0.0, rate
     while cur < dur_s:
         ts.append(cur)
         cur += 1.0 / r
-        r *= accel ** (1.0 / max(rate * dur_s, 1))
+        r = min(r * accel ** (1.0 / max(rate * dur_s, 1)), rmax)
     x = np.zeros(n)
     f = midi(note)
     rs = np.random.RandomState(seed + 5)
@@ -1166,3 +1174,321 @@ def openhat(dur_steps=4.0, gain=1.0, tone=1.0, decay=0.42, strike=0.05,
     out = hp(out, hpf, order=2)
     out[:, 1] = np.roll(out[:, 1], int(SR * 0.0009))
     return out * adsr(n, a=0.0005, r=0.03)[:, None] * gain * 0.42
+
+
+# ---- the fabrication shop ----
+# Everything above this line is a drum, a one-shot or a bed. A machine shop is
+# none of those. It is several machines, each running its own cycle, none of
+# them agreeing with the music or with each other, and none of them stopping
+# between the hits - the idling is what makes the gaps sound like a factory
+# rather than like a silence. These are those machines.
+
+@cached
+def weight(tune=43.65, dur_steps=2.6, decay=0.10, gain=1.0):
+    """The third layer of the kick: one clean sine at the root, mono, short.
+
+    The punch (`techkick`, `industrialkick`) is 20-120 Hz of transient and
+    the growl (`rumble`) is the room it stands in, and neither of them is the
+    weight. The first industrial records this project measured came out with
+    more energy in 120-300 Hz than under 120 - all growl and no floor - and
+    this is the floor. No distortion, no reverb, ducked with everything else.
+
+    It does NOT follow the kick onto the eighths. Eight sine hits a bar at
+    44 Hz is not eight times the weight, it is one long smear: the weight
+    stays on the four beats and the offbeats are pure punch.
+    """
+    n, t = steps(dur_steps)
+    return (sub(tune, dur_steps) * np.exp(-t / decay)[:, None]).astype(np.float32) * gain
+
+
+@cached
+def mill(dur_steps=64, cycle=6.0, note=36, gain=1.0, motor=0.5, bite=1.0,
+         cut=0.7, screech=0.8, hiss=0.45, offset=0.0, whine=1870.0,
+         tool=1180.0, pan=0.0, seed=0):
+    """A machine tool running its cycle.
+
+    Per cycle the tool bites - a short ring of tool steel, a band of
+    broadband cut noise and a resonant SCREECH that sweeps while the edge is
+    in the metal - and the spindle labours behind it, bending down in pitch
+    under load with its gear whine climbing, which is what a machine taking a
+    cut actually does. Then it comes free and exhales. The motor runs
+    continuously underneath all of it, because the idling is what makes the
+    gaps in a factory sound like a factory rather than a silence.
+
+    The screech is not decoration. A first pass of this with a motor, a
+    strike and cut noise measured 68% of its energy in 120-300 Hz and 1%
+    above 3 kHz, which is a lathe recorded through a wall - and every
+    industrial record this project has measured has failed in exactly that
+    direction. Metal being cut is a scream, and it lives at 2-7 kHz.
+
+    `cycle` is in STEPS and should be EVEN. Six steps repeats every three
+    bars and drifts against the bar the whole way, which is the point: a shop
+    is several machines and none of them agree. But every hit still lands on
+    an eighth, so the ear keeps a reference. Give a machine with a pitch and
+    a ring an ODD cycle and it never lands on a beat or an offbeat eighth at
+    all, and that is not heard as polymeter - it is heard as a second machine
+    playing badly.
+
+    Two or three of these at 6, 10 and 14 steps, panned apart, IS the record.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 619)
+    f = midi(note)
+    cyc = max(int(round(cycle * STEP)), 512)
+    k0 = int(round(offset * STEP))
+
+    # ---- the motor, which never stops
+    u = ((np.arange(n) + k0) % cyc) / cyc                 # 0..1 through the cycle
+    load = np.clip(1.0 - u / 0.42, 0.0, 1.0) ** 0.7       # in the metal for 42% of it
+    fm = f * (1 - 0.055 * load) * (1 + 0.005 * np.sin(2 * np.pi * 0.31 * t + rs.rand() * 6))
+    ph = 2 * np.pi * np.cumsum(fm) / SR
+    mo = saw_ph(ph, f * 1.25, nyq=13000.0, kmax=36) * 0.6 + 0.45 * np.sin(2 * ph)
+    mo = morph_lp(stereo(np.tanh(1.7 * mo)), 300.0, 3000.0, 0.10 + 0.75 * load, bands=6)
+    fw = whine * (1 - 0.07 * load)
+    wh = np.sin(2 * np.pi * np.cumsum(fw) / SR + rs.rand() * 6) * (0.18 + 0.82 * load)
+    mot = mo * 0.55 + stereo(wh).astype(np.float32) * 0.30
+
+    # ---- the cut: a resonant band walking up while the edge is in the metal
+    scr = np.zeros((n, 2), dtype=np.float32)
+    if screech:
+        nz = np.stack([rs.randn(n), rs.randn(n)], 1).astype(np.float32)
+        drag = uniform_filter1d(np.abs(rs.randn(n)), int(0.012 * SR))
+        drag = drag / max(float(drag.max()), 1e-9)
+        e = np.clip(load * (0.45 + 0.55 * drag), 0, 1)
+        scr = morph_lp(hp(nz, 1800), 2100.0, 7600.0, 0.18 + 0.82 * e,
+                       bands=7, res=0.55) * (e ** 1.4).astype(np.float32)[:, None]
+
+    # ---- strike, swarf, exhale. Every cycle is different, because a machine
+    # that produces a bit-identical transient a thousand times in a record is
+    # a metronome, not a machine.
+    strike = np.zeros(n)
+    swarf = np.zeros(n)
+    puff = np.zeros(n)
+    c = 0
+    while True:
+        a = c * cyc - k0
+        c += 1
+        if a >= n:
+            break
+        if a + int(0.25 * SR) < 0:
+            continue
+        det = rs.uniform(0.94, 1.07)
+        amp = rs.uniform(0.72, 1.0)
+        a0 = max(a, 0)
+        m = min(int(0.13 * SR), n - a0)
+        if m > 64:
+            tt = np.arange(m) / SR
+            sk = np.zeros(m)
+            for p, g_, d in ((1.0, 1.0, 0.042), (2.37, 0.74, 0.026), (3.91, 0.55, 0.016),
+                             (6.13, 0.38, 0.010), (9.71, 0.24, 0.006)):
+                sk += g_ * np.sin(2 * np.pi * tool * det * p * tt) * np.exp(-tt / d)
+            sk /= 2.91                                    # normalise BEFORE any drive
+            sk += rs.randn(m) * np.exp(-tt / 0.0022) * 1.1
+            strike[a0:a0 + m] += sk * amp
+        mm = min(int(0.26 * SR), n - a0)
+        if mm > 64:
+            tc = np.arange(mm) / SR
+            swarf[a0:a0 + mm] += rs.randn(mm) * np.exp(-tc / rs.uniform(0.035, 0.075)) * amp
+        h = a + int(cyc * 0.47)
+        h0 = max(h, 0)
+        mh = min(int(0.16 * SR), n - h0)
+        if h < n and mh > 64:
+            th = np.arange(mh) / SR
+            puff[h0:h0 + mh] += rs.randn(mh) * np.minimum(th / 0.006, 1.0) \
+                * np.exp(-th / rs.uniform(0.030, 0.060)) * rs.uniform(0.5, 1.0)
+
+    out = motor * mot
+    out += bite * bandpass(stereo(np.tanh(1.5 * strike)), 600, 14000) * 1.5
+    out += cut * bandpass(stereo(swarf), 1900, 11000) * 0.9
+    out += screech * scr * 0.85
+    out += hiss * hp(stereo(puff), 4200) * 0.5
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0016))
+    if pan:
+        out = panned(out, pan)
+    env = np.ones(n, dtype=np.float32)
+    aa = min(int(0.10 * SR), n // 2); rr = min(int(0.14 * SR), n // 2)
+    env[:aa] = np.linspace(0, 1, aa); env[-rr:] *= np.linspace(1, 0, rr)
+    return (out * env[:, None]).astype(np.float32) * gain * 0.35
+
+
+@cached
+def pipe(note=45, dur_steps=8, gain=1.0, knocks=6, decay=0.55, rattle=0.7,
+         air=0.4, stretch_=0.0016, drive=1.6, seed=0):
+    """Sanitary pipework, hit from the inside.
+
+    Not `anvil`, which is a plate. A plate's modes are irrational and it is
+    struck once and rings. A pipe is a tube, so its modes are the ODD
+    harmonics of its length, slightly stretched by the stiffness of the wall -
+    and it is not struck once, because whatever is travelling down it hits it
+    several times inside one decay. Between the knocks the bracket it is
+    clamped to buzzes for as long as the tube is still moving hard enough,
+    and that buzz is what makes this read as plumbing rather than as tuned
+    percussion. `air` is the column itself: the hollow note you hear when you
+    put your ear to a cold riser.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 787)
+    f = midi(note)
+    x = np.zeros(n)
+    ks = np.sort(np.concatenate([[0.0], rs.uniform(0.03, 0.86, max(knocks - 1, 0))
+                                 * (n / SR)]))
+    for j, kt in enumerate(ks):
+        a = int(kt * SR)
+        m = n - a
+        if m < 256:
+            continue
+        tt = np.arange(m) / SR
+        lvl = 1.0 if j == 0 else rs.uniform(0.25, 0.7)
+        det = 1.0 + rs.uniform(-0.004, 0.004)
+        y = np.zeros(m)
+        for i in range(7):
+            h = 2 * i + 1                                  # a closed tube: odd only
+            fk = f * det * h * (1 + stretch_ * h * h)
+            if fk > SR * 0.44:
+                break
+            y += (np.sin(2 * np.pi * fk * tt + rs.rand() * 6)
+                  * np.exp(-tt / (decay / (1 + i * 1.35))) / (1 + i * 0.9))
+        y /= 2.4                                           # before the drive, always
+        y += rs.randn(m) * np.exp(-tt / 0.0014) * 0.8      # the contact
+        x[a:] += y * lvl
+    if air:
+        col = bandpass(stereo(rs.randn(n)), f * 0.88, f * 1.14, order=2)[:, 0]
+        col += bandpass(stereo(rs.randn(n)), f * 2.9, f * 3.2, order=2)[:, 0] * 0.5
+        x += air * col * 2.4 * np.exp(-t / (decay * 1.8))
+    out = bandpass(stereo(np.tanh(drive * x)), max(f * 0.55, 90), 13000)
+    if rattle:
+        # the bracket. It only buzzes while the tube is moving, so the gate is
+        # the tube's own envelope - and it clatters at its own rate, which has
+        # nothing to do with the pitch.
+        e = uniform_filter1d(np.abs(x), 96)
+        thr = 0.30 * max(float(e.max()), 1e-9)
+        g = np.clip((e - thr) / max(thr, 1e-9), 0, 1) ** 0.8
+        clat = 0.5 + 0.5 * np.sign(np.sin(2 * np.pi * (74.0 + 46.0 * rs.rand()) * t
+                                          + 2.1 * np.sin(2 * np.pi * 11.3 * t)))
+        bz = hp(stereo(rs.randn(n)), 2400) * (g * clat)[:, None]
+        out = out + rattle * bz * 0.55
+    out[:, 1] = np.roll(out[:, 1], int(SR * 0.0011))
+    return out * adsr(n, a=0.0008, r=0.04)[:, None] * gain * 0.4
+
+
+@cached
+def girder(f0=43.65, f1=0.0, dur_steps=128, gain=1.0, modes=6, friction=0.55,
+           drive=1.8, curve=1.0, hpf=95.0, width=1.4, seed=0):
+    """A megastructure under load, moving.
+
+    Everything else in this palette is a machine hitting something. This is
+    the building: a beam the size of a room being winched across it. The
+    pitch is carried by bar modes - 1, 2.76, 5.40, 8.93, 13.34, 18.6 - and
+    they are excited by FRICTION rather than by a strike, so it has no attack
+    at all and never arrives; it is simply already happening. `friction` is
+    how uneven the drag is, and it is the only thing that keeps a set of
+    sines from being an organ.
+
+    And it GLIDES, `f0` to `f1` across the whole call. That is the surreal
+    part and it is the reason this exists: an object that size cannot change
+    pitch, and this one takes forty seconds to slide a tritone.
+
+    On a record with no acid it is the only voice carrying a note across a
+    section, and it carries it as one gesture rather than as a sequence of
+    them. Render it over a whole section and place it on the section line.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 853)
+    f1 = f1 or f0
+    fr = f0 * (f1 / f0) ** (np.linspace(0, 1, n) ** curve)
+    RAT = (1.0, 2.756, 5.404, 8.933, 13.34, 18.64, 24.75)
+    x = np.zeros(n)
+    tot = 0.0
+    for i, r in enumerate(RAT[:modes]):
+        if fr.max() * r > SR * 0.42:
+            break
+        ph = 2 * np.pi * np.cumsum(fr * r) / SR + rs.rand() * 6.28
+        # the drag: a slow, uneven pull on each mode, and no two modes are
+        # being dragged the same way, which is what a real surface does
+        w = uniform_filter1d(np.abs(rs.randn(n)), max(int((0.24 / (1 + i * 0.6)) * SR), 3))
+        w = w / max(float(w.max()), 1e-9)
+        a = (1 - friction) + friction * w
+        g = 1.0 / (1 + i * 0.78)
+        x += np.sin(ph) * a * g
+        tot += g
+    x /= max(tot, 1e-9)                                    # before the drive
+    out = drive_asym(stereo(x), drive, asym=0.22)
+    # the surfaces themselves: a band of noise walking with the glide, so you
+    # can hear that something is being dragged and not merely sounded
+    if friction:
+        nz = np.stack([rs.randn(n), rs.randn(n)], 1).astype(np.float32)
+        env = np.clip(0.15 + np.log2(np.maximum(fr, 1e-6) / f0) * 1.4, 0, 1)
+        sc = morph_lp(hp(nz, 500), 900.0, 8200.0, env, bands=7, res=0.40)
+        gg = uniform_filter1d(np.abs(rs.randn(n)), int(0.09 * SR))
+        gg = gg / max(float(gg.max()), 1e-9)
+        out = out + sc * (0.30 * friction * (0.22 + 0.78 * gg)).astype(np.float32)[:, None]
+    out = hp(out, hpf, order=2)
+    out = widen(out, width)
+    env = np.ones(n, dtype=np.float32)
+    aa = min(int(1.1 * SR), n // 2); rr = min(int(1.4 * SR), n // 2)
+    env[:aa] = np.linspace(0, 1, aa) ** 1.5
+    env[-rr:] *= np.linspace(1, 0, rr) ** 1.2
+    return (out * env[:, None]).astype(np.float32) * gain * 0.42
+
+
+@cached
+def shear(note=29, dur_steps=32, gain=1.0, rates=(1, 1, 2, 2, 4, 4, 8, 8),
+          tear=(0.20, 1.00), sub=1.0, drive=7.0, res=3.4, crush=0,
+          f_lo=95.0, f_hi=4800.0, split=92.0, curve=1.0, width=0.35, seed=0):
+    """The moment the plate lets go: a sub that comes apart under load.
+
+    Nothing else on this palette is a bass instrument. `rumble` is a room,
+    `weight` is a floor and `distbass` fills an offbeat - none of them can be
+    the thing a drop lands on, and a hard record with no low-end EVENT is a
+    wall however loud it is.
+
+    It is split, because every bass in this project is: below `split` one
+    clean sine carries the weight and is never touched, and everything above
+    it is the SAME oscillator being torn. Two distorted fundamentals under
+    90 Hz intermodulate and the low end gets smaller, not bigger.
+
+    What tears it is a wavefolder whose amount ramps from `tear[0]` to
+    `tear[1]` across the whole call, fed through a resonant lowpass whose
+    cutoff is moved by a `scanlane` - a lane whose RATE is sequenced rather
+    than its value, so the crackle accelerates from a quarter to a
+    thirty-second inside one note that is never retriggered. `tanh` stops
+    making partials the moment it is flat and a folder does not, which is the
+    whole difference between a sub that is loud and a sub that is coming
+    apart.
+
+    One call per phrase, not per bar. The oscillator runs the whole way, so
+    there is no edge on the bar line and nothing to reset: the gesture is the
+    acceleration, and a run of retriggered notes is a different instrument.
+    """
+    n, t = steps(dur_steps)
+    rs = np.random.RandomState(seed + 941)
+    f = midi(note)
+    ph = 2 * np.pi * f * t
+
+    # the weight: clean, centred, and out of the way of everything that follows
+    low = lp(stereo(np.sin(ph) * 0.85 + 0.15 * np.sin(2 * ph)), split, order=4)
+
+    # the character: the same phase, torn
+    x = saw_ph(ph, f, nyq=16000.0, kmax=96) * 0.62 + square(f, t, kmax=44) * 0.38
+    lane = scanlane(n, rates, lo=0.0, hi=1.0, shape='sine', curve=1.15, smooth=0.004)
+    y = morph_lp(stereo(x * 0.55), f_lo, f_hi, 0.10 + 0.90 * lane, bands=8, res=res)
+    y = np.tanh(drive * y)
+    ten = (tear[0] + (tear[1] - tear[0]) * np.linspace(0, 1, n) ** curve).astype(np.float32)
+    y = np.sin((1.0 + 2.4 * ten)[:, None] * np.pi * 0.5 * np.clip(y, -2, 2))
+    y = np.clip(y * (1.25 + 0.75 * ten)[:, None], -1.0, 1.0)
+    if crush:
+        y = bitcrush(y, bits=crush, downsample=2)
+    y = hp(y, split, order=4)
+    # The rattle. A folder pushed hard flattens the amplitude as well as the
+    # spectrum, so by the end of the ramp the tear stops being rhythmic and
+    # becomes a block - which is loud and is not "coming apart". The lane goes
+    # on the level as well as on the cutoff, so the break-up gets FASTER
+    # rather than merely denser, and that acceleration is the drop.
+    y = y * (0.30 + 0.70 * lane ** 0.7).astype(np.float32)[:, None]
+    y[:, 1] = np.roll(y[:, 1], int(SR * 0.0006 * width))
+
+    out = sub * low * 0.55 + y * 1.25
+    a = min(int(0.012 * SR), n // 2); r = min(int(0.030 * SR), n // 2)
+    env = np.ones(n, dtype=np.float32)
+    env[:a] = np.linspace(0, 1, a); env[-r:] *= np.linspace(1, 0, r)
+    return (out * env[:, None]).astype(np.float32) * gain * 0.62
