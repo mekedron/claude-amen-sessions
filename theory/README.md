@@ -181,6 +181,7 @@ everything at once is not experimental, it is noise.
 - [`note-envelopes-need-a-release.md`](90-memories/note-envelopes-need-a-release.md) — A note envelope that stops instead of fading is a click
 - [`dark-is-register-and-mode-not-key.md`](90-memories/dark-is-register-and-mode-not-key.md) — "Darker" is register and mode, never the key name
 - [`the-303-can-be-the-bass-part.md`](90-memories/the-303-can-be-the-bass-part.md) — A 303 written as the bassline needs its drive split off the fundamental
+- [`shimmer-is-the-only-reverb-that-adds-notes.md`](90-memories/shimmer-is-the-only-reverb-that-adds-notes.md) — A transposition inside a reverb's feedback path
 - [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
 - [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal-is-holes-not-a-full-spectrum.md
 - [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md

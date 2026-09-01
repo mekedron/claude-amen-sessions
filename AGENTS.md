@@ -379,6 +379,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/note-envelopes-need-a-release.md
 @theory/90-memories/dark-is-register-and-mode-not-key.md
 @theory/90-memories/the-303-can-be-the-bass-part.md
+@theory/90-memories/shimmer-is-the-only-reverb-that-adds-notes.md
 @theory/90-memories/loud-masters-need-a-true-peak-limiter.md
 @theory/90-memories/minimal-is-holes-not-a-full-spectrum.md
 @theory/90-memories/minimal-means-fewer-voices.md

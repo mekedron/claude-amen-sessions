@@ -67,7 +67,7 @@ def chordpad(notes, dur_steps=64, cutoff=2200, attack=0.9, gain=1.0, seed=0):
                attack=attack, bow=0.55, drift=1.25, seed=seed)
 
 @cached
-def shine(notes, dur_steps=64, decay=6.0, wet=0.55, tone=2800, passes=3,
+def shine(notes, dur_steps=64, decay=6.0, wet=0.55, tone=5200, passes=3,
           fb=0.55, seed=0):
     """The same chord sent round the octave loop. Rendered from a quieter,
     darker copy than the pad hears, because what comes back is three passes
@@ -78,7 +78,7 @@ def shine(notes, dur_steps=64, decay=6.0, wet=0.55, tone=2800, passes=3,
                    fb=fb, damp=4000)
 
 def harmony(b0, bars, prog, gain=1.0, shineg=0.0, cutoff=2200, attack=0.9,
-            decay=6.0, seed=0):
+            decay=6.0, tone=4400, seed=0):
     """Four bars a chord, rendered five bars long and placed on the change so
     the tails overlap it - the progression is voice-led across the seam
     instead of switched."""
@@ -88,7 +88,7 @@ def harmony(b0, bars, prog, gain=1.0, shineg=0.0, cutoff=2200, attack=0.9,
                                             attack=attack, seed=seed + i * 7),
                 gain, 'pad')
         if shineg:
-            s.place(s.pos(b0 + i * 4), shine(ch, 72, decay=decay,
+            s.place(s.pos(b0 + i * 4), shine(ch, 72, decay=decay, tone=tone,
                                              seed=seed + i * 7), shineg, 'shine')
 
 def held(b0, bars, gain=1.0, cutoff=2600, seed=0):
@@ -99,7 +99,7 @@ def held(b0, bars, gain=1.0, cutoff=2600, seed=0):
                            seed=seed), 1.0, 'lead')
 
 def floor(b, gain=1.0, steps_=(0, 4, 8, 12), tailg=0.9, tune=ROOT, decay=0.135,
-          drive=2.0, click=0.55, tick=0.5, knock=0.6, lpf=None):
+          drive=2.2, click=0.55, tick=0.5, knock=0.95, lpf=None):
     for st in steps_:
         t = s.pos(b, st)
         s.hit(t)
@@ -109,12 +109,13 @@ def floor(b, gain=1.0, steps_=(0, 4, 8, 12), tailg=0.9, tune=ROOT, decay=0.135,
             k = lp(k, lpf)
         s.place(t, k, gain, 'drums')
         if tailg:
-            s.place(t, ktail(tune=tune, decay=0.24, tone=180), tailg, 'sub')
+            s.place(t, ktail(tune=tune, decay=0.22, tone=320, harm=0.55),
+                    tailg, 'sub')
 
 def perc(b, gain=1.0, sh=(2, 6, 10, 14), rim=(), clap=(), seed=0):
     for st in sh:
-        s.place(s.pos(b, st), shaker(0.8, bright=0.72, seed=(b * 16 + st) % 61),
-                gain * 0.30, 'drums')
+        s.place(s.pos(b, st), shaker(0.8, bright=1.30, seed=(b * 16 + st) % 61),
+                gain * 0.58, 'drums')
     for st in rim:
         s.place(s.pos(b, st), rimtick(0.6, f=1480.0, seed=(b * 4 + st) % 47),
                 gain * 0.34, 'drums')
@@ -125,18 +126,18 @@ def perc(b, gain=1.0, sh=(2, 6, 10, 14), rim=(), clap=(), seed=0):
 def offchord(b, ch, gain=1.0, st=6, cutoff=3200, times=7, fb=0.58):
     """The offbeat chord thrown into a tape echo. The instrument is the stab
     plus the echo; on its own it is a click with a chord attached."""
-    seg = dubstab(list(ch), 1.6, f_hi=cutoff, res=2.0, decay=0.075, drive=1.6)
+    seg = dubstab(tuple(ch), 1.6, f_hi=cutoff, res=2.0, decay=0.075, drive=1.6)
     s.place(s.pos(b, st), dubecho(seg, steps_=3.0, times=times, fb=fb,
                                   damp0=4200.0, darken=0.60, drive=1.5,
                                   seed=b), gain, 'chord')
 
-def bed(b0, bars, humg=1.0, dustg=0.0, note=33, seed=0):
+def bed(b0, bars, humg=1.0, dustg=0.00, note=33, seed=0):
     s.place(s.pos(b0), hum(note=note, dur_steps=bars * 16, gain=humg,
                            cutoff=460, motor=0.16, seed=seed), 1.0, 'air')
     if dustg:
         for b in range(b0, b0 + bars, 4):
-            s.place(s.pos(b), dust(64, gain=dustg, density=14, lo=2600,
-                                   hi=9000, seed=b), 1.0, 'air')
+            s.place(s.pos(b), dust(64, gain=dustg, density=26, lo=3000,
+                                   hi=13000, seed=b), 1.6, 'air')
 
 # ================= ANKUNFT: 0-15 =================
 # Outside. No kick for thirty-three seconds, and the first thing that happens
@@ -161,11 +162,11 @@ for b in range(16, 48):
           tick=0.30 + 0.25 * u)
     perc(b, gain=0.5 + 0.3 * u, sh=(2, 6, 10, 14),
          rim=(7, 15) if ph >= 8 else (), clap=(12,) if ph >= 16 else ())
-bed(16, 32, humg=1.1, dustg=0.5, seed=4)
+bed(16, 32, humg=1.1, dustg=1.05, seed=4)
 harmony(16, 32, AEOL, gain=0.78, shineg=0.40, cutoff=1900, attack=1.3, seed=10)
 held(16, 32, gain=0.34, cutoff=2100, seed=5)
 for i, b in enumerate(range(19, 48, 4)):
-    offchord(b, AEOL[(i + 1) % 4], gain=0.34 + 0.03 * i, cutoff=2600 + 120 * i)
+    offchord(b, AEOL[(i + 1) % 4], gain=(0.34 + 0.03 * i) * 2.6, cutoff=2600 + 120 * i)
 
 # ================= LICHT: 48-79 =================
 # The light. Nothing new arrives - the shimmer's send goes up, the pad's
@@ -178,11 +179,11 @@ for b in range(48, 80):
           knock=0.66)
     perc(b, gain=0.85, sh=(2, 6, 10, 14), rim=(7, 15),
          clap=(12,) if ph % 4 == 3 else ())
-bed(48, 32, humg=0.9, dustg=0.85, seed=6)
+bed(48, 32, humg=0.9, dustg=1.78, seed=6)
 harmony(48, 32, AEOL, gain=0.92, shineg=0.62, cutoff=2600, attack=1.0, seed=20)
 held(48, 32, gain=0.50, cutoff=3000, seed=7)
 for i, b in enumerate(range(51, 80, 4)):
-    offchord(b, AEOL[(i + 1) % 4], gain=0.46, cutoff=3400, fb=0.62)
+    offchord(b, AEOL[(i + 1) % 4], gain=(0.46) * 2.6, cutoff=3400, fb=0.62)
 s.place(s.pos(64), sweepnoise(96, gain=0.34, f0=600, f1=7000, q=0.45, seed=8),
         1.0, 'air')
 
@@ -191,12 +192,12 @@ s.place(s.pos(64), sweepnoise(96, gain=0.34, f0=600, f1=7000, q=0.45, seed=8),
 # bars; the echo's feedback goes up and its damping down, so the chord that
 # was a stab turns into weather.
 s.place(s.pos(80), mdown(12, gain=0.4, f0=2600, f1=200), 1.0, 'air')
-bed(80, 16, humg=1.5, dustg=0.6, seed=9)
+bed(80, 16, humg=1.5, dustg=1.26, seed=9)
 harmony(80, 16, AEOL, gain=0.86, shineg=0.78, cutoff=1600, attack=2.2,
         decay=8.0, seed=30)
 held(80, 16, gain=0.44, cutoff=2200, seed=11)
 for i, b in enumerate(range(81, 96, 4)):
-    offchord(b, AEOL[i % 4], gain=0.52, cutoff=1900, times=9, fb=0.70)
+    offchord(b, AEOL[i % 4], gain=(0.52) * 2.6, cutoff=1900, times=9, fb=0.70)
 for b in (88, 92):                                # two footsteps, then nothing
     floor(b, gain=0.44, steps_=(0,), tailg=0.6, lpf=1400)
 for b in range(92, 96):
@@ -206,7 +207,7 @@ for b in range(92, 96):
 # The F becomes D. One note in six minutes, and it is the natural sixth -
 # the difference between a minor key that is sad and a minor key that is
 # only early.
-bed(96, 40, humg=0.85, dustg=1.0, seed=12)
+bed(96, 40, humg=0.85, dustg=2.10, seed=12)
 harmony(96, 40, DOR, gain=1.0, shineg=0.72, cutoff=3000, attack=0.9, seed=40)
 held(96, 40, gain=0.58, cutoff=3400, seed=13)
 for b in range(96, 136):
@@ -218,14 +219,14 @@ for b in range(96, 136):
     perc(b, gain=0.55 + 0.40 * u, sh=(2, 6, 10, 14),
          rim=(7, 15) if ph >= 4 else (), clap=(12,) if ph >= 12 else ())
 for i, b in enumerate(range(99, 136, 4)):
-    offchord(b, DOR[(i + 1) % 4], gain=0.42 + 0.02 * i, cutoff=3000 + 100 * i,
+    offchord(b, DOR[(i + 1) % 4], gain=(0.42 + 0.02 * i) * 2.6, cutoff=3000 + 100 * i,
              fb=0.60)
 s.place(s.pos(112), sweepnoise(128, gain=0.30, f0=500, f1=8000, q=0.4, seed=14),
         1.0, 'air')
 
 # ================= ZUHAUSE: 136-159 =================
 # Home. Everything leaves in the order it arrived.
-bed(136, 24, humg=1.0, dustg=0.6, seed=15)
+bed(136, 24, humg=1.0, dustg=1.26, seed=15)
 harmony(136, 24, DOR, gain=0.90, shineg=0.60, cutoff=2200, attack=1.4, seed=50)
 held(136, 24, gain=0.46, cutoff=2600, seed=16)
 for b in range(136, 160):
@@ -236,7 +237,7 @@ for b in range(136, 160):
     perc(b, gain=0.90 - 0.75 * u, sh=(2, 6, 10, 14) if ph < 12 else (6, 14),
          rim=(7, 15) if ph < 8 else ())
 for i, b in enumerate(range(139, 156, 4)):
-    offchord(b, DOR[(i + 1) % 4], gain=0.44 - 0.06 * i, cutoff=2400, times=8,
+    offchord(b, DOR[(i + 1) % 4], gain=(0.44 - 0.06 * i) * 2.6, cutoff=2400, times=8,
              fb=0.64)
 
 # ================= SCHLAF: 160-175 =================
@@ -245,7 +246,7 @@ for i, b in enumerate(range(139, 156, 4)):
 bed(160, 16, humg=1.2, seed=17)
 s.place(s.pos(160), chordpad(Am, 200, cutoff=1500, attack=3.0, seed=60),
         0.72, 'pad')
-s.place(s.pos(160), shine(Am, 176, decay=9.0, wet=0.6, tone=2400, passes=3,
+s.place(s.pos(160), shine(Am, 176, decay=9.0, wet=0.6, tone=3800, passes=3,
                           fb=0.6, seed=61), 0.66, 'shine')
 s.place(s.pos(160), ens([HELD], 200, gain=0.34, voices=3, cutoff=2000,
                         attack=3.5, bow=0.45, drift=1.5, seed=18), 1.0, 'lead')
@@ -260,26 +261,27 @@ s.bus['lead']  = bus_reverb(s.bus['lead'],  decay=4.0, wet=0.34, tone=3400)
 s.bus['chord'] = bus_reverb(s.bus['chord'], decay=2.4, wet=0.20, tone=2800)
 s.bus['air']   = bus_reverb(s.bus['air'],   decay=3.0, wet=0.18, tone=2400)
 s.bus['drums'] = bus_reverb(s.bus['drums'], decay=1.1, wet=0.09, tone=3600)
-s.bus['pad']   = hp(s.bus['pad'], 150)
+s.bus['pad']   = hp(s.bus['pad'], 100)   # the warmth is 60-120, not 150 up
 s.bus['shine'] = hp(s.bus['shine'], 320)          # the octaves, never the bottom
 s.bus['lead']  = hp(s.bus['lead'], 300)
 s.bus['chord'] = hp(s.bus['chord'], 240)
 s.bus['air']   = hp(s.bus['air'], 40)
+s.bus['air']   = shelf(s.bus['air'], 5000, 5.0)   # dust is real content
 # A touch of instability on something too perfect: everything harmonic goes
 # through tape, because nothing about seven in the morning is in tune.
 for b in ('pad', 'shine', 'lead', 'chord'):
     s.bus[b] = tapeflutter(s.bus[b], depth_ms=0.7, rate=4.2)
 for b in s.bus:
     s.bus[b] = mono_below(s.bus[b], 150)
-s.bus['shine'] = side_boost(s.bus['shine'], 700, 0.6)
+s.bus['shine'] = side_boost(s.bus['shine'], 700, 0.35)
 s.bus['pad']   = side_boost(s.bus['pad'], 600, 0.35)
 
-ARC = [(0, -7.0), (8, -5.4), (16, -3.6), (32, -2.6), (47.9, -2.2),
+ARC = [(0, -3.8), (8, -3.2), (16, -2.6), (32, -2.0), (47.9, -1.8),
        (48, -1.6), (64, -1.0), (79.9, -0.8),
-       (80, -5.2), (88, -4.6), (95.9, -3.8),
+       (80, -4.2), (88, -3.8), (95.9, -3.2),
        (96, -1.8), (112, -0.6), (128, 0.0), (135.9, 0.0),
-       (136, -0.9), (148, -3.0), (159.9, -5.5),
-       (160, -7.5), (168, -10.0), (176, -15.0)]
+       (136, -0.9), (148, -2.4), (159.9, -4.0),
+       (160, -5.0), (168, -6.8), (176, -11.0)]
 _bars = np.array([p[0] for p in ARC]) * BAR
 _db   = np.array([p[1] for p in ARC])
 _ride = 10 ** (np.interp(np.arange(s.total, dtype=np.float64), _bars, _db) / 20.0)
@@ -287,8 +289,8 @@ _ride = uniform_filter1d(_ride, int(0.030 * SR))
 for b in s.bus:
     s.bus[b] = (s.bus[b] * _ride[:, None]).astype(np.float32)
 
-GAINS = {'drums': 0.70, 'sub': 0.62, 'pad': 0.50, 'shine': 0.34,
-         'chord': 0.40, 'lead': 0.34, 'air': 0.30}
+GAINS = {'drums': 0.78, 'sub': 0.30, 'pad': 0.58, 'shine': 0.44,
+         'chord': 1.80, 'lead': 0.36, 'air': 0.70}
 s.report(GAINS)
 s.ownership(3000, 16000, GAINS, 'top  3-16k')
 s.ownership(200, 800, GAINS, 'mid  200-800')

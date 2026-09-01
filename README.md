@@ -156,6 +156,13 @@ sidechain depth and transient punch against the tracks that already worked.
                       and `sheet()`, an UNtuned bank of high resonant bands,
                       because everything else in an industrial kit is dark by
                       construction
+    core.shimmer()    a reverb with an octave transposition inside its
+                      feedback path, so a held chord grows a choir of its own
+                      harmonics that nobody played - late, in tune, and
+                      further away every pass. It is the only reverb that
+                      adds notes, and damping in the loop is not a tone
+                      control, it is what stops the octaves stacking into a
+                      whistle
     src/minimallib.py the high-tech minimal module: a clean three-layer
                       kick, `line()` - a whole bar of a monophonic voice as
                       one unbroken oscillator - `acidline()`, a TB-303 with
@@ -266,6 +273,7 @@ All finished audio lives in `renders/`.
 | `acid_nebel_130.wav` | Dub techno with acid in it, 6:24: an offbeat chord thrown into a delay that saturates inside its own feedback, and a 303 arriving from behind it. No kick for sixteen bars |
 | `acid_rausch_138.wav` | Acid breakbeat in D minor, 5:37: no kick on every beat, ghost snares carrying the groove, and the 303 sharing the bar with hoovers, orchestra hits and a rave piano |
 | `acid_saeure_146.wav` | Hard acid in E minor, 6:38: kick tuned to E1, and a 303 that descends from E3 to three octaves at once. Sixteen bars of hard-clipped industrial kicks before the finale |
+| `dub_heimweg_118.wav` | Ambient dub techno in A minor moving to A Dorian, 6:06 - the third record from the same night as `blendung` and `finsternis`, and the one that happens after them. Seven in the morning, the light is wrong, the body is still at 142 and the city has started without you. 118 BPM because a walking pace is about 118 steps a minute, so the beat is a footstep rather than a machine; the kick is clean, 138 ms, with no distortion anywhere near it, and for a third of the record there is no kick at all. The whole harmonic argument is one note, twice. The chords are i-bVII-bVI-bVII four bars each and the lead does not move: it holds E5 for the entire record, which is the fifth over Am, the sixth over G, the major seventh over F and the ninth over D - one note that is four different feelings depending on what walks underneath it. Then at bar 96 the F becomes D: the natural sixth, Aeolian becomes Dorian, and that is the difference between being tired and being alright. It is the only note that changes in six minutes. `shimmer()` is new and it is what makes this a morning: a reverb with an octave transposition inside its feedback path, so a held chord grows a choir of its own harmonics that nobody played - measured on one chord it moves the energy from 78% in 200-800 Hz to 73% in 800-3000 and takes the ring from 2.0 seconds to 6.3. No bells anywhere; a struck bright object would read as a music box, which is the one thing this must not be. Mastered to -11.7 LUFS with the peaks left on: a record about being tired that has been limited to -6 is a lie |
 | `acid_finsternis_142.wav` | Dark acid techno in D# minor / D# Phrygian, 7:16, and the fifth record here with a 303 in it - the way it avoids being the fifth is register. Every acid line in this project high-passes itself at 165-240 Hz because the sub belongs to the kick, which is right when the 303 is a hook over a bassline. Here there is no bassline: `deepacid()` is the same machine written to OWN 60-300 Hz, with its overdrive split off the fundamental so the drive that makes a 303 sound like one never touches the sub, and the line's own octave added underneath as a clean sine. It measures 15% in 60-120 Hz and 62% in 120-300 where the old one measures 0% and 8%. Nothing from the machine hall is in it - no anvils, no forge, no steam, no siren. The shape is an eclipse and it is written in the spectrum rather than in the level: 3 kHz upward is EMPTY for a hundred and twenty bars, 0.02% of the record's energy through the umbra, and 6.3% in the last section - you cannot open a band that was never closed. One note carries the harmony: the fifth flattens to the b5, and D# Phrygian becomes Locrian, a tritone standing on the kick. The kick is a part rather than a constant, moving through six patterns; at the exact midpoint everything that was closed opens at once; and eight bars before the end the record narrows to nothing but four enormous kicks a bar |
 | `acid_spirale_140.wav` | Acid techno in A minor, 7:22: two 303 lines, one on a sixteen-step bar and one on a fifteen-step cycle, so they drift apart and meet again every fifteen bars. No rumble - the low end belongs to the bassline |
 | `industrial_untertage_136.wav` | Industrial techno in G minor, 5:43: a shift underground. The choir is the instrument - `labourchoir` divides the formants, and a vocal tract scaled up reads as a bigger body at the same pitch, so four saw stacks become something the size of the room. They sag flat across every phrase, answer the press rather than the beat, and keep walking into the augmented second a harmonic-minor V puts under them |
@@ -331,6 +339,7 @@ python3 src/track_untertage.py   # writes renders/industrial_untertage_136.wav
 python3 src/track_blendung.py    # writes renders/industrial_blendung_154.wav
 python3 src/track_spirale.py     # writes renders/acid_spirale_140.wav
 python3 src/track_finsternis.py  # writes renders/acid_finsternis_142.wav
+python3 src/track_heimweg.py     # writes renders/dub_heimweg_118.wav
 python3 src/track_saeure.py      # writes renders/acid_saeure_146.wav
 python3 src/track_rausch.py      # writes renders/acid_rausch_138.wav
 python3 src/track_nebel.py       # writes renders/acid_nebel_130.wav
