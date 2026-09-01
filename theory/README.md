@@ -166,6 +166,7 @@ everything at once is not experimental, it is noise.
 - [`a-bassline-written-as-notes-is-an-arpeggio.md`](90-memories/a-bassline-written-as-notes-is-an-arpeggio.md) — a-bassline-written-as-notes-is-an-arpeggio.md
 - [`a-breakdown-must-keep-its-kick.md`](90-memories/a-breakdown-must-keep-its-kick.md) — a-breakdown-must-keep-its-kick.md
 - [`a-chord-must-not-arrive-as-one-event.md`](90-memories/a-chord-must-not-arrive-as-one-event.md) — a-chord-must-not-arrive-as-one-event.md
+- [`a-timbre-figure-must-not-repeat-exactly.md`](90-memories/a-timbre-figure-must-not-repeat-exactly.md) — a-timbre-figure-must-not-repeat-exactly.md
 - [`additive-stacks-clip-into-squares.md`](90-memories/additive-stacks-clip-into-squares.md) — additive-stacks-clip-into-squares.md
 - [`a-sliced-break-must-not-be-jittered.md`](90-memories/a-sliced-break-must-not-be-jittered.md) — a-sliced-break-must-not-be-jittered.md
 - [`an-open-hat-must-end-before-the-next-one.md`](90-memories/an-open-hat-must-end-before-the-next-one.md) — an-open-hat-must-end-before-the-next-one.md
@@ -183,6 +184,7 @@ everything at once is not experimental, it is noise.
 - [`loud-masters-need-a-true-peak-limiter.md`](90-memories/loud-masters-need-a-true-peak-limiter.md) — loud-masters-need-a-true-peak-limiter.md
 - [`minimal-is-holes-not-a-full-spectrum.md`](90-memories/minimal-is-holes-not-a-full-spectrum.md) — minimal-is-holes-not-a-full-spectrum.md
 - [`minimal-means-fewer-voices.md`](90-memories/minimal-means-fewer-voices.md) — minimal-means-fewer-voices.md
+- [`neuro-needs-a-screamer-over-the-reese.md`](90-memories/neuro-needs-a-screamer-over-the-reese.md) — neuro-needs-a-screamer-over-the-reese.md
 - [`neurofunk-bass-is-a-dark-reese.md`](90-memories/neurofunk-bass-is-a-dark-reese.md) — neurofunk-bass-is-a-dark-reese.md
 - [`one-oscillator-cut-in-half-not-two-oscillators.md`](90-memories/one-oscillator-cut-in-half-not-two-oscillators.md) — one-oscillator-cut-in-half-not-two-oscillators.md
 - [`pitched-metal-reads-as-cheerful.md`](90-memories/pitched-metal-reads-as-cheerful.md) — pitched-metal-reads-as-cheerful.md

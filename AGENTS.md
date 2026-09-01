@@ -364,6 +364,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/a-bassline-written-as-notes-is-an-arpeggio.md
 @theory/90-memories/a-breakdown-must-keep-its-kick.md
 @theory/90-memories/a-chord-must-not-arrive-as-one-event.md
+@theory/90-memories/a-timbre-figure-must-not-repeat-exactly.md
 @theory/90-memories/additive-stacks-clip-into-squares.md
 @theory/90-memories/a-sliced-break-must-not-be-jittered.md
 @theory/90-memories/an-open-hat-must-end-before-the-next-one.md
@@ -381,6 +382,7 @@ Everything below is loaded into every session by the harness.
 @theory/90-memories/loud-masters-need-a-true-peak-limiter.md
 @theory/90-memories/minimal-is-holes-not-a-full-spectrum.md
 @theory/90-memories/minimal-means-fewer-voices.md
+@theory/90-memories/neuro-needs-a-screamer-over-the-reese.md
 @theory/90-memories/neurofunk-bass-is-a-dark-reese.md
 @theory/90-memories/one-oscillator-cut-in-half-not-two-oscillators.md
 @theory/90-memories/pitched-metal-reads-as-cheerful.md

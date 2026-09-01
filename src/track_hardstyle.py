@@ -218,5 +218,7 @@ for b in ('drums', 'music', 'fx'):
 
 GAINS = {'drums': 1.4, 'bass': 0.66, 'music': 0.78, 'pad': 0.45, 'fx': 0.65}
 s.report(GAINS)
-s.render('hard_ascension_170.wav', drive=1.3, duck=0.08, limit=0.88, peak=0.95,
-         fade=1.5, gains=GAINS)
+# A clipper takes the very tip off the kick, where the ear is masked anyway, so
+# the saturator is not asked to squash every transient in the track instead.
+s.render('hard_ascension_170.wav', drive=1.05, duck=0.08, clip=1.18, limit=0.88,
+         peak=0.95, fade=1.5, gains=GAINS)

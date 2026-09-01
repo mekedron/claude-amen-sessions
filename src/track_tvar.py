@@ -15,8 +15,24 @@ record is sixteen bars of `chasm()` in the breakdown, voiced with no third
 anywhere: a bare fifth at the bottom and the Phrygian b2 two octaves above the
 root, which is dread rather than a chord.
 
-**The bass is one creature, not a bass part.** Every two-bar cell is a single
-oscillator running a lane of ten half-bar gestures from `abysslib.GESTURES`.
+**The bass is two layers, and that is the point.** `maw()` is the reese: it
+carries its own fundamental at 43.65 Hz and it measures dark, because that is
+what a reese is - the sample it was tuned against has 4% of its energy above
+800 Hz. Built as the WHOLE bass it left the record with a shelf falling off a
+cliff at 1 kHz, which is what "muffled" measures as. `fang()` is what sits on
+top: hard sync two octaves up, FM at an integer ratio, a wavefolder, and four
+resonances that track the note at 21x, 36x, 62x and 108x the fundamental and
+sweep half an octave each on unrelated rates. It shares the phase track and
+the gesture lanes, so it is the same note making the same figure - and it does
+not move the pitch anyone hears, which is the whole reason this genre uses two
+layers rather than one filter.
+
+**The gestures are rhythmic, and the rhythm is in the timbre.** Every two-bar cell is a single
+oscillator running a lane of fourteen half-bar gestures from
+`abysslib.GESTURES`. `step`, `roll`, `punch` and `stut` jump the scan rate on
+the sixteenth grid and leave the envelope nearly open - dubstep puts the
+rhythm in the amplitude and smears one LFO across a bar, and at 174 that
+reads as the wrong genre.
 The pitch barely moves; the rate of the wavetable scan moves every sixteenth.
 `lurk` holds the timbre still and `shred` runs it at thirty-seconds, and the
 cell that goes `lurk draw chew shred` is one note accelerating from stillness
@@ -50,7 +66,7 @@ not sum to a section and a limiter closes whatever gap survives them.
 import numpy as np
 from core import *
 import core, abysslib as A
-from abysslib import (maw, phrase, resink, crush, bone, thump, ghost, tick, sonar,
+from abysslib import (maw, fang, phrase, resink, crush, bone, thump, ghost, tick, sonar,
                       leviathan, chasm, hull, breath, swarm, scream, descent,
                       maw_rev, deg, ROOT)
 
@@ -60,7 +76,8 @@ s = Session(BARS, tail=3.0)
 # The sub and the bed get ducked too. A kick that only moves the character
 # layer out of the way leaves the two loudest things in the record fighting
 # over 40-90 Hz.
-s.DUCKED = {'bass': 1.0, 'sub': 0.70, 'body': 0.80, 'pad': 0.90, 'atmos': 0.30}
+s.DUCKED = {'bass': 0.72, 'fang': 3.90, 'sub': 0.62, 'body': 0.75,
+            'pad': 0.90, 'atmos': 0.30}
 rs = np.random.RandomState(1917)
 
 
@@ -111,26 +128,38 @@ def kit(b, v=0, gain=1.0, hats=1.0, ghosts=1.0, opens=(6,), tick_pat=None):
 # Cells are named by what the thing is doing. Each is four half-bar gestures
 # handed to one oscillator, and the table underneath is which mouth it uses.
 CELLS = {
-    'wake':   (['lurk', 'lurk', 'draw', 'draw'], 'growl', dict(bite=0.85)),
-    'stalk':  (['lurk', 'draw', 'chew', 'shred'], 'growl', dict(bite=0.80)),
-    'answer': (['snap', 'snap', 'chew', 'gnash'], 'growl', dict(bite=0.70, drive=2.7)),
-    'climb':  (['chew', 'shred', 'gnash', 'howl'], 'growl', dict(bite=0.42, drive=2.6)),
-    'scream': (['howl', 'howl', 'gnash', 'sink'], 'vowel', dict(bite=0.50, vwet=0.62, drive=2.4)),
-    'hunt':   (['gnash', 'shred', 'gnash', 'shred'], 'metal', dict(bite=0.34, drive=2.9, fold_g=1.42)),
-    'bite':   (['snap', 'snap', 'snap', 'gnash'], 'metal', dict(bite=0.34, drive=3.0)),
-    'hand':   (['shred', 'shred', 'gnash', 'sink'], 'growl', dict(bite=0.75)),
-    'tear':   (['gnash', 'gnash', 'shred', 'howl'], 'rip', dict(bite=0.30, drive=3.1, fold_g=1.5,
-                                                                crush=7)),
-    'talk':   (['chew', 'howl', 'chew', 'gnash'], 'vowel', dict(bite=0.55, vwet=0.70,
-                                                                vowels=('oo', 'ee'))),
-    'wide':   (['draw', 'chew', 'chew', 'shred'], 'reeseb', dict(bite=0.72, detune=32.0, drive=2.2)),
-    'crush':  (['lurk', 'lurk', 'sink', 'sink'], 'witch', dict(bite=0.90, drive=2.5, fold_g=1.2)),
-    # The reel: the vibration stretched out until it nearly stops, then wound
-    # back up to thirty-seconds - and the pitch arc lifts on the cell after
-    # it, so the phrase reads long, short, higher. One note the whole way.
-    'reel':   (['stretch', 'wind', 'stretch', 'shred'], 'witch', dict(bite=0.80, drive=2.5)),
-    'reel2':  (['stretch', 'wind', 'gnash', 'wind'], 'reeseb', dict(bite=0.75, detune=38.0)),
+    # --- the drops: rhythmic. These interlock with the two-step, and the
+    # `pos` contour inside each gesture is the figure - played on timbre,
+    # because the pitch is not moving.
+    #
+    # Four DIFFERENT gestures per cell, deliberately. Making both bars play
+    # the same pair and then restating the cell - A A B A, textbook call and
+    # response - measured beautifully (contour correlation +0.86 bar to bar)
+    # and sounded worse: at 174 over a two-bar cell, exact repetition of a
+    # TIMBRE figure reads as monotony where a repeated note figure would read
+    # as a hook. What recurs here is the vocabulary, not the sentence.
+    'hunt':   (['step', 'roll', 'step', 'stut'], 'metal', dict(drive=2.9, fold_g=1.42, bite=0.34)),
+    'bite':   (['punch', 'step', 'punch', 'roll'], 'metal', dict(drive=3.0, bite=0.34)),
+    'tear':   (['stut', 'step', 'roll', 'stut'], 'rip', dict(drive=3.1, fold_g=1.5, crush=7, bite=0.30)),
+    'answer': (['punch', 'punch', 'step', 'roll'], 'reeseb', dict(drive=2.7, bite=0.70)),
+    'climb':  (['roll', 'step', 'stut', 'gnash'], 'witch', dict(drive=2.6, bite=0.42)),
+    'wide':   (['roll', 'step', 'roll', 'stut'], 'reeseb', dict(detune=38.0, drive=2.2, bite=0.72)),
+    'hand':   (['stut', 'roll', 'step', 'sink'], 'witch', dict(bite=0.75)),
+    'talk':   (['step', 'howl', 'step', 'roll'], 'vowel', dict(vwet=0.70, vowels=('oo', 'ee'), bite=0.55)),
+    'stalk':  (['lurk', 'draw', 'step', 'roll'], 'witch', dict(bite=0.80)),
+
+    # --- the contrast, and the only places a stretched gesture belongs: the
+    # bar before a drop, the bars after one, and the breakdown. Held inside a
+    # drop it stops being drum & bass and starts being dubstep.
+    'scream': (['howl', 'howl', 'stut', 'sink'], 'vowel', dict(vwet=0.62, drive=2.4, bite=0.50)),
+    'wake':   (['lurk', 'lurk', 'draw', 'draw'], 'witch', dict(bite=0.85)),
+    'crush':  (['lurk', 'lurk', 'sink', 'sink'], 'witch', dict(drive=2.5, fold_g=1.2, bite=0.90)),
+    'reel':   (['stretch', 'wind', 'stretch', 'shred'], 'witch', dict(drive=2.5, bite=0.80)),
+    'reel2':  (['stretch', 'wind', 'gnash', 'wind'], 'reeseb', dict(detune=38.0, bite=0.75)),
 }
+FANG = {'wake': 0.30, 'stalk': 0.52, 'crush': 0.28, 'answer': 0.78, 'hand': 0.60,
+        'wide': 0.66, 'reel': 0.58, 'reel2': 0.68, 'hunt': 1.00, 'bite': 1.00,
+        'tear': 1.00, 'climb': 0.86, 'scream': 0.80, 'talk': 0.74}
 _CACHE = {}
 
 
@@ -148,8 +177,18 @@ def cell(name, note, seed=0, res=0.62, **kw):
     return _CACHE[key]
 
 
+def _fang(name, note, seed):
+    key = ('fang', name, note, seed)
+    if key not in _CACHE:
+        cells, _, base = CELLS[name]
+        _CACHE[key] = phrase(cells, [(0, note)], fn=fang, seed=seed,
+                             drive=base.get('drive', 3.2))
+    return _CACHE[key]
+
+
 def lay(b, name, note, gain=1.0, seed=0, **kw):
     s.place(s.pos(b), cell(name, note, seed, **kw), gain, 'bass')
+    s.place(s.pos(b), _fang(name, note, seed), gain * FANG.get(name, 0.7), 'fang')
 
 
 # ------------------------------------------------------------------- the sub --
@@ -205,7 +244,7 @@ subseg(32, 48, 29, 0.80)
 lay(34, 'wake', 29, 0.75, seed=11)
 lay(38, 'wake', 29, 0.85, seed=11)
 lay(42, 'stalk', 29, 0.90, seed=12)
-lay(46, 'stalk', 30, 0.95, seed=13)          # Gb - the b2, once, as a warning
+lay(46, 'reel', 30, 0.95, seed=13)          # Gb - the b2, once, as a warning
 s.place(s.pos(40), scream(8 * 16, 0.42, seed=1, f0=140, f1=1800), 1.0, 'fx')
 s.place(s.pos(44), scream(4 * 16, 0.60, seed=2, f0=260, f1=3400), 1.0, 'fx')
 # the last half bar: everything stops and the sub falls out from under it
@@ -217,7 +256,7 @@ s.place(s.pos(48), impact(24, 0.85), 1.0, 'fx')
 s.place(s.pos(48), hull(32 * 16, seed=14, lo=2000, hi=9000, density=0.6), 0.40, 'atmos')
 D1 = [('stalk', 29), ('answer', 29), ('stalk', 29), ('climb', 29),
       ('stalk', 30), ('answer', 29), ('scream', 32), ('climb', 29),
-      ('hunt', 30), ('reel', 29), ('hunt', 29), ('bite', 32),
+      ('hunt', 30), ('tear', 29), ('hunt', 29), ('bite', 32),
       ('hunt', 37), ('climb', 36), ('scream', 30), ('hand', 29)]
 for i, (name, nt) in enumerate(D1):
     b = 48 + i * 2
@@ -248,7 +287,7 @@ for b in range(82, 96, 2):
     s.place(s.pos(b), crush(3.0), 0.55, 'drums'); s.hit(s.pos(b))
     s.place(s.pos(b, 8), reverb(bone(3.0), 1.4, 0.35, 3000), 0.42, 'drums')
     s.place(s.pos(b, 8), thump(2.4), 0.60, 'drums')
-lay(94, 'crush', 29, 0.55, seed=22)
+lay(94, 'reel2', 29, 0.62, seed=22)
 subseg(94, 96, 29, 0.30)
 
 # ---- 96-111  build 2 ----
@@ -274,7 +313,7 @@ s.place(s.pos(112), impact(24, 1.0), 1.0, 'fx')
 s.place(s.pos(112), hull(32 * 16, seed=29, lo=2200, hi=9500, density=0.6), 0.42, 'atmos')
 D2 = [('hunt', 29), ('bite', 29), ('hunt', 29), ('tear', 29),
       ('talk', 32), ('bite', 29), ('tear', 30), ('climb', 29),
-      ('hunt', 32), ('reel2', 29), ('wide', 32), ('bite', 36),
+      ('hunt', 32), ('bite', 29), ('wide', 32), ('tear', 36),
       ('talk', 37), ('tear', 36), ('hunt', 30), ('hand', 29)]
 for i, (name, nt) in enumerate(D2):
     b = 112 + i * 2
@@ -315,7 +354,7 @@ s.place(s.pos(160), impact(24, 1.1), 1.0, 'fx')
 s.place(s.pos(160), hull(32 * 16, seed=32, lo=2400, hi=10000, density=0.6), 0.40, 'atmos')
 D3 = [('hunt', 29), ('scream', 29), ('tear', 29), ('answer', 29),
       ('hunt', 29), ('bite', 30), ('climb', 32), ('tear', 29),
-      ('reel', 29), ('bite', 32), ('talk', 37), ('tear', 36),
+      ('wide', 29), ('bite', 32), ('talk', 37), ('tear', 36),
       ('hunt', 37), ('tear', 36), ('hunt', 35), ('hand', 29)]
 for i, (name, nt) in enumerate(D3):
     b = 160 + i * 2
@@ -362,21 +401,28 @@ s.bus['bass'] = hp(s.bus['bass'], 27, 2)
 s.bus['bass'] = shelf(s.bus['bass'], 150, 1.5, 'low')
 s.bus['bass'] = peak_eq(s.bus['bass'], 1450, 2.0, 0.7)      # where the scan lives
 s.bus['bass'] = peak_eq(s.bus['bass'], 2500, -2.0, 0.8)     # the snare's crack
-s.bus['bass'] = peak_eq(s.bus['bass'], 520, -1.8, 0.9)
+s.bus['bass'] = peak_eq(s.bus['bass'], 520, -1.4, 0.9)
 # The creature is a SUSTAINED source, and a sustained source that owns the top
 # of a record is a noise bed - which at 6-9 kHz is the thing that hurts after
 # ninety seconds. Shelved out of the band the snare has to win.
 s.bus['bass'] = shelf(s.bus['bass'], 5400, -2.0, 'high')
 s.bus['bass'] = mono_below(s.bus['bass'], 170)
 
+s.bus['fang'] = bandpass(s.bus['fang'], 620, 10500, 2)
+s.bus['fang'] = compress(s.bus['fang'], thresh=0.10, ratio=3.5, attack=0.004,
+                         release=0.07)
+s.bus['fang'] = peak_eq(s.bus['fang'], 2500, -1.2, 0.8)   # the snare's crack
+s.bus['fang'] = shelf(s.bus['fang'], 3400, 1.0, 'high')
 s.bus['sub'] = mono_below(lp(s.bus['sub'], 130, 4), 200)
 s.bus['body'] = mono_below(hp(s.bus['body'], 100, 2), 170)
 
 s.bus['drums'] = hp(s.bus['drums'], 32, 2)
+s.bus['drums'] = peak_eq(s.bus['drums'], 245, -2.5, 0.9)    # room for the bass
 s.bus['drums'] = peak_eq(s.bus['drums'], 2400, 2.5, 0.7)    # the crack
 s.bus['drums'] = peak_eq(s.bus['drums'], 4200, 2.2, 0.6)    # the snap
-s.bus['drums'] = peak_eq(s.bus['drums'], 8200, -2.0, 0.7)   # where bright turns to pain
-s.bus['drums'] = shelf(s.bus['drums'], 11000, -5.0, 'high')
+s.bus['drums'] = peak_eq(s.bus['drums'], 8200, -1.0, 0.7)   # where bright turns to pain
+s.bus['drums'] = shelf(s.bus['drums'], 7500, 2.5, 'high')
+s.bus['drums'] = peak_eq(s.bus['drums'], 7000, 2.5, 0.6)
 # Parallel compression first, to lift the ghost notes into audibility, then
 # glue. A 25 dB crest factor on a drum bus is a kit that was recorded; these
 # drums were built, and in this genre they are as loud as the bass.
@@ -398,9 +444,9 @@ s.bus['fx'] = hp(s.bus['fx'], 28, 2)
 # things the ear counts - as no louder than the sixteenths between them. The
 # kick duck alone cannot fix that because the kick is not on 4 or 12, so the
 # low end is ducked against the SNARE as well, shallower and faster.
-_sd = duck_env(s.total, SNARE_HITS, depth=0.84, hold=0.006, release=0.055)
+_sd = duck_env(s.total, SNARE_HITS, depth=0.88, hold=0.005, release=0.045)
 s.bus['sub'] = (s.bus['sub'] * _sd[:, None]).astype(np.float32)
-s.bus['bass'] = (s.bus['bass'] * (0.55 + 0.45 * _sd)[:, None]).astype(np.float32)
+s.bus['bass'] = (s.bus['bass'] * (0.82 + 0.18 * _sd)[:, None]).astype(np.float32)
 s.bus['body'] = (s.bus['body'] * (0.70 + 0.30 * _sd)[:, None]).astype(np.float32)
 
 # ---- the ride ----
@@ -426,8 +472,8 @@ ride = uniform_filter1d(ride, int(0.030 * SR))      # no zipper on the fader
 for b in s.bus:
     s.bus[b] = (s.bus[b] * ride[:, None]).astype(np.float32)
 
-GAINS = {'drums': 2.10, 'sub': 0.42, 'bass': 0.60, 'body': 1.10,
-         'atmos': 1.30, 'pad': 3.20, 'fx': 0.42}
+GAINS = {'drums': 1.95, 'sub': 0.58, 'bass': 0.78, 'fang': 3.90, 'body': 1.10,
+         'atmos': 1.20, 'pad': 3.20, 'fx': 0.42}
 s.report(GAINS)
 s.ownership(3000, 16000, GAINS, label='3-16k')
 
@@ -436,7 +482,7 @@ s.ownership(3000, 16000, GAINS, label='3-16k')
 # quieter the harder it is pushed. Then 2.5:1 glue, then a look-ahead limiter
 # detecting on a 4x upsample, so this lands at -1 dBTP rather than the +3 the
 # reference records carry.
-s.render('neuro_tvar_174.wav', drive=0.0, duck=0.30, duck_rel=0.085,
+s.render('neuro_tvar_174.wav', drive=0.0, duck=0.46, duck_rel=0.075,
          limit=0.0, peak=0.99, gains=GAINS, clip=1.55, fade=2.6,
          comp=dict(thresh=0.40, ratio=2.5, attack=0.006, release=0.10, makeup=1.2),
          brick=dict(gain=1.16, ceiling=0.89, release=0.075))

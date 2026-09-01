@@ -203,7 +203,7 @@ def maw(notes, bars=2, rate=1.0, cut=1200.0, res=1.4, fmi=0.0, vow=0.0,
         x = x + sub * lp(stereo(np.tanh(1.30 * sb) * 0.78), 460, 4)
 
     if tilt:
-        x = shelf(x, 760, tilt, 'high')
+        x = shelf(x, 1150, tilt, 'high')
 
     # --- the ring. Low and bright are not opposites, but they are not the same
     # knob either: opening the cutoff to get brightness raises the whole
@@ -235,6 +235,85 @@ def maw(notes, bars=2, rate=1.0, cut=1200.0, res=1.4, fmi=0.0, vow=0.0,
             x[k:k + m] += hp(stereo(edge), 700, 2) * 0.34
 
     return (x * gain).astype(np.float32)
+
+
+def fang(notes, bars=2, rate=1.0, cut=1200.0, res=1.4, fmi=0.0, vow=0.0,
+         ntch=900.0, syn=0.0, gat=1.0, pos=0.0, lo=680.0, hi=9800.0,
+         ratio=(21.0, 36.0, 62.0, 108.0), drive=3.2, fold_g=1.9, table='rip',
+         tail=6, seed=0, gain=1.0, glide=0.060, **_):
+    """The screamer: the bass layer that lives from 700 Hz up.
+
+    `maw()` is the reese - and a reese measures dark on its own, because that
+    is what a reese is. The sample this engine's low end was tuned against has
+    4% of its energy above 800 Hz, and building a whole bass to that number
+    produces a record with a shelf falling off a cliff at 1 kHz. It is a
+    FOUNDATION LAYER out of a sample pack, not a finished bass.
+
+    What sits on top of it in the genre is this: hard sync two octaves up, FM
+    at an integer ratio with a high index, a wavefolder rather than a
+    saturator, and a bandpass that keeps the whole thing out of the reese's
+    way. It shares the phase track, so it is the same note and can never
+    disagree about tuning; it shares the gesture lanes, so it moves with the
+    creature rather than beside it; and it is built twice from different
+    oscillator phases, which is where the 400-1200 Hz width comes from.
+
+    It does not move the pitch anybody hears. That is the whole reason a
+    genre that wants to be low AND bright uses two layers instead of one
+    filter - opening a cutoff raises the fundamental's octave along with
+    everything else, and a separate band-limited layer does not.
+    """
+    n = int((bars * 16 + tail) * STEP)
+    f = _ftrack(notes, n, glide)
+    fmax = float(f.max())
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    t = np.arange(n) / SR
+    K = int(np.clip(15200.0 / fmax, 24, 150))
+    tab = wtable(table, K, f0=fmax, frames=24)
+
+    off = steplane(pos, n, 'ramp', 0.010)
+    scan = np.clip(scanlane(n, rate, 6.0, 23.0, 'sine', 1.1) + off, 0, 23)
+    fml = np.clip(steplane(fmi, n, 'ramp', 0.012), 0.0, 8.0)
+    synl = np.clip(steplane(syn, n, 'ramp', 0.010), 0.0, 6.0)
+    gatl = np.clip(steplane(gat, n, 'hold', 0.0035), 0.0, 1.0)
+    resl = np.clip(steplane(res, n, 'ramp', 0.010), 0.4, 9.0)
+    # Three bandpasses tracking the note, at 21x, 36x and 62x the
+    # fundamental - roughly 0.9, 1.6 and 2.7 kHz for an F1 - and they stay
+    # there in HARMONICS rather than in hertz however far the pitch arc
+    # climbs. Two of them left a dip between the pair at exactly the
+    # frequency the mix was missing, which is the trap with resonant layers:
+    # the hole between the resonances is as audible as the resonances.
+    # ...and each of them SWEEPS. Four resonances parked at fixed harmonics
+    # are a comb, and a comb's gaps measure as clearly as its peaks: with them
+    # nailed down the mix read -4 to -5 dB at 600, 1200 and 3800 Hz, which is
+    # exactly halfway between each pair. Swept over half an octave on four
+    # unrelated rates they cross the gaps, the time-average fills in, and a
+    # moving formant is what the genre wanted from them anyway.
+    _rt = np.atleast_1d(np.asarray(rate, dtype=np.float64))
+    bands = [np.clip(f * r * scanlane(n, _rt * m + o, 0.72, 1.42, sh, 1.0,
+                                      phase0=p), lo * (0.9 + 0.25 * i), 12000.0)
+             for i, (r, m, o, sh, p) in enumerate(zip(
+                 ratio, (0.5, 0.25, 1.0, 0.125), (0.07, 0.13, 0.05, 0.19),
+                 ('sine', 'tri', 'sine', 'tri'), (0.0, 1.9, 3.4, 5.1)))]
+
+    chans = []
+    for c in range(2):
+        rs = np.random.RandomState(seed * 29 + c * 211 + 7)
+        pm = (1.6 + fml) * np.sin(3.0 * ph + rs.rand() * 6.28)
+        x = wtscan(ph + pm + rs.rand() * 6.28, tab, scan)
+        x = x + 0.55 * sync_saw(t, f * 4.0, 2.0 + 1.4 * synl)
+        chans.append(x)
+    x = np.stack(chans, 1).astype(np.float32)
+
+    x = drive_asym(norm(x, 0.72), drive, 0.28)
+    x = sum(w * svf(x, b, resl * q, 'bp') for b, w, q in
+            zip(bands, (0.62, 0.72, 0.80, 0.52), (1.6, 1.35, 1.15, 0.95)))
+    x = fold(norm(x, 0.58) * fold_g)
+    x = bandpass(x, lo, hi, 2)
+    # the screamer breathes with the gesture instead of droning under it
+    amp = np.clip(scanlane(n, rate, 0.30, 1.0, 'sine', 0.8, phase0=0.6), 0, 1)
+    amp = amp * (0.30 + 0.70 * gatl)
+    x = x * (_swell(notes, n) * gatl * amp)[:, None]
+    return (x * gain * 0.5).astype(np.float32)
 
 
 # Eight half-bar behaviours. A cell is four of them; a drop is eight cells
@@ -291,7 +370,7 @@ GESTURES = {
                   vow=[.8, .2, .1, .8, .2, .1, .85, .1],
                   ntch=[1050, 368, 324, 1050, 368, 324, 1138, 324],
                   syn=[1.4, 0, 0, 1.4, 0, 0, 1.8, 0],
-                  gat=[1, .06, 0, 1, .06, 0, 1, 0],
+                  gat=[1, .58, .42, 1, .58, .42, 1, .45],
                   pos=[10, 4, 3, 10, 4, 3, 12, 3]),
     # it screams. One quarter-note sweep across the whole half bar, the vowel
     # travelling ee -> ah, cutoff at its widest swing of the record.
@@ -303,6 +382,63 @@ GESTURES = {
                   ntch=[1452, 1295, 1138, 980, 814, 691, 569, 490],
                   syn=[0, 0, .4, .8, .6, .2, 0, 0], gat=[1] * 8,
                   pos=[7, 8, 9.5, 11, 12, 10, 7, 5]),
+    # ---- the rhythmic half ----
+    # Neurofunk articulates its bass four to six times a bar and locks those
+    # articulations to the two-step. Dubstep holds one note and lets an LFO
+    # smear across the whole bar. Same machinery, opposite result: below, the
+    # rate lane JUMPS between a scrape and a hold on the sixteenth grid
+    # instead of ramping across it, and the scan position walks a contour that
+    # repeats every half bar - so the scrapes make a figure the ear can learn
+    # rather than a texture it can only sit in.
+    #
+    # `pos` is where the melody lives. The pitch is not moving; which part of
+    # the wavetable is being read is, and a repeating contour through it reads
+    # as a riff played on timbre.
+    #
+    # And the gate barely moves. Putting the rhythm in the AMPLITUDE gives 16
+    # attacks a bar, which is what the doc measures on a bass written as a run
+    # of short notes and is the thing this genre is not; the low end has to be
+    # sounding 81-85% of the bar. So the envelope stays nearly open and the
+    # rate and position lanes carry the figure on their own - the ear hears a
+    # rhythm because the TIMBRE jumps on the grid, not because the level does,
+    # and that is also why it reads as full instead of chopped.
+    'step':  dict(rate=[16, 2, 0, 8, 1, 0, 12, 2],
+                  cut=[720, 300, 195, 560, 250, 180, 640, 280],
+                  res=[5.4, 2.6, 1.8, 4.8, 2.4, 1.8, 5.0, 2.6],
+                  fmi=[3.0, 1.0, .5, 2.4, .8, .4, 2.8, 1.0],
+                  vow=[.9, .35, .15, .8, .3, .12, .85, .35],
+                  ntch=[420, 220, 165, 380, 200, 155, 400, 210],
+                  syn=[2.4, .5, 0, 1.8, .3, 0, 2.2, .5],
+                  gat=[1, .96, .90, 1, .95, .88, 1, .94],
+                  pos=[13, 6, 3, 11, 5, 2, 12, 7]),
+    'roll':  dict(rate=[8, 0, 8, 0, 8, 0, 16, 4],
+                  cut=[560, 210, 620, 230, 590, 220, 700, 330],
+                  res=[4.6, 2.0, 4.8, 2.1, 4.7, 2.0, 5.2, 3.0],
+                  fmi=[2.2, .6, 2.4, .6, 2.3, .6, 2.8, 1.2],
+                  vow=[.75, .2, .8, .22, .78, .2, .9, .4],
+                  ntch=[370, 175, 400, 185, 385, 180, 430, 240],
+                  syn=[1.6, 0, 1.8, 0, 1.7, 0, 2.4, .6],
+                  gat=[1, .91, 1, .90, 1, .90, 1, .94],
+                  pos=[10, 4, 12, 5, 11, 4, 14, 8]),
+    'punch': dict(rate=[16, 0, 0, 0, 12, 0, 8, 0],
+                  cut=[780, 240, 190, 165, 690, 220, 540, 185],
+                  res=[5.8, 2.2, 1.8, 1.6, 5.4, 2.0, 4.6, 1.8],
+                  fmi=[3.4, .6, .4, .3, 3.0, .5, 2.2, .4],
+                  vow=[.95, .25, .12, .08, .9, .2, .75, .12],
+                  ntch=[460, 195, 165, 150, 420, 180, 360, 160],
+                  syn=[3.0, 0, 0, 0, 2.4, 0, 1.6, 0],
+                  gat=[1, .92, .84, .78, 1, .90, 1, .82],
+                  pos=[15, 5, 3, 2, 13, 4, 10, 3]),
+    'stut':  dict(rate=[16, 16, 4, 0, 16, 16, 8, 0],
+                  cut=[700, 640, 320, 190, 740, 660, 520, 200],
+                  res=[5.6, 5.2, 3.0, 1.9, 5.8, 5.4, 4.4, 1.9],
+                  fmi=[3.2, 3.0, 1.2, .4, 3.4, 3.0, 2.0, .4],
+                  vow=[.9, .82, .4, .15, .95, .85, .7, .15],
+                  ntch=[440, 405, 230, 170, 460, 415, 350, 175],
+                  syn=[2.8, 2.4, .8, 0, 3.0, 2.6, 1.4, 0],
+                  gat=[1, .97, .90, .84, 1, .96, .94, .85],
+                  pos=[14, 12, 6, 3, 15, 13, 9, 3]),
+
     # The stretch. The modulation slows from thirty-seconds to a standstill
     # across half a bar - the vibration getting LONGER - and because the phase
     # is integrated from the rate rather than restarted, it decelerates into
@@ -339,16 +475,18 @@ GESTURES = {
 LANES = ('rate', 'cut', 'res', 'fmi', 'vow', 'ntch', 'syn', 'gat', 'pos')
 
 
-def phrase(cells, notes, **kw):
+def phrase(cells, notes, fn=None, **kw):
     """Assemble a cell from half-bar gestures and hand the whole thing to one
-    oscillator. `cells` is a list of gesture names, two per bar."""
+    oscillator. `cells` is a list of gesture names, two per bar. `fn` picks
+    which layer reads them - `maw` for the reese, `fang` for the screamer -
+    so both are driven by the SAME lanes and move as one instrument."""
     lanes = {k: [] for k in LANES}
     for name in cells:
         g = GESTURES[name]
         for k in LANES:
             lanes[k] += list(g[k])
     lanes.update(kw)
-    return maw(notes, bars=len(cells) // 2, **lanes)
+    return (fn or maw)(notes, bars=len(cells) // 2, **lanes)
 
 
 def resink(seg, down=0.5, up=1.5, gd=2.4, gu=1.15, tone=3400, mix=0.62,

@@ -26,36 +26,9 @@ BAR, STEP = core.set_grid(bpm=170)
 BPM = core.BPM
 
 # ---- the kick ----
-def hardkick(dur_steps=3, tune=55.0, rise=1.9, tau=0.06, drive=9.0, gain=1.0,
-             decay=0.3, punch=1.0, tone=4200, weight=0.45, mid=2.8, raw=0.5,
-             scream=0.35):
-    """The kick. A sine dives onto `tune`, then goes through the chain that
-    makes it hurt: drive, EQ, drive again, wavefold. `raw` is how far into the
-    folder it goes, `scream` adds the screaming overtone on top; both at 0
-    give you a clean hardstyle kick, both up give industrial hardcore."""
-    n, t = steps(dur_steps)
-    f = tune * (1 + rise * np.exp(-t / tau))
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    x = np.tanh(drive * np.sin(ph))                                  # stage 1: drive
-    x = lp(stereo(x), tone)
-    x = x + weight * bandpass(x, tune * 0.8, tune * 2.4)             # EQ: the chest
-    x = x + mid * bandpass(x, 240, 1900)                             # EQ: the part you hear
-    x = np.tanh(2.1 * x / (1 + mid * 0.35))                          # stage 2: drive the EQ
-    x = x + 0.8 * bandpass(x, 900, 4600)                             # EQ: presence
-    if raw:                                                          # stage 3: the grit
-        grit = np.tanh(7 * (saw_ph(ph, tune * 14) + 0.4 * np.sin(1.5 * ph)))
-        grit = bandpass(stereo(grit), 300, 6800) * np.exp(-t / (decay * 0.7))[:, None]
-        x = x + raw * 1.5 * fold(grit, 1.1)
-    if scream:                                                       # and the scream on top
-        sc = np.tanh(5 * saw_ph(2 * ph, tune * 20)) * np.exp(-t / 0.07)
-        x = x + scream * bandpass(stereo(sc), 1500, 9000) * 1.2
-    tail = lp(x, 11000) * np.exp(-t / decay)[:, None]
-    pf = tune * (1 + 7.0 * np.exp(-t / 0.012))
-    pnch = np.tanh(6 * np.sin(2 * np.pi * np.cumsum(pf) / SR)) * np.exp(-t / 0.03)
-    click = np.random.randn(n) * np.exp(-t / 0.0022) * 0.8
-    click += np.sin(2 * np.pi * 2400 * t) * np.exp(-t / 0.003) * 0.5
-    out = tail + 0.8 * stereo(pnch) * punch + hp(stereo(click), 3000) * 0.55 * punch
-    return norm(hp(out, 32) * adsr(n, a=0.0004, r=0.015)[:, None], 0.97) * gain
+# The chain lives in core as rawkick(): every hard-dance genre is built on the
+# same kick, and it is the one voice worth sharing between them.
+hardkick = rawkick
 
 def kickroll(s, b, steps_, note_from=55.0, note_to=55.0, bus='drums', gain=1.0, **kw):
     """a run of kicks across the bar, optionally climbing in pitch"""

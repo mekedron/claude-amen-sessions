@@ -996,6 +996,47 @@ def reverb(seg, decay=3.0, wet=0.5, tone=4000, predelay=0.015):
         out[pre:pre + len(seg) + len(ir) - 1, c] += wet * fftconvolve(seg[:, c], ir[:, c])
     return out
 
+def shimmer(seg, decay=6.0, wet=0.55, tone=3000, passes=3, fb=0.55,
+            damp=4200, shift=2.0, predelay=0.02):
+    """A reverb with a pitch shift inside its feedback path.
+
+    `reverb()` above is one convolution: what goes in comes back darker and
+    later and otherwise unchanged. Put a transposition in the loop and each
+    pass returns an octave above the one before it, so a held chord grows a
+    choir of its own harmonics that was never played - the partials arrive
+    late, in tune, and from further away every time. It is the only reverb
+    that adds notes.
+
+    Each pass is re-reverberated, so the tail does not merely rise in pitch,
+    it also spreads: pass three has been through six seconds of room three
+    times and has no transient left in it at all. `damp` darkens the loop,
+    which is what stops the octaves from stacking into a whistle - without
+    it the top pass runs away, and that is the failure mode of every shimmer
+    ever built.
+
+    `shift` of 2.0 is the octave. 1.5 is a fifth and stacks into a dominant
+    ninth over four passes, which is bright and slightly wrong; 0.5 is an
+    octave DOWN and turns the same device into weight rather than air.
+    """
+    x = np.asarray(seg, dtype=np.float32)
+    total = len(x) + int((decay * (passes + 1) + 1.0) * SR)
+    out = np.zeros((total, 2), dtype=np.float32)
+    g = 1.0
+    for i in range(passes + 1):
+        r = reverb(x, decay=decay, wet=1.0, tone=tone, predelay=predelay)
+        r = r[:total]
+        out[:len(r)] += r * (wet * g)
+        if i == passes:
+            break
+        # the next pass is this tail transposed, darkened and sent round
+        # again. Damping in the loop is not a tone control - it is what
+        # keeps the octaves from accumulating into a whistle.
+        up = resample(r, shift, keep=False)
+        x = lp(up[:total], damp)
+        g *= fb
+    return out
+
+
 def delay(seg, steps_=3.0, times=4, fb=0.45, ping=True, damp=400):
     """echoes ringing off into the mix, alternating channels when ping=True"""
     d = int(steps_ * STEP)
