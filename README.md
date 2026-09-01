@@ -142,6 +142,26 @@ sidechain depth and transient punch against the tracks that already worked.
                       at once, `tgate()`, and `uplift()`, a riser built as a
                       resonant band climbing exponentially rather than as a
                       crossfade between static filters
+    src/discolib.py   the disco module, 120 BPM, and the only one written as
+                      a BAND rather than as a machine: a 22" bass drum with a
+                      felt beater (a knock at 1.2 kHz, not a 909's click) and
+                      a wooden shell ringing 95-165 Hz after the head has
+                      stopped, an open hat built as six inharmonic modes with
+                      a different decay each and windowed hard to silence at
+                      258 ms, a room of nine pairs of hands, a Precision bass
+                      through an Ampeg rendered a bar at a time - a plank and
+                      not a box, so all its character is the split-coil
+                      pickup's comb and a finger's rounded corner - a
+                      sixteenth-note chank of four strings struck 3 ms apart
+                      through a convolved cabinet, a string SECTION that plays
+                      a LINE (seven players, each with its own entry lag, its
+                      own random walk of intonation and its own vibrato
+                      ramping in over 200 ms from each attack), a glissando
+                      whose level holds while its cutoff closes as the pitch
+                      rises, a synthesiser used as a singer because formant
+                      synthesis is a robot saying vowels, and two-inch tape:
+                      asymmetric saturation, a head bump at 55 Hz, wow at
+                      0.33 Hz and flutter at 9
     src/hardlib.py    the hardstyle module: the kick, 170 BPM
     src/neurolib.py   the neurofunk module: the tight kit, the bass design
                       chain - reese, growl, talking formants, hard sync - and
@@ -302,6 +322,7 @@ All finished audio lives in `renders/`.
 | `acid_nebel_130.wav` | Dub techno with acid in it, 6:24: an offbeat chord thrown into a delay that saturates inside its own feedback, and a 303 arriving from behind it. No kick for sixteen bars |
 | `acid_rausch_138.wav` | Acid breakbeat in D minor, 5:37: no kick on every beat, ghost snares carrying the groove, and the 303 sharing the bar with hoovers, orchestra hits and a rave piano |
 | `acid_saeure_146.wav` | Hard acid in E minor, 6:38: kick tuned to E1, and a 303 that descends from E3 to three octaves at once. Sixteen bars of hard-clipped industrial kicks before the finale |
+| `disco_revashol_120.wav` | Disco in D minor that ends in E minor, 5:52 - Revachol at dawn: a city that lost its revolution fifty years ago, and a broken man who nevertheless finds his soul tearing itself toward disco. ABBA's trick, which is euphoria in a minor key - the four-to-the-floor says dance and the harmony says something else and the listener does both. i-iv-bVI-V then i-iv-bVI-bVII, the same three chords twice with only the fourth changing: the first half asks with a leading tone, the second answers modally with none, so it lifts rather than resolves. The guitar's top voice is A4 on ALL FOUR chords - the 5th of Dm, the 9th of Gm, the major 7th of Bb, the root of A7 - one note with four meanings, and the harmony is heard as a colour changing rather than as a row of blocks. It moves exactly once, in bar 8, to say the loop is starting again. The verses are somewhere else: a Dorian vamp, Dm9-G13, where the natural sixth is the character note, so the chorus arriving is a mode change as much as a section change - cool in the verses, grieving in the choruses. There is a topline and no vocalist, so the tune is a synthesiser, and what makes it read as singing is not its spectrum: it SLIDES between notes and its vibrato arrives a fifth of a second after the note does, never with it. The bridge modulates to F major with the drums gone, its last bar is B7 - a semitone above the Bb before it, and the dominant of a key the record has not been in - and bar 128 lands in E MINOR and stays for thirty-two, with the section doubling the tune two octaves apart because that is the oldest way of saying everybody is singing now. Mastered to -8.7 LUFS: this genre was played by people and its dynamic range is part of what it is |
 | `dub_heimweg_118.wav` | Ambient dub techno in A minor moving to A Dorian, 6:06 - the third record from the same night as `blendung` and `finsternis`, and the one that happens after them. Seven in the morning, the light is wrong, the body is still at 142 and the city has started without you. 118 BPM because a walking pace is about 118 steps a minute, so the beat is a footstep rather than a machine; the kick is clean, 138 ms, with no distortion anywhere near it, and for a third of the record there is no kick at all. The whole harmonic argument is one note, twice. The chords are i-bVII-bVI-bVII four bars each and the lead does not move: it holds E5 for the entire record, which is the fifth over Am, the sixth over G, the major seventh over F and the ninth over D - one note that is four different feelings depending on what walks underneath it. Then at bar 96 the F becomes D: the natural sixth, Aeolian becomes Dorian, and that is the difference between being tired and being alright. It is the only note that changes in six minutes. `shimmer()` is new and it is what makes this a morning: a reverb with an octave transposition inside its feedback path, so a held chord grows a choir of its own harmonics that nobody played - measured on one chord it moves the energy from 78% in 200-800 Hz to 73% in 800-3000 and takes the ring from 2.0 seconds to 6.3. No bells anywhere; a struck bright object would read as a music box, which is the one thing this must not be. Mastered to -11.7 LUFS with the peaks left on: a record about being tired that has been limited to -6 is a lie |
 | `acid_finsternis_142.wav` | Dark acid techno in D# minor / D# Phrygian, 7:16, and the fifth record here with a 303 in it - the way it avoids being the fifth is register. Every acid line in this project high-passes itself at 165-240 Hz because the sub belongs to the kick, which is right when the 303 is a hook over a bassline. Here there is no bassline: `deepacid()` is the same machine written to OWN 60-300 Hz, with its overdrive split off the fundamental so the drive that makes a 303 sound like one never touches the sub, and the line's own octave added underneath as a clean sine. It measures 15% in 60-120 Hz and 62% in 120-300 where the old one measures 0% and 8%. Nothing from the machine hall is in it - no anvils, no forge, no steam, no siren. The shape is an eclipse and it is written in the spectrum rather than in the level: 3 kHz upward is EMPTY for a hundred and twenty bars, 0.02% of the record's energy through the umbra, and 6.3% in the last section - you cannot open a band that was never closed. One note carries the harmony: the fifth flattens to the b5, and D# Phrygian becomes Locrian, a tritone standing on the kick. The kick is a part rather than a constant, moving through six patterns; at the exact midpoint everything that was closed opens at once; and eight bars before the end the record narrows to nothing but four enormous kicks a bar |
 | `acid_spirale_140.wav` | Acid techno in A minor, 7:22: two 303 lines, one on a sixteen-step bar and one on a fifteen-step cycle, so they drift apart and meet again every fifteen bars. No rumble - the low end belongs to the bassline |
@@ -369,6 +390,7 @@ python3 src/track_blendung.py    # writes renders/industrial_blendung_154.wav
 python3 src/track_spirale.py     # writes renders/acid_spirale_140.wav
 python3 src/track_finsternis.py  # writes renders/acid_finsternis_142.wav
 python3 src/track_heimweg.py     # writes renders/dub_heimweg_118.wav
+python3 src/track_revashol.py    # writes renders/disco_revashol_120.wav
 python3 src/track_saeure.py      # writes renders/acid_saeure_146.wav
 python3 src/track_rausch.py      # writes renders/acid_rausch_138.wav
 python3 src/track_nebel.py       # writes renders/acid_nebel_130.wav
